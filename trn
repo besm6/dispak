@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+#       $Id: trn,v 1.1 1999/01/27 00:43:42 mike Exp $
+#
+name=$1
+tf=trn$$
+case $name in
+	e64)
+		zone=0140
+		size=0002
+		;;
+	disp99)
+		zone=0142
+		size=0004
+		;;
+	sostav)
+		zone=0146
+		size=0001
+		;;
+	ekdisp)
+		zone=0147
+		size=0001
+		;;
+	*)
+		echo $name - no such module
+		exit 1
+		;;
+esac
+cat >$tf <<@@@
+ÛÉÆÒ 419999 ÚÓÈ^
+ÌÅÎ 42(2099)^
+ÌÅÎ 43(2099-ÚÐ)^
+åå÷1á3
+*NAME $name
+*BEMSH
+÷÷ä\$\$\$
+@@@
+cat $name.bs>>$tf
+cat >>$tf <<@@@
+ë÷þ\$\$\$
+ôòî\$\$\$
+þôëïíð420070
+ÂÔÍÁÌÆ
+úïîíïä43$zone  $size
+ëîã\$\$\$
+*END FILE
+\`\`\`\`\`\`
+åëïîåã
+@@@
+run -p $tf
+rm $tf
+#
+#       $Log: trn,v $
+#       Revision 1.1  1999/01/27 00:43:42  mike
+#       Initial revision
+#
+#
