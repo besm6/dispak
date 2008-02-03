@@ -1,7 +1,7 @@
 #include <math.h>
 #include "defs.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.4 2001/02/24 03:33:43 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.5 2006/03/19 08:41:56 leob Exp $";
 
 typedef union   {
 		double                  d;
@@ -148,6 +148,35 @@ aox() {
 	return E_SUCCESS;
 }
 
+// non-restoring division
+
+double nrdiv (double n, double d) {
+
+int ne, de, re;
+double nn, dd;
+
+nn = frexp(n, &ne);
+dd = frexp(d, &de);
+
+double res = 0, q = 0.5;
+double eps = ldexp(q, -40); // run for 40 bits of precision
+
+if ( fabs(nn) >= fabs(dd)) nn/=2, ne++;
+
+while (q > eps) {
+       if (nn == 0.0) break;
+       if (fabs(nn) < 0.25) { nn *= 2; } // magic shortcut
+       else if ((nn > 0) ^ (dd > 0)) { res -= q; nn = 2*nn+dd;}
+       else { res += q; nn = 2*nn-dd; }
+       q /= 2;
+}
+
+res = frexp(res, &re);
+
+return ldexp(res, re+ne-de);
+
+}
+
 int
 b6div() {
 #ifdef DIV_NATIVE
@@ -187,7 +216,8 @@ qzero:
 	dividend.hil -= bias << 20;
 	TO_NAT(enreg, divisor);
 
-	quotient.d = dividend.d / divisor.d;
+       // quotient.d = dividend.d / divisor.d;
+       quotient.d = nrdiv(dividend.d, divisor.d);
 
 	o = quotient.hil >> 20;
 	o = o - 1022 + 64;
@@ -645,6 +675,9 @@ yta() {
 
 /*
  *      $Log: arith.c,v $
+ *      Revision 1.5  2006/03/19 08:41:56  leob
+ *      Implemented correct non-restoring division. TAU goes past division.
+ *
  *      Revision 1.4  2001/02/24 03:33:43  mike
  *      Cleaning up warnings.
  *
