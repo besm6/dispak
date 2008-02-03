@@ -1,5 +1,11 @@
+#ifdef __GNUC__
+#define	GCC_SPECIFIC(x)	x
+#else
+#define	GCC_SPECIFIC(x)
+#endif	/* __GNUC__ */
 
-static char     rcsid[] = "$Id: errtxt.c,v 1.1 1999/01/22 18:35:24 mike Exp $";
+
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: errtxt.c,v 1.1.1.1 2001/02/01 03:48:39 root Exp $";
 
 unsigned char   *errtxt[] = {
 	" Неизвестная ош.",     /*  0 */
@@ -88,6 +94,14 @@ unsigned char   *errtxt[] = {
 
 /*
  *      $Log: errtxt.c,v $
+ *      Revision 1.1.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.2  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
  *      Revision 1.1  1999/01/22 18:35:24  mike
  *      Initial revision
  *

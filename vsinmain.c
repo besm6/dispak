@@ -3,7 +3,7 @@
 #include "defs.h"
 #include "iobuf.h"
 
-static char     rcsid[] = "$Id: vsinmain.c,v 1.1 1998/12/30 02:51:02 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinmain.c,v 1.1.1.2 2001/02/01 14:43:14 root Exp $";
 
 FILE    *inf;
 char    *prog;
@@ -38,7 +38,7 @@ uchar   koi8[] = {
 	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
 	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
 };
-uchar   upp[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
+uchar   *upp = "0123456789+-/,. E@()x=;[]*`'#<>:\
 бвчздецъйклмнопртуфхжигюыэщшьасD\
 FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"я`'";
 
@@ -49,7 +49,7 @@ int
 main(int argc, char **argv) {
 	int     r;
 
-	if (prog = strrchr(argv[0], '/'))
+	if ((prog = strrchr(argv[0], '/')))
 		++prog;
 	else
 		prog = argv[0];
@@ -90,6 +90,17 @@ nextw(void) {
 }
 
 /*      $Log: vsinmain.c,v $
+ *      Revision 1.1.1.2  2001/02/01 14:43:14  root
+ *      dual output
+ *
+ *      Revision 1.1.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.2  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
  *   */

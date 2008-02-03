@@ -1,17 +1,17 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] = "$Id: optab.c,v 1.2 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: optab.c,v 1.3.1.2 2001/02/05 03:52:14 root Exp $";
 
 extern int      add(), aax(), aex(), arx(),
-		avx(), aox(), div(),  mul(),  apx(), aux(), acx(),
+		avx(), aox(), b6div(),  mul(),  apx(), aux(), acx(),
 		anx(), epx(), emx(),  asx(), yta(),
 		priv();
 
 optab_t optab[] = {
 	{"atx", 0,      I_ATX,  0, },                           /* 000 */
 	{"stx", 0,      I_STX,  F_RSTACK | F_LG, },             /* 001 */
-	{"mod", priv,   0,      F_PRIV, },                      /* 002 */
+	{"mod", 0,      I_MOD,  F_PRIV, },                      /* 002 */
 	{"xts", 0,      I_XTS,  F_WSTACK | F_OP | F_LG, },      /* 003 */
 	{"a+x", 0,      I_ADD,  F_STACK | F_OP | F_AR | F_AG, },/* 004 */
 	{"a-x", 0,      I_SUB,  F_STACK | F_OP | F_AR | F_AG, },/* 005 */
@@ -23,7 +23,7 @@ optab_t optab[] = {
 	{"arx", arx,    0,      F_STACK | F_OP | F_MG, },       /* 013 */
 	{"avx", avx,    0,      F_STACK | F_OP | F_AR | F_AG, },/* 014 */
 	{"aox", aox,    0,      F_STACK | F_OP | F_LG, },       /* 015 */
-	{"a/x", div,    0,      F_STACK | F_OP | F_AR | F_MG, },/* 016 */
+	{"a/x", b6div,  0,      F_STACK | F_OP | F_AR | F_MG, },/* 016 */
 	{"a*x", mul,    0,      F_STACK | F_OP | F_AR | F_MG, },/* 017 */
 	{"apx", apx,    0,      F_STACK | F_OP | F_LG, },       /* 020 */
 	{"aux", aux,    0,      F_STACK | F_OP | F_LG, },       /* 021 */
@@ -92,6 +92,20 @@ optab_t optab[] = {
 };
 
 /*      $Log: optab.c,v $
+ *      Revision 1.3.1.2  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.3.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.4  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
+ *      Revision 1.3  1999/02/02 03:26:27  mike
+ *      Allowed 002 (mod) op in supervisor mode.
+ *
  *      Revision 1.2  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *

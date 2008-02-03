@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "disk.h"
 
-static char     rcsid[] = "$Id: main.c,v 1.3 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: main.c,v 1.4.1.3 2001/02/05 03:52:14 root Exp $";
 
 static struct   {
 	int     dsk;
@@ -12,9 +12,9 @@ static struct   {
 	ushort  sz;
 	reg_t   caddr;
 }       sv_disk[] = {
-	2099,   0100,   3,      0,      /* disp99       */
-	2099,   0103,   2,      010000, /* e64, ekdisp  */
-	0,      0,      0,      0,
+	{2099,   0100,   3,      0,		},	/* disp99       */
+	{2099,   0103,   3,      010000,	},	/* e64, ekdisp, spe66  */
+	{0,      0,      0,      0,		},
 };
 
 static char     *pout = NULL;
@@ -26,13 +26,14 @@ extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            dump_pout(void);
 
+int
 main(argc, argv)
 	char **argv;
 {
 	int             i, k;
 	ulong           icnt;
 	double          sec;
-	unsigned        nh;
+	void*           nh;
 
 	if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
 		signal (SIGTERM, catchsig);
@@ -44,6 +45,9 @@ main(argc, argv)
 		if (argv[i][0] == '-')
 			for (k=1; argv[i][k]; k++)
 				switch (argv[i][k]) {
+				case 'l':	/* use Latin letters for output */
+					upp = uppl;
+					break;
 				case 'b':       /* break on first cmd */
 					breakflg = 1;
 					break;
@@ -84,7 +88,7 @@ usage:
 	}
 
 	i = 0;
-	while (*ifile && !isdigit(*ifile))
+	while (*ifile && !isdigit(0xFF & *ifile))
 		++ifile;
 	sscanf(ifile, "%o", &i);
 	if (!i || i >= 0200)
@@ -113,6 +117,10 @@ usage:
 	if (!(nh = disk_open(0, DISK_READ_WRITE | DISK_TEMP)))
 		exit(1);
 	disks[OSD_NOMML3].diskh = nh;
+
+	if (!(nh = disk_open(2053, DISK_READ_ONLY)))
+		exit(1);
+	disks[OSD_NOMML1].diskh = nh;
 
 	(void) signal(SIGALRM, alrm_handler);
 	gettimeofday(&start_time, NULL);
@@ -160,7 +168,7 @@ startwatch(void) {
 
 static int
 sv_load() {
-	unsigned        dh;
+	void*           dh;
 	ushort          z;
 	reg_t           cp;
 	int             i;
@@ -200,7 +208,26 @@ dump_pout(void) {
 	fclose(fp);
 }
 
-/*      $Log: main.c,v $
+/*
+ *      $Log: main.c,v $
+ *      Revision 1.4.1.3  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.4.1.2  2001/02/01 07:40:07  root
+ *      dual output mode
+ *
+ *      Revision 1.4.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.5  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
+ *      Revision 1.4  1999/02/02 03:30:30  mike
+ *      Added e66.
+ *      Got 2053 open on NOMML1.
+ *
  *      Revision 1.3  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *
@@ -209,4 +236,5 @@ dump_pout(void) {
  *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
- *   */
+ *
+ */

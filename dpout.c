@@ -40,11 +40,11 @@ main(int argc, char **argv) {
 	while (fread(para, 1, PARASZ, fp) == PARASZ) {
 
 		if (!w) {
-			w = para[4] << 8 & 0x300 | para[5];
+			w = (para[4] << 8 & 0x300) | para[5];
 			if (w) {
 				w *= 6;
 				b = para[4] >> 7 | para[3] << 1;
-				b = (b ^ 0xf) + 1 & 0xf;
+				b = ((b ^ 0xf) + 1) & 0xf;
 				b = 6 - b;
 			} else
 				dump(PARASZ);
@@ -68,6 +68,8 @@ main(int argc, char **argv) {
 		fwrite(line, 1, maxp + 1, stdout);
 		putchar('\n');
 	}
+
+	return 0;
 }
 
 void

@@ -1,11 +1,15 @@
 #include <math.h>
 #include "defs.h"
 
-static char     rcsid[] = "$Id: arith.c,v 1.1 1998/12/30 02:51:02 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.1.1.3 2001/02/05 05:44:28 dvv Exp $";
 
 typedef union   {
 		double                  d;
 		struct  {
+#if defined (__alpha) || defined (__ia64)
+			unsigned _lol;
+			unsigned _hil;
+#else
 #ifdef M_WORDSWAP
 			unsigned long   _lol;
 			unsigned long   _hil;
@@ -13,16 +17,18 @@ typedef union   {
 			unsigned long   _hil;
 			unsigned long   _lol;
 #endif
+#endif
 		}       l;
 	}       math_t;
 #define lol     l._lol
 #define hil     l._hil
 #define TO_NAT(from,to) {\
-	to.hil = ((from.o - 64 + 1022) << 20) | (from.ml << 5) & 0xfffff |\
+	to.hil = ((from.o - 64 + 1022) << 20) | ((from.ml << 5) & 0xfffff) |\
 			(from.mr >> 19);\
 	to.lol = (from.mr & 0x7ffff) << 13;\
 }
 
+int
 add() {
 	alureg_t        a1, a2;
 	int             diff, neg;
@@ -97,6 +103,7 @@ add() {
 	return E_SUCCESS;
 }
 
+int
 aax() {
 
 	acc.l &= enreg.l;
@@ -105,6 +112,7 @@ aax() {
 	return E_SUCCESS;
 }
 
+int
 aex() {
 
 	accex = acc;
@@ -113,6 +121,7 @@ aex() {
 	return E_SUCCESS;
 }
 
+int
 arx() {
 	ulong           i;
 
@@ -128,12 +137,14 @@ arx() {
 	return E_SUCCESS;
 }
 
+int
 avx() {
 	if (NEGATIVE(enreg))
 		NEGATE(acc);
 	return E_SUCCESS;
 }
 
+int
 aox() {
 
 	acc.l |= enreg.l;
@@ -142,7 +153,8 @@ aox() {
 	return E_SUCCESS;
 }
 
-div() {
+int
+b6div() {
 #ifdef DIV_NATIVE
 	int             neg, o;
 	unsigned long   i, c, bias = 0;
@@ -187,7 +199,7 @@ qzero:
 	if (o < 0)
 		goto qzero;
 	acc.o = o & 0x7f;
-	acc.ml = (quotient.hil & 0xfffff | 0x100000) >> 5;
+	acc.ml = ((quotient.hil & 0xfffff) | 0x100000) >> 5;
 	acc.mr = ((quotient.hil & 0x1f) << 19) |
 			(quotient.lol >> 13);
 	if (neg)
@@ -276,6 +288,7 @@ qzero:
 	return E_SUCCESS;
 }
 
+int
 elfun(int fun) {
 #ifdef DIV_NATIVE
 	int             neg = 0, o;
@@ -309,6 +322,10 @@ qzero:
 	}
 
 	TO_NAT(acc, arg);
+	if (neg) {
+		arg.d = -arg.d;
+		neg = 0;
+	}
 
 	switch (fun) {
 	case EF_SQRT:
@@ -320,6 +337,18 @@ qzero:
 	case EF_COS:
 		arg.d = cos(arg.d);
 		break;
+	case EF_ARCTG:
+		arg.d = atan(arg.d);
+		break;
+	case EF_ARCSIN:
+		arg.d = asin(arg.d);
+		break;
+	case EF_ALOG:
+		arg.d = log(arg.d);
+		break;
+	case EF_EXP:
+		arg.d = exp(arg.d);
+		break;
 	case EF_ENTIER:
 		arg.d = floor(arg.d);
 		break;
@@ -327,15 +356,15 @@ qzero:
 		return E_INT;
 	}
 
-	o = arg.hil >> 20;
+	o = (arg.hil >> 20) & 0x7ff;
 	o = o - 1022 + 64;
 	if (o < 0)
 		goto qzero;
 	acc.o = o & 0x7f;
-	acc.ml = (arg.hil & 0xfffff | 0x100000) >> 5;
+	acc.ml = ((arg.hil & 0xfffff) | 0x100000) >> 5;
 	acc.mr = ((arg.hil & 0x1f) << 19) |
 			(arg.lol >> 13);
-	if (neg != (arg.hil >> 31))
+	if (arg.hil >> 31)
 		NEGATE(acc);
 	if ((o > 0x7f) && !dis_exc)
 		return E_OVFL;
@@ -347,6 +376,7 @@ qzero:
 #endif
 }
 
+int
 mul() {
 	uchar           neg = 0;
 	alureg_t        a, b;
@@ -406,7 +436,7 @@ mul() {
 		accex.mr &= 0xffffff;
 		acc.mr = (~acc.mr & 0xffffff) + (accex.ml >> 16);
 		accex.ml &= 0xffff;
-		acc.ml = (~acc.ml & 0xffff) + (acc.mr >> 24) | 0x30000;
+		acc.ml = ((~acc.ml & 0xffff) + (acc.mr >> 24)) | 0x30000;
 		acc.mr &= 0xffffff;
 	}
 
@@ -415,6 +445,7 @@ mul() {
 	return E_SUCCESS;
 }
 
+int
 apx() {
 
 
@@ -437,6 +468,7 @@ apx() {
 	return E_SUCCESS;
 }
 
+int
 aux() {
 	int     i;
 
@@ -466,6 +498,7 @@ aux() {
 	return E_SUCCESS;
 }
 
+int
 acx() {
 	int     c = 0;
 	ulong   i;
@@ -477,6 +510,7 @@ acx() {
 	return arx();
 }
 
+int
 anx() {
 	ulong   c;
 	ulong   i;
@@ -521,16 +555,19 @@ anx() {
 	return E_SUCCESS;
 }
 
+int
 epx() {
 	acc.o += enreg.o - 64;
 	return E_SUCCESS;
 }
 
+int
 emx() {
 	acc.o += 64 - enreg.o;
 	return E_SUCCESS;
 }
 
+int
 asx() {
 	int     i, j;
 
@@ -590,6 +627,7 @@ asx() {
 	return E_SUCCESS;
 }
 
+int
 yta() {
 	if (G_LOG) {
 		acc = accex;
@@ -598,7 +636,7 @@ yta() {
 
 	acc.mr = accex.mr;
 	acc.l = (accex.l & 0xffff) |
-		(acc.l + (enreg.o << 17) - (64 << 17)) & 0x1fe0000 ;
+		((acc.l + (enreg.o << 17) - (64 << 17)) & 0x1fe0000);
 	if (acc.l & 0x1000000) {
 		acc.l &= 0xffffff;
 		return E_OVFL;
@@ -607,6 +645,18 @@ yta() {
 }
 
 /*      $Log: arith.c,v $
+ *      Revision 1.1.1.3  2001/02/05 05:44:28  dvv
+ *      добавлена поддержка ia64, Linux
+ *
+ *      Revision 1.1.1.2  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.1.1.1  2001/02/01 03:47:26  root
+ *      e50 fix
+ *
+ *      Revision 1.2  2001/01/31 22:58:43  dvv
+ *      fixes to for whetstone and -Wall
+ *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
  *   */

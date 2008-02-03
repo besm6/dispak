@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include "disk.h"
 
-static char     rcsid[] = "$Id: zdump.c,v 1.2 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: zdump.c,v 1.2.1.2 2001/02/05 03:52:14 root Exp $";
 
 static char     upp[] = "0123456789+-/,. E@()x=;[]*'\"#<>:\
 áâ÷çäåöúéêëìíîïğòóôõæèãşûıùøüàñD\
 FGIJLNQRSUVWZ^<>V&??:=%$|-_!";
 
+void dump (unsigned, unsigned, unsigned);
+
+int
 main(int argc, char **argv) {
-	unsigned        diskh, diskno, zs, ze, addr = 0, l, r, b = 0;
+	void*     diskh;
+	unsigned  diskno, zs, ze, addr = 0, l, r, b = 0;
 	unsigned char   buf[6144], *cp;
 
 	if (argv[1] && !strcmp(argv[1], "-b"))
@@ -66,6 +70,7 @@ main(int argc, char **argv) {
 		putchar('.'); \
 }
 
+void
 dump(unsigned addr, unsigned l, unsigned r) {
 
 	printf("%05o:\t", addr);
@@ -86,6 +91,17 @@ dump(unsigned addr, unsigned l, unsigned r) {
 }
 
 /*      $Log: zdump.c,v $
+ *      Revision 1.2.1.2  2001/02/05 03:52:14  root
+ *      ĞÒÁ×ËÉ ĞÏÄ ÁÌØÆÕ, Tru64 cc
+ *
+ *      Revision 1.2.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.3  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
  *      Revision 1.2  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *

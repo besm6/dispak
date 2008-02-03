@@ -1,6 +1,6 @@
 #include "diski.h"
 
-static char     rcsid[] = "$Id: disk.c,v 1.1 1998/12/30 02:51:02 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: disk.c,v 1.1.1.2 2001/02/05 03:52:14 root Exp $";
 
 static int disk_positioni(disk_t *, u_int);
 static int disk_makezonei(disk_t *, u_int);
@@ -20,7 +20,8 @@ static int disk_formcodei(char *);
 /* opens $DISKDIR/{diskno}, or ./{diskno}, if $DISKDIR is not set   */
 /* to create a new file, do "cat > {diskno}^JDISK^D^D"              */
 
-u_int disk_open(u_int diskno, u_int mode) {
+void*
+disk_open(u_int diskno, u_int mode) {
     disk_t *d;
     char fname[256];
     u_int f, newmode = 0;
@@ -92,7 +93,7 @@ u_int disk_open(u_int diskno, u_int mode) {
     d->d_md[0] = calloc(sizeof(md_t), 1);
     if (!d->d_md[0]) {
 	fprintf(stderr, "disk_open: no memory for %d\n", diskno);
-	disk_close((u_int) d);
+	disk_close(d);
 	return 0;
     }
 
@@ -101,7 +102,7 @@ u_int disk_open(u_int diskno, u_int mode) {
 	if ((size != 4 && size != sizeof(md_t)) ||
 	    memcmp(d->d_md[0]->md_magic, DISK_MAGIC, 4)) {
 	    fprintf(stderr, "disk_open: bad disk structure of %d\n", diskno);
-	    disk_close((u_int) d);
+	    disk_close(d);
 	    return 0;
 	}
     } else {
@@ -119,12 +120,12 @@ u_int disk_open(u_int diskno, u_int mode) {
 
     i = 0;
 
-    while (pos = getlong(d->d_md[i]->md_next)) {
+    while ((pos = getlong(d->d_md[i]->md_next))) {
 	i++;
 	d->d_md[i] = calloc(sizeof(md_t), 1);
 	if (!d->d_md[i]) {
 	    fprintf(stderr, "disk_open: no memory\n");
-	    disk_close((u_int) d);
+	    disk_close(d);
 	    return 0;
 	}
 
@@ -137,16 +138,17 @@ u_int disk_open(u_int diskno, u_int mode) {
 
 	if (size != sizeof(md_t) || memcmp(d->d_md[i]->md_magic, DISK_MAGIC, 4)) {
 	    fprintf(stderr, "disk_open: bad disk structure of %d\n", diskno);
-	    disk_close((u_int) d);
+	    disk_close(d);
 	    return 0;
         }
     }
-    return (u_int) d;
+    return d;
 }
 
 /* disk_close is MANDATORY if synchronous_descriptors isn't defined */
 
-int disk_close(u_int ud) {
+int
+disk_close(void* ud) {
     disk_t *d = (disk_t*) ud;
     int i;
     u_long pos = 0;
@@ -177,7 +179,7 @@ int disk_close(u_int ud) {
     return DISK_IO_OK;
 }
 
-int disk_setmode(u_int ud, u_int mode) {
+int disk_setmode(void* ud, u_int mode) {
     disk_t *d = (disk_t*) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -204,7 +206,7 @@ int disk_setmode(u_int ud, u_int mode) {
  * gracefully; mode = DISK_MODE_LOUD returns DISK_IO_NEW
  */
 
-int disk_readi(u_int ud, u_int zone, char *buf, u_int mode) {
+int disk_readi(void* ud, u_int zone, char *buf, u_int mode) {
     disk_t *d = (disk_t*) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -241,7 +243,7 @@ int disk_readi(u_int ud, u_int zone, char *buf, u_int mode) {
     return DISK_IO_OK;
 }
 
-int disk_writei(u_int ud, u_int zone, char *buf, u_int mode) {
+int disk_writei(void* ud, u_int zone, char *buf, u_int mode) {
     disk_t *d = (disk_t*) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -317,7 +319,7 @@ static int disk_makezonei(disk_t *d, u_int zone) {
 	    if (!d->d_md[i]) {
 		fprintf(stderr, "disk_makezonei: no memory for zone %o on %d\n",
 		    zone, d->d_diskno);
-		disk_close((u_int) d);
+		disk_close(d);
 		return DISK_IO_ENWRITE;
 	    }
 	    memcpy(d->d_md[i]->md_magic, DISK_MAGIC, 4);
@@ -389,6 +391,17 @@ static int disk_formcodei(char *buf) {
 }
 
 /*      $Log: disk.c,v $
+ *      Revision 1.1.1.2  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.1.1.1  2001/02/01 03:47:26  root
+ *      *** empty log message ***
+ *
+ *      Revision 1.2  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
  *   */

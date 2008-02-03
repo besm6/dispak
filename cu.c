@@ -3,7 +3,7 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] = "$Id: cu.c,v 1.3 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: cu.c,v 1.4.1.2 2001/02/06 07:32:31 dvv Exp $";
 
 long    aumodes[] = {
 	0,
@@ -14,7 +14,8 @@ long    aumodes[] = {
 
 extern void     ib_cleanup(void);
 
-void    unpack(pc)
+void
+unpack(pc)
 	ushort  pc;
 {
 	REGISTER word_t         *wp = &core[pc];
@@ -29,6 +30,7 @@ void    unpack(pc)
 	cflags[pc] |= C_UNPACKED;
 }
 
+int
 _abort(err) {
 	lasterr = err;
 	if (ninter) {
@@ -68,12 +70,12 @@ _abort(err) {
 	};\
 }
 #define STK_PUSH        {\
-	STORE(acc, reg[STACKREG] | supmode & sup_mmap);\
+	STORE(acc, reg[STACKREG] | (supmode & sup_mmap));\
 	reg[STACKREG] = ADDR(reg[STACKREG] + 1);\
 }
 #define STK_POP         {\
 	reg[STACKREG] = ADDR(reg[STACKREG] - 1);\
-	LOAD(acc, reg[STACKREG] | supmode & sup_mmap);\
+	LOAD(acc, reg[STACKREG] | (supmode & sup_mmap));\
 }
 
 #ifdef DEBUG
@@ -386,7 +388,7 @@ set_mode:
 		reg[0] = 0;
 		if (rg != STACKREG)
 			reg[STACKREG] = ADDR(reg[STACKREG] - 1);
-		LOAD(acc, reg[STACKREG] | supmode & sup_mmap);
+		LOAD(acc, reg[STACKREG] | (supmode & sup_mmap));
 		if (rg == PSREG)
 			sup_mmap = (reg[PSREG] & 1) << 15;
 		break;
@@ -408,6 +410,11 @@ mtj:
 		reg[i] = ADDR(reg[i] + reg[ui.i_reg]);
 		reg[0] = 0;
 		NEXT;
+	case I_MOD:
+		if (supmode)
+			NEXT;
+		else
+			ABORT(E_PRIV);
 	case I_IRET:
 		if (!supmode)
 			ABORT(E_PRIV);
@@ -420,7 +427,7 @@ mtj:
 			NEXT;
 		}
 		reg[PSREG] = reg[PSSREG] & 02003;
-		JMP(reg[ui.i_reg & 3 | 030]);
+		JMP(reg[(ui.i_reg & 3) | 030]);
 		right = !!(reg[PSSREG] & 0400);
 		sup_mmap = reg[PSSREG] & 1 ? 0100000 : 0;
 		supmode = reg[PSSREG] & 014 ? 0100000 : 0;
@@ -446,10 +453,10 @@ mtj:
 		reg[TRAPNREG] = ui.i_opcode - 050;
 		stopwatch();
 		if (trace) {
-			LOAD(enreg, reg[016] | supmode & sup_mmap);
-			fprintf(stderr, "%05o:%03o.%05o(%08o%08o) %08o%08o\n",
-				abpc, ui.i_opcode, reg[016], enreg.l, enreg.r,
-				acc.l, acc.r);
+			LOAD(enreg, reg[016] | (supmode & sup_mmap));
+			fprintf(stderr, "%05o:%03o.%05o(%08lo%08lo) %08lo%08lo\n",
+				abpc, ui.i_opcode, reg[016], (ulong)enreg.l, (ulong)enreg.r,
+				(ulong)acc.l, (ulong)acc.r);
 			fflush(stderr);
 		}
 		switch (ui.i_opcode) {
@@ -464,6 +471,12 @@ mtj:
 			goto errchk;
 		case 053:
 			err = e53();
+			goto errchk;
+		case 055:
+			err = elfun (EF_ALOG);
+			goto errchk;
+		case 056:
+			err = elfun (EF_EXP);
 			goto errchk;
 		case 057:
 			err = elfun(EF_ENTIER);
@@ -543,7 +556,7 @@ errchk:
 		break;
 	}
 
-	if (i = op.o_flags & F_GRP)
+	if ((i = op.o_flags & F_GRP))
 		augroup.gl_au = aumodes[i];
 
 	if (op.o_flags & F_AR) {
@@ -563,7 +576,7 @@ errchk:
 		if (dis_norm)
 			goto chk_rnd;
 		if (!(i = (acc.ml >> 15) & 3)) {
-			if (r = acc.ml & 0xffff) {
+			if ((r = acc.ml & 0xffff)) {
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r <<= 1);
 				acc.ml = (r & 0xffff) |
@@ -576,7 +589,7 @@ errchk:
 				acc.o -= cnt;
 				goto chk_zero;
 			}
-			if (r = acc.mr >> 16) {
+			if ((r = acc.mr >> 16)) {
 				int     fcnt;
 				for (cnt = 0; (r & 0x80) == 0;
 							++cnt, r <<= 1);
@@ -589,7 +602,7 @@ errchk:
 				rr = acc.r & ((1l << fcnt) - 1);
 				goto chk_zero;
 			}
-			if (r = acc.mr & 0xffff) {
+			if ((r = acc.mr & 0xffff)) {
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r <<= 1);
 				acc.ml = (r & 0xffff) |
@@ -599,10 +612,10 @@ errchk:
 				accex.ml = accex.mr << cnt;
 				accex.mr = 0;
 				acc.o -= 24 + cnt;
-				rr = acc.ml & ((1 << cnt) - 1) | acc.mr;
+				rr = (acc.ml & ((1 << cnt) - 1)) | acc.mr;
 				goto chk_zero;
 			}
-			if (r = accex.ml & 0xffff) {
+			if ((r = accex.ml & 0xffff)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r <<= 1);
@@ -613,7 +626,7 @@ errchk:
 				acc.o -= 40 + cnt;
 				goto chk_zero;
 			}
-			if (r = accex.mr >> 16) {
+			if ((r = accex.mr >> 16)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x80) == 0;
 							++cnt, r <<= 1);
@@ -623,7 +636,7 @@ errchk:
 				acc.o -= 56 + cnt;
 				goto chk_zero;
 			}
-			if (r = accex.mr & 0xffff) {
+			if ((r = accex.mr & 0xffff)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r <<= 1);
@@ -634,7 +647,7 @@ errchk:
 			}
 			goto zero;
 		} else if (i == 3) {
-			if (r = ~acc.ml & 0xffff) {
+			if ((r = ~acc.ml & 0xffff)) {
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r = (r << 1) | 1);
 				acc.ml = 0x10000 | (~r & 0xffff) |
@@ -648,7 +661,7 @@ errchk:
 				acc.o -= cnt;
 				goto chk_zero;
 			}
-			if (r = (~acc.mr >> 16) & 0xff) {
+			if ((r = (~acc.mr >> 16) & 0xff)) {
 				int     fcnt;
 				for (cnt = 0; (r & 0x80) == 0;
 							++cnt, r = (r << 1) | 1);
@@ -664,7 +677,7 @@ errchk:
 				rr = acc.r & ((1l << fcnt) - 1);
 				goto chk_zero;
 			}
-			if (r = ~acc.mr & 0xffff) {
+			if ((r = ~acc.mr & 0xffff)) {
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r = (r << 1) | 1);
 				acc.ml = 0x10000 | (~r & 0xffff) |
@@ -674,10 +687,10 @@ errchk:
 				accex.ml = (accex.mr << cnt) & 0xffff;
 				accex.mr = 0;
 				acc.o -= 24 + cnt;
-				rr = acc.ml & ((1 << cnt) - 1) | acc.mr;
+				rr = (acc.ml & ((1 << cnt) - 1)) | acc.mr;
 				goto chk_zero;
 			}
-			if (r = ~accex.ml & 0xffff) {
+			if ((r = ~accex.ml & 0xffff)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r = (r << 1) | 1);
@@ -688,7 +701,7 @@ errchk:
 				acc.o -= 40 + cnt;
 				goto chk_zero;
 			}
-			if (r = (~accex.mr >> 16) & 0xff) {
+			if ((r = (~accex.mr >> 16) & 0xff)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x80) == 0;
 							++cnt, r = (r << 1) | 1);
@@ -698,7 +711,7 @@ errchk:
 				acc.o -= 56 + cnt;
 				goto chk_zero;
 			}
-			if (r = ~accex.mr & 0xffff) {
+			if ((r = ~accex.mr & 0xffff)) {
 				rr = accex.ml | accex.mr;
 				for (cnt = 0; (r & 0x8000) == 0;
 							++cnt, r = (r << 1) | 1);
@@ -761,6 +774,20 @@ priv() {
 }
 
 /*      $Log: cu.c,v $
+ *      Revision 1.4.1.2  2001/02/06 07:32:31  dvv
+ *      добавлены несколько экстракодов для ФОРТРАН-ДУБНА
+ *
+ *      Revision 1.4.1.1  2001/02/01 03:47:26  root
+ *      e50 fix
+ *
+ *      Revision 1.5  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
+ *      Revision 1.4  1999/02/02 03:26:27  mike
+ *      Allowed 002 (mod) op in supervisor mode.
+ *
  *      Revision 1.3  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *

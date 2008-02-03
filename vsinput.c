@@ -8,14 +8,13 @@
 #include "iobuf.h"
 
 #define SKIP_SP()       {while (isspace(ch)) nextc();}
-#define NEXT_NS()       ({nextc();SKIP_SP();ch;})
 #define PAST_SP()       {while (!isspace(ch)) nextc(); SKIP_SP();}
 #define NEXT_ART()      {while (ch != '^') nextc(); nextc(); SKIP_SP();}
 #define ASSERT_CH(c)    {if (ch != c) goto fs;}
 #define EAT_CH(c)       {ASSERT_CH(c); nextc();}
-#define KOI2UPP(c)      ((c) <= ' ' ? 017 : (c) == '\n' ? 0214 : koi8[(c) - 32])
+#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
 
-static char     rcsid[] = "$Id: vsinput.c,v 1.3 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinput.c,v 1.5.1.2 2001/02/05 03:52:14 root Exp $";
 
 static unsigned                 lineno;
 static unsigned                 level, array;
@@ -39,6 +38,14 @@ static unsigned                 nextcp(void);
 static int                      dump(uchar tag, unsigned long long w);
 static inline unsigned          parity(unsigned byte);
 extern unsigned long long       nextw(void);
+
+static unsigned
+NEXT_NS()
+{
+	nextc();
+	SKIP_SP();
+	return ch;
+}
 
 int
 vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit) {
@@ -105,7 +112,7 @@ d_6_12:
 				inperr("ãéæò # 6 É # 12");
 				return -1;
 			}
-			psp.user.l = psp.user.l << 4 | ch - '0';
+			psp.user.l = (psp.user.l << 4) | (ch - '0');
 			user_hi = user_hi * 10 + ch - '0';
 			nextc();
 		}
@@ -113,7 +120,7 @@ d_6_12:
 			for (i = 0; i < 6; ++i) {
 				if (!isdigit(ch))
 					goto d_6_12;
-				psp.user.r = psp.user.r << 4 | ch - '0';
+				psp.user.r = (psp.user.r << 4) | (ch - '0');
 				user_lo = user_lo * 10 + ch - '0';
 				nextc();
 			}
@@ -139,7 +146,6 @@ d_6_12:
 				return i;
 			nextc();
 		}
-		ASSERT_CH('^');
 		NEXT_ART();
 	}
 
@@ -149,7 +155,7 @@ d_6_12:
 		for (cp = art; ch != '^'; nextc())
 			*cp++ = ch;
 		*cp = 0;
-		if (cp = strchr(art, ' '))
+		if ((cp = strchr(art, ' ')))
 			++cp;
 		if (!strncmp(art, "÷èï", 3)) {
 			if (!*cp) {
@@ -157,11 +163,11 @@ mpar:
 				inperr("îåô ðáòáí");
 				return -1;
 			}
-			sscanf(cp, "%o", &psp.entry);
+			sscanf(cp, "%lo", &psp.entry);
 		} else if (!strncmp(art, "áãð", 3)) {
 			if (!*cp)
 				goto mpar;
-			sscanf(cp, "%d", &psp.lprlim);
+			sscanf(cp, "%hu", &psp.lprlim);
 			if (psp.lprlim == 0 || psp.lprlim > 128)
 				psp.lprlim = 128;
 			psp.lprlim = 0200000 - psp.lprlim * 236;
@@ -172,7 +178,7 @@ mpar:
 				goto mpar;
 			while (*cp && !isdigit(*cp))
 				++cp;
-			sscanf (cp, "%o", &psp.phys);
+			sscanf (cp, "%lo", &psp.phys);
 			if (!psp.phys ||
 					((psp.phys >= 030) && (psp.phys < 070)) ||
 					(psp.phys >= 0100))
@@ -188,7 +194,7 @@ mpar:
 					return -1;
 				}
 				u = 0;
-				sscanf(cp, "%o", &u);
+				sscanf(cp, "%lo", &u);
 				if (cp[2] != '(' || u < 030 || u >= 070)
 					goto fs;
 				psp.vol[psp.nvol].u = u;
@@ -216,22 +222,25 @@ mpar:
 				++psp.nvol;
 			}
 		}
-nextart:
+/*** nextart:	*/
 		NEXT_ART();
 	}
 
 	if (!edit) {
 		unsigned long long      w = 0;
 
+newaddr:
 		w = nextw();
+		if (w == EKONEC)
+			return 0;
 		iaddr = w & 077777;
-		if (i = dump(W_IADDR, w & 077777))
+		if ((i = dump(W_IADDR, w & 077777)))
 			return i;
 		for (;;) {
 			w = nextw();
 			if (w == UNDERBANG3)
-				return 0;
-			if (i = dump(W_CODE, w))
+				goto newaddr;
+			if ((i = dump(W_CODE, w)))
 				return i;
 		}
 	}
@@ -248,15 +257,15 @@ nextart:
 			break;
 		case U('÷'):
 			while (NEXT_NS() >= '0' && ch <= '7')
-				w = w << 3 | ch - '0';
+				w = (w << 3) | (ch - '0');
 			iaddr = w & 077777;
-			if (i = dump(W_IADDR, w & 077777))
+			if ((i = dump(W_IADDR, w & 077777)))
 				return i;
 			break;
 		case U('ó'):
 			while (NEXT_NS() >= '0' && ch <= '7')
-				w = w << 3 | ch - '0';
-			if (i = dump(W_DATA, w))
+				w = (w << 3) | (ch - '0');
+			if ((i = dump(W_DATA, w)))
 				return i;
 			break;
 		case U('ë'):
@@ -282,7 +291,7 @@ nextart:
 				inperr("ãéæò îå 9 é îå 18");
 				return -1;
 			}
-			if (i = dump(W_CODE, w))
+			if ((i = dump(W_CODE, w)))
 				return i;
 			break;
 		case U('â'):
@@ -299,7 +308,7 @@ noend:
 				}
 				w = w << 8 | KOI2UPP(ch);
 			}
-			if (i = dump(W_DATA, w))
+			if ((i = dump(W_DATA, w)))
 				return i;
 			break;
 		case U('á'):
@@ -317,7 +326,7 @@ noend:
 				    if (ch == '$' && pch == '_') {
 					if (i) {
 					    w <<= (6 - i) * 8;
-					    if (i = dump(W_DATA, w))
+					    if ((i = dump(W_DATA, w)))
 						    return i;
 					}
 					goto a1done;
@@ -325,7 +334,7 @@ noend:
 				    pch = ch;
 				    w = w << 8 | KOI2UPP(ch);
 				}
-				if (i = dump(W_DATA, w))
+				if ((i = dump(W_DATA, w)))
 					return i;
 			    }
 a1done:
@@ -342,17 +351,18 @@ a1done:
 					goto noend;
 				    s[i] = ch;
 				    nextc();
+				    if (i == 5 && !strncmp(s, "``````", 6)) {
+					for (c = 0; c < 24; ++c)
+					    if ((i = dump(W_DATA, 1ull)))
+						return i;
+					SKIP_SP();
+					goto a3over;
+				    }
 				}
 				s[i] = 0;
 				while (ch != '\n' && ch != -1)
 				    nextc();
 				nextc();
-				if (!strcmp(s, "``````")) {
-				    for (c = 0; c < 24; ++c)
-					if (i = dump(W_DATA, 1ull))
-					    return i;
-				    break;
-				}
 				for (i = 0; s[i]; ++i) {
 				    c = KOI2UPP(s[i]);
 				    w[i / 5] <<= 8;
@@ -361,9 +371,10 @@ a1done:
 				if (i % 5)
 				    w[i / 5] <<= 8 * (5 - i % 5);
 				for (c = 0; c < 24; ++c)
-				    if (i = dump(W_DATA, w[c]))
+				    if ((i = dump(W_DATA, w[c])))
 					return i;
 			    }
+a3over:
 			} else
 				goto fs;
 			break;
@@ -412,7 +423,9 @@ nextc(void) {
 	}
 	if (ch >= 0300 && ch <= 0337)
 		return ch += 040;
-	ch = toupper(ch);
+	if (isalpha (ch)) {
+		ch = toupper(ch);
+	}
 	switch (ch) {
 	case 'A':
 		ch = U('á');
@@ -468,7 +481,8 @@ inperr(char *s) {
 
 static uchar
 *passload(char *src) {
-	ulong   dh, sz;
+	void*   dh;
+	ulong   sz;
 	uchar   *buf, *cp;
 
 	if (!(buf = malloc(12288))) {
@@ -563,7 +577,26 @@ parity(unsigned byte) {
 	return !byte;
 }
 
-/*      $Log: vsinput.c,v $
+/*
+ *      $Log: vsinput.c,v $
+ *      Revision 1.5.1.2  2001/02/05 03:52:14  root
+ *      ÐÒÁ×ËÉ ÐÏÄ ÁÌØÆÕ, Tru64 cc
+ *
+ *      Revision 1.5.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.6  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
+ *      Revision 1.5  1999/02/20 04:59:40  mike
+ *      e50 '7701' (exform) A3 style. Many fixes.
+ *
+ *      Revision 1.4  1999/02/09 01:33:37  mike
+ *      Design flaw fix: it was not possible to change
+ *      the input address (in binary input mode (no TKH)).
+ *
  *      Revision 1.3  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *
@@ -572,4 +605,5 @@ parity(unsigned byte) {
  *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
- *   */
+ *
+ */

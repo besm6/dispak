@@ -1,15 +1,15 @@
 #
-#       $Id: Makefile,v 1.4 1999/01/27 04:29:11 mike Exp $
+#       $Id: Makefile,v 1.7.1.3 2001/02/06 07:32:31 dvv Exp $
 #
 SHELL   = /bin/sh
 YACC    = bison -y
-REL     =2.0
+REL     =2.3
 TOP     =vsix-$(REL)
-OPT     = -O3 -fomit-frame-pointer -finline-functions
-DEB     = # -DDEBUG -g
+OPT     = -ffast-math -O3 -fomit-frame-pointer
+DEB     = -DDEBUG -g
 CFLAGS  = ${OPT} ${DEB}
-CC      = gcc -D_GCC_ -m486
-#CC      = gcc -D_GCC_
+#CC      = gcc -D_GCC_ -m486
+CC      = gcc -D_GCC_ -Wall -pipe
 OBJS    = main.o cu.o optab.o arith.o debug.o input.o extra.o disk.o \
 		errtxt.o vsinput.o
 VSIOBJS = vsinmain.o vsinput.o disk.o
@@ -17,7 +17,7 @@ ITDOBJS = imgtodisk.o disk.o
 ZDOBJS  = zdump.o disk.o
 SRCS    = RCS
 DSRCS   = $(addprefix $(TOP)/,$(SRCS))
-DISKS   = 2048 2053 2113 2099 ibuf
+DISKS   = 2048 2053 2113 2099 2196 ibuf
 DDISKS  = $(addprefix diskdir/,$(DISKS))
 DDDISKS = $(addprefix $(TOP)/diskdir/,$(DISKS))
 TESTS   = tests
@@ -28,7 +28,7 @@ ALL     = vsix vsinput imgtodisk zdump dpout
 all: ${ALL}
 
 vsix: ${OBJS}
-	$(CC) $(CFLAGS) -o vsix $(OBJS) -lm
+	$(CC) $(CFLAGS) -o vsix $(OBJS) -lm -lrt
 
 vsinput:        $(VSIOBJS)
 	$(CC) $(CFLAGS) -o vsinput $(VSIOBJS)
@@ -67,6 +67,31 @@ disks.tgz:      $(DDISKS)
 	cd ..;tar cf - $(DDDISKS) | gzip > $(TOP)/$@
 #
 #       $Log: Makefile,v $
+#       Revision 1.7.1.3  2001/02/06 07:32:31  dvv
+#       *** empty log message ***
+#
+#       Revision 1.7.1.2  2001/02/05 03:52:14  root
+#       правки под альфу, Tru64 cc
+#
+#       Revision 1.7.1.1  2001/02/01 03:48:39  root
+#       e50 and -Wall fixes
+#
+#       Revision 1.9  2001/02/01 00:22:12  dvv
+#       *** empty log message ***
+#
+#       Revision 1.8  2001/01/31 22:58:43  dvv
+#       fixes to for whetstone and -Wall
+#
+#       Revision 1.7  1999/02/20 05:03:31  mike
+#       Rel. 2.3
+#
+#       Revision 1.6  1999/02/09 01:41:09  mike
+#       - Release 2.2.
+#       - New disk 2196 (krab).
+#
+#       Revision 1.5  1999/02/02 03:42:41  mike
+#       Release 2.1
+#
 #       Revision 1.4  1999/01/27 04:29:11  mike
 #       distrib targets updated.
 #

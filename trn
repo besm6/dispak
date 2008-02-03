@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#       $Id: trn,v 1.1 1999/01/27 00:43:42 mike Exp $
+#       $Id: trn,v 1.2 1999/02/09 01:35:35 mike Exp $
 #
 name=$1
 tf=trn$$
@@ -19,6 +19,10 @@ case $name in
 		;;
 	ekdisp)
 		zone=0147
+		size=0001
+		;;
+	spe66)
+		zone=0150
 		size=0001
 		;;
 	*)
@@ -51,6 +55,9 @@ run -p $tf
 rm $tf
 #
 #       $Log: trn,v $
+#       Revision 1.2  1999/02/09 01:35:35  mike
+#       added spe66.
+#
 #       Revision 1.1  1999/01/27 00:43:42  mike
 #       Initial revision
 #

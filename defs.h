@@ -1,4 +1,4 @@
-/*      $Id: defs.h,v 1.4 1999/01/27 01:56:12 mike Exp $    */
+/*      $Id: defs.h,v 1.5.1.4 2001/02/05 05:44:28 dvv Exp $    */
 
 #ifndef defs_h
 #define defs_h                          /* to avoid multiple inclusions */
@@ -13,7 +13,7 @@ typedef unsigned long   ulong;
 #include <stdio.h>
 #include <signal.h>
 
-#ifdef i386
+#if defined (i386) || defined (__alpha) || defined (__ia64)
 #ifndef M_WORDSWAP
 #define M_WORDSWAP
 #endif
@@ -31,9 +31,12 @@ typedef unsigned long   ulong;
 #define STATIC
 #define JHBSZ   16
 #define JMP(addr)       { \
-	jhbuf[jhbi] = (abpc << 16) | (pc = (addr)); \
+	pc = (addr); \
 	right = 0; \
-	jhbi = (jhbi + 1) % JHBSZ; \
+	if (!supmode) { \
+		jhbuf[jhbi] = (abpc << 16) | pc; \
+		jhbi = (jhbi + 1) % JHBSZ; \
+	} \
 }
 #else
 #define REGISTER register
@@ -78,7 +81,7 @@ typedef unsigned long   ulong;
 #endif
 
 typedef struct  {
-	unsigned        diskh;
+	void*           diskh;
 	ushort          offset;
 	ushort          diskno;
 	ushort          mode;
@@ -159,8 +162,8 @@ typedef struct  {                       /* pointer to a byte            */
 #define Lop1(w)         (((w).w_sh >> 7) & 0xf) /* 1-st structure op    */
 #define Lop2(w)         (((w).w_sh >> 4) & 0x3f)/* 2-nd structure op    */
 #define Lopcode(w)      (Lstruct(w) ? Lop1(w) | 0100 : Lop2(w))
-#define Laddr1(w)       (((w).w_b[1] << 8) & 0x7f00 | (w).w_b[2])
-#define Laddr2(w)       (((w).w_b[1] << 8) & 0x0f00 | (w).w_b[2])
+#define Laddr1(w)       ((((w).w_b[1] << 8) & 0x7f00) | (w).w_b[2])
+#define Laddr2(w)       ((((w).w_b[1] << 8) & 0x0f00) | (w).w_b[2])
 #define Laddr(w)        (Lstruct(w) ? Laddr1(w) : Laddr2(w) |   \
 			(Lexp(w) ? 070000 : 0)) /* address field        */
 
@@ -252,14 +255,14 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 #define STOP            goto _stop
 #define ABORT(ERR)      { \
 	pcm_dbg = pcm; \
-	if (err = _abort((ERR))) \
+	if ((err = _abort((ERR)))) \
 		STOP; \
 	else \
 		NEXT; \
 }
 
 #define ADDR(x) ((ushort)(x) & 077777)
-#define XADDR(x)        (ADDR(x) | supmode & sup_mmap)
+#define XADDR(x)        (ADDR(x) | (supmode & sup_mmap))
 
 #define NEGATIVE(R)     (((R).ml & 0x10000) != 0)
 
@@ -370,7 +373,7 @@ EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
 EXTERN char             *myname;        /* program name                 */
 EXTERN ddisk_t          disks[NDISKS];  /* disks & drums        */
-EXTERN unsigned         drumh;          /* our drums            */
+EXTERN void*            drumh;          /* our drums            */
 EXTERN unsigned         lpbufh;         /* lpr buffer handle    */
 EXTERN ushort           abpc;
 EXTERN uchar            abright;
@@ -383,7 +386,7 @@ EXTERN ushort           exitaddr;
 EXTERN alureg_t         user;           /* job id               */
 EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
-extern uchar            koi8[], upp[];
+extern uchar            koi8[], uppl[], uppr[], *upp;
 EXTERN ushort           phdrum;
 #ifdef DEBUG
 EXTERN ulong            jhbuf[JHBSZ];
@@ -421,9 +424,74 @@ extern void     alrm_handler(int sig);
 
 extern unsigned char    *errtxt[];
 
+
+void command (void);
+void where (void);
+
+/* extra.c */
+int emu_call (void);
+void terminate (void);
+int e50 (void);
+int e51 (void);
+int e53 (void);
+int e60 (void);
+int e61 (void);
+int e62 (void);
+int e63 (void);
+
+/* arith.c */
+int add (void);
+int asx (void);
+int elfun (int);
+int print (void);
+int physaddr (void);
+int deb (void);
+int ddio (void);
+int term (void);
+int resources (void);
+int eexit (void);
+
+/* debug.y */
+void help (void);
+void breakpoint (int);
+void bpw (int);
+void okno (int);
+
+/* cu.c */
+void unpack (ushort);
+
+#ifdef __GNUC__
+#define	GCC_SPECIFIC(x)	x
+#else
+#define	GCC_SPECIFIC(x)
+#endif	/* __GNUC__ */
+
 #endif  /* defs_h */
 
 /*      $Log: defs.h,v $
+ *      Revision 1.5.1.4  2001/02/05 05:44:28  dvv
+ *      добавлена поддержка ia64, Linux
+ *
+ *      Revision 1.5.1.3  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.5.1.2  2001/02/01 07:39:17  root
+ *      dual output mode
+ *
+ *      Revision 1.5.1.1  2001/02/01 03:47:26  root
+ *      *** empty log message ***
+ *
+ *      Revision 1.7  2001/02/01 00:14:28  dvv
+ *      more -Wall fixes
+ *
+ *      Revision 1.6  2001/01/31 22:59:46  dvv
+ *      fixes for Whetstone FORTRAN test;
+ *      fixes to shut -Wall up and (more importantly) make scanf (and printf
+ *      	args to match the formats
+ *
+ *      Revision 1.5  1999/02/09 01:23:14  mike
+ *      jmp history now only stores user mode addresses.
+ *
  *      Revision 1.4  1999/01/27 01:56:12  mike
  *      bugfix in the optimized LOAD.
  *

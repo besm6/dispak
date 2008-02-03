@@ -7,12 +7,20 @@
 #include "iobuf.h"
 
 #define ETX     003
+#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
 
-static char     rcsid[] = "$Id: extra.c,v 1.3 1999/01/27 00:24:50 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: extra.c,v 1.6.1.6 2001/02/06 07:37:35 dvv Exp $";
 
-uchar   upp[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
+uchar   uppr[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
 АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЫЬЭЮЯD\
 FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"Ъ`'";
+
+uchar   uppl[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
+AБBГДEЖЗИЙKЛMHOПPCTYФXЦЧШЩЫЬЭЮЯD\
+FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"Ъ`'";
+
+uchar  *upp = uppr;
+
 uchar   koi8[] = {
 	0017,   0133,   0134,   0034,   0127,   0126,   0121,   0033,
 	0022,   0023,   0031,   0012,   0015,   0013,   0016,   0014,
@@ -164,7 +172,7 @@ print(void)
 	pos = 0;
 
 	while (bp.p_w)
-		if (!indef && (bp.p_w == addr1 + 1) ||
+		if ((!indef && (bp.p_w == addr1 + 1)) ||
 				(addr1 == 0 && ++cnt == 128) ||
 				(isend(c = getbyte(&bp)))) {
 			lflush(line);
@@ -191,12 +199,16 @@ print(void)
 				putchar('\n');
 				break;
 			case 0143:
+			case 0242:
 				continue;
 			case 0173:
 				pos = getbyte(&bp) % 128;
 				continue;
 			default:
-				line[pos++] = upp[c];
+				if (c < sizeof uppr)
+					line[pos++] = upp[c];
+				else
+					line[pos++] = '$';
 				break;
 			}
 			if (pos == 128) {
@@ -213,14 +225,21 @@ int
 e53(void) {
 	switch (reg[016]) {
 	case 010: {
-		time_t          t;
 		struct tm       *d;
-		struct timeval  cur;
-		time(&t);
-		d = localtime(&t);
-		gettimeofday(&cur, NULL);
-		acc.r = (d->tm_hour * 60 + d->tm_min * 60 + d->tm_sec) * 50 +
-				cur.tv_usec / 20000;
+#ifdef __linux
+		struct timeval t;
+		gettimeofday (&t, NULL);
+#else
+		struct timespec t;
+		clock_gettime (CLOCK_REALTIME, &t);
+#endif
+		d = localtime (&t.tv_sec);
+		acc.r = ((d->tm_hour * 60 + d->tm_min) * 60 + d->tm_sec) * 50 +
+#ifdef __linux
+				t.tv_usec / 20000;
+#else
+				t.tv_nsec / 20000000;
+#endif
 		acc.l = 0;
 		return E_SUCCESS;
 	}
@@ -259,6 +278,8 @@ e53(void) {
 		else
 			(void) eraise(acc.r & 0xffffff);
 		return E_SUCCESS;
+	case 000:
+		return elfun(EF_ARCTG);
 	default:
 		return E_UNIMP;
 	}
@@ -272,8 +293,18 @@ e51(void) {
 int
 e50(void) {
 	switch (reg[016]) {
+	case 0:
+		return elfun(EF_SQRT);
 	case 1:
 		return elfun(EF_SIN);
+	case 2:
+		return elfun(EF_COS);
+	case 3:
+		return elfun(EF_ARCTG);
+	case 5:
+		return elfun(EF_ALOG);
+	case 6:
+		return elfun(EF_EXP);
 	case 7:
 		return elfun(EF_ENTIER);
 	case 0100:
@@ -320,7 +351,7 @@ e50(void) {
 			(d->tm_mon / 10) << 4  |
 			(d->tm_mon % 10);
 		acc.r = (d->tm_year % 10) << 20 |
-			(d->tm_year / 10) << 16 |
+			((d->tm_year / 10) %10) << 16 |
 			1;
 		return E_SUCCESS;
 	}
@@ -332,13 +363,13 @@ e50(void) {
 		acc.r = acc.l = 0;
 		return E_SUCCESS;
 	case 0131: {
-		unsigned        u, ndisk;
+		unsigned        u;
 
 		u = acc.l >> 18;
 		if ((((acc.l >> 12) &  077) != 077) | (u < 030) | (u > 067))
 			return E_CWERR;
 		acc.l = 0;
-		if (disks[u].diskh) {
+		if (disks[u].diskh || disks[u].diskno) {
 			acc.r = 3;
 			return E_SUCCESS;
 		}
@@ -355,6 +386,8 @@ e50(void) {
 		acc.r = 0;
 		return E_SUCCESS;
 	}
+	case 0135:
+		return E_SUCCESS;
 	case 0136:
 		return E_SUCCESS;
 	case 0156:
@@ -366,6 +399,9 @@ e50(void) {
 		return E_SUCCESS;
 	case 0177:      /* resource request     */
 		acc.l = acc.r = 0;
+		return E_SUCCESS;
+	case 0200:      /* page status  */
+		acc.l = acc.r = 0;      /* present */
 		return E_SUCCESS;
 	case 0202:
 		{
@@ -401,6 +437,7 @@ e50(void) {
 		acc.r = reg[016] = pc;
 		return E_SUCCESS;
 	default:
+printf ("e50 %o\n", reg[016]);
 		return E_UNIMP;
 	}
 }
@@ -429,6 +466,9 @@ e62(void) {
 		acc.l = 0;
 		acc.r = 077777;
 		return E_SUCCESS;
+	case 0103:
+		acc.l = acc.r = 0;
+		return E_SUCCESS;
 	case 0120:
 		return E_SUCCESS;
 	case 0124:
@@ -446,18 +486,17 @@ e62(void) {
 			if ((disks[u].offset = reg[016] & 0777) == 0777) {
 				if (disks[u].diskh)
 					disk_close(disks[u].diskh);
-				disks[u].diskno = disks[u].diskh = 0;
+				disks[u].diskh = 0;
+				disks[u].diskno = 0;
 				return E_SUCCESS;
 			}
-		} else
-			return E_UNIMP;
+		}
+		return E_UNIMP;
 	}
 }
 
 int
 e63(void) {
-	unsigned        u;
-	alureg_t        r;
 	struct timeval  ct;
 
 	switch (reg[016]) {
@@ -501,9 +540,7 @@ e61(void) {
 
 int
 deb(void) {
-	unsigned        u;
 	alureg_t        r;
-	struct timeval  ct;
 
 	LOAD(r, reg[016]);
 	JMP(ADDR(r.l));
@@ -513,6 +550,7 @@ deb(void) {
 int
 ddio(void) {
 	ushort          addr = reg[016], u, zone;
+       ushort          sector;
 	uinstr_t        uil, uir;
 	int             r;
 	uchar           buf[6144];
@@ -533,19 +571,32 @@ ddio(void) {
 		zone += (u - (phdrum & 077)) * 040;
 		u = phdrum >> 8;
 	}
-	if (!disks[u].diskh)
-	    if (!disks[u].diskno)
+	if (!disks[u].diskh) {
+	    if (!disks[u].diskno) {
 		return E_CWERR;
-	    else
+	    } else {
 		if (!(disks[u].diskh = disk_open(disks[u].diskno, disks[u].mode)))
 			return E_INT;
+	    }
+	}
+
 	if (uil.i_reg & 8) {
+       /* согласно ВЗУ и ХЛАМу, 36-й разряд означает, что номер "зоны"
+        * есть не номер тракта, а номер сектора (обмен по КУС).
+        */
+               if (uil.i_addr & 04000) {
+                 zone = uir.i_addr & 0177; 
+                 sector = zone & 3;
+                 zone >>= 2;
+               } else {
+                 sector = (uir.i_addr >> 6) & 3;
+               }
 		r = disk_read(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
 			(char *)buf);
 		if (!(uil.i_opcode & 010)) {
 			memcpy(
-				buf + ((uir.i_addr >> 6) & 3) * 256,
+                               buf + sector * 256 * 6,
 				core + addr + (uil.i_addr & 3) * 256,
 				256 * 6
 			);
@@ -572,7 +623,7 @@ ddio(void) {
 		return E_DISKERR;
 	if (uil.i_reg & 8 && uil.i_opcode & 010) {
 		memcpy(core + addr + (uil.i_addr & 3) * 256,
-		       buf + ((uir.i_addr >> 6) & 3) * 256,
+                      buf + sector * 256 * 6,
 		       256 * 6);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		for (u = addr + (uil.i_addr & 3) * 256;
@@ -591,6 +642,10 @@ ttout(uchar flags, ushort a1, ushort a2) {
 
 	sp = core[a1].w_b;
 	dp = buf;
+	if (flags == 0220) {
+		PUTB(' ');
+		++sp;
+	}
 	while (((dp - buf) < sizeof(buf)) && ((dp - buf) < (a2 - a1 + 1) * 6)) {
 		if (flags & 1) {
 			PUTB(*sp & 0x7f);
@@ -610,6 +665,12 @@ ttout(uchar flags, ushort a1, ushort a2) {
 			break;
 		case 0143:
 			break;
+		case 021:
+			if (flags == 0220) {
+				PUTB('\n');
+				goto done;
+			}
+			/* fall thru */
 		default:
 			if (*sp < 0134)
 				PUTB(upp[*sp]);
@@ -707,6 +768,11 @@ oporos:
 			acc.l = 010000002;
 			acc.r = 012;
 			return E_SUCCESS;
+		case 0220:
+			ttout(uil.i_opcode,
+					ADDR(reg[uil.i_reg] + uil.i_addr),
+					ADDR(reg[uir.i_reg] + uir.i_addr));
+			return E_SUCCESS;
 		default:
 			return E_UNIMP;
 		}
@@ -725,12 +791,25 @@ physaddr(void) {
 		acc.l = 046000000;
 		acc.r = IPZ;
 		break;
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+		LOAD(acc, addr | 0100000);
+		break;
 	case IPZ + 077:
 		acc = user;
 		break;
 	case IPZ + 040:
 		acc.l = 0;
 		acc.r = 077;
+		break;
+	case IPZ + 071:                 /* общтом */
+		acc.l = 0;
+		acc.r = 0;
 		break;
 	case 0221:                      /* GOD? */
 		acc.l = 0;
@@ -772,10 +851,11 @@ resources(void) {
 			if (arg[i] == 077)
 				break;
 			if (!disks[arg[i]].diskno)
-				return E_RESOP;
+				continue;
 			if (disks[arg[i]].diskh)
 				disk_close(disks[arg[i]].diskh);
-			disks[arg[i]].diskno = disks[arg[i]].diskh = 0;
+			disks[arg[i]].diskh = 0;
+			disks[arg[i]].diskno = 0;
 		}
 		return E_SUCCESS;
 	case 047:
@@ -866,9 +946,12 @@ rpt:
 	switch (c) {
 	case 0175:
 	case 0214:
+	case 0341:
 		return '\n';
 	case 0143:
 		goto rpt;
+	case 0342:
+		return '`';
 	}
 	return upp[c];
 }
@@ -878,9 +961,22 @@ nextw(void) {
 	return getword(&txt);
 }
 
+static ushort   diagaddr;
+
 static void
 diag(char *s) {
-	fputs(s, stderr);
+	uchar    *cp, *dp;
+
+	if (diagaddr) {
+		for (cp = s, dp = (uchar *) (core + diagaddr + 1); *cp; ++cp, ++dp)
+			*dp = KOI2UPP(*cp);
+		*dp = 0172;
+		enreg.l = 0;
+		enreg.r = strlen(s) / 6 + 1;
+		STORE(enreg, diagaddr);
+		fputs(s, stderr);
+	} else
+		fputs(s, stderr);
 }
 
 static void
@@ -891,9 +987,11 @@ exform(void) {
 	txt.p_w = ADDR(acc.r);
 	txt.p_b = 0;
 	w = getword(&txt);
-	if (w == TKH000)
+	diagaddr = 0;
+	if ((w & 0xffffff000000ull) == TKH000) {
+		diagaddr = ADDR(w);
 		r = vsinput(uget, diag, 1);
-	else {
+	} else {
 		--txt.p_w;
 		r = vsinput(uget, diag, 0);
 	}
@@ -913,7 +1011,7 @@ emu_call(void) {
 		char            *addr;
 		int             r;
 
-		u = acc.l >> 22 & 7 | acc.r >> 7 & 7;
+		u = (acc.l >> 22 & 7) | (acc.r >> 7 & 7);
 		if (u >= OSD_NUM)
 			return E_INT;
 		u += OSD_OFF;
@@ -934,7 +1032,52 @@ emu_call(void) {
 	}
 }
 
-/*      $Log: extra.c,v $
+/*
+ *      $Log: extra.c,v $
+ *      Revision 1.6.1.6  2001/02/06 07:37:35  dvv
+ *      Лёнины правки Э70
+ *
+ *      Revision 1.3.2.2  2001/02/06 07:34:53  dvv
+ *      Лёнины правки Э70
+ *
+ *      Revision 1.6.1.5  2001/02/05 05:44:28  dvv
+ *      добавлена поддержка ia64, Linux
+ *
+ *      Revision 1.6.1.4  2001/02/05 03:52:14  root
+ *      правки под альфу, Tru64 cc
+ *
+ *      Revision 1.6.1.3  2001/02/02 14:45:17  root
+ *      0242 -> пробел
+ *
+ *      Revision 1.6.1.2  2001/02/01 07:38:18  root
+ *      dual output mode
+ *
+ *      Revision 1.6.1.1  2001/02/01 03:48:39  root
+ *      e50 and -Wall fixes
+ *
+ *      Revision 1.7  2001/01/31 22:58:43  dvv
+ *      fixes to for whetstone and -Wall
+ *
+ *      Revision 1.6  1999/02/20 04:59:40  mike
+ *      e50 '7701' (exform) A3 style. Many fixes.
+ *
+ *      Revision 1.5  1999/02/09 01:29:55  mike
+ *      - fixed e50 '131' (BUSY ret code)
+ *      - added
+ *      	e50 '103'
+ *      	e50 '135'
+ *      	e50 '200'
+ *      	e71 to operator's console
+ *      	e65 '1' - '7' (CPU console switches)
+ *
+ *      Revision 1.4  1999/02/02 03:37:33  mike
+ *      e72 ='20xxxxxxxx77' should not be checking for the
+ *          presence of a volume. And it doesn't any more.
+ *      Allowed reading of IPZ(071) (общтом).
+ *
+ *      Revision 1.3.2.1  2001/02/05 22:06:16  dvv
+ *      Лёнины правки для Э70 (чтобы *algol работал)
+ *
  *      Revision 1.3  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *
@@ -944,4 +1087,5 @@ emu_call(void) {
  *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision
- *   */
+ *
+ */

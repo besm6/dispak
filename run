@@ -1,16 +1,22 @@
 #!/bin/csh
 #
-#       $Id: run,v 1.1 1999/01/27 00:43:42 mike Exp $
+#       $Id: run,v 1.1.1.1 2001/02/01 03:48:39 root Exp $
 #
-set cmd=vsix
+set cmd=./vsix
 while ( $#argv > 1 )
 	set cmd = ( $cmd $argv[1] )
 	shift argv
 end
-set no=`vsinput $argv[1]` && exec $cmd $no
+set no=`./vsinput $argv[1]` && exec $cmd $no
 echo $no
 #
 #       $Log: run,v $
+#       Revision 1.1.1.1  2001/02/01 03:48:39  root
+#       e50 and -Wall fixes
+#
+#       Revision 1.2  2001/01/31 22:58:43  dvv
+#       fixes to for whetstone and -Wall
+#
 #       Revision 1.1  1999/01/27 00:43:42  mike
 #       Initial revision
 #

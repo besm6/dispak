@@ -1,4 +1,4 @@
-/*      $Id: optab.h,v 1.2 1999/01/27 00:24:50 mike Exp $    */
+/*      $Id: optab.h,v 1.3 1999/02/02 03:26:27 mike Exp $    */
 
 /*
  *      instructions table entry
@@ -48,6 +48,7 @@ extern optab_t  optab[];
 #define I_STI   29
 #define I_YTA   30
 #define I_IRET  31
+#define I_MOD   32
 
 /*
  *      instruction flags
@@ -69,6 +70,9 @@ extern optab_t  optab[];
 #define F_AROP          0x800
 
 /*      $Log: optab.h,v $
+ *      Revision 1.3  1999/02/02 03:26:27  mike
+ *      Allowed 002 (mod) op in supervisor mode.
+ *
  *      Revision 1.2  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.
  *
