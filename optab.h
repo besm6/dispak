@@ -1,4 +1,4 @@
-/*      $Id: optab.h,v 1.3 1999/02/02 03:26:27 mike Exp $    */
+/*      $Id: optab.h,v 1.5 2001/02/17 03:41:28 mike Exp $    */
 
 /*
  *      instructions table entry
@@ -9,6 +9,10 @@ typedef struct  {
 	int     (*o_impl)();
 	char    o_inline;
 	ushort  o_flags;
+#ifdef DEBUG
+	ulong   o_count;
+	ulong   o_ticks;
+#endif
 }       optab_t;
 
 extern optab_t  optab[];
@@ -69,7 +73,14 @@ extern optab_t  optab[];
 #define F_STACK         0x400
 #define F_AROP          0x800
 
-/*      $Log: optab.h,v $
+/*
+ *      $Log: optab.h,v $
+ *      Revision 1.5  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
+ *      Revision 1.4  2001/02/15 05:19:05  mike
+ *      stats gathering.
+ *
  *      Revision 1.3  1999/02/02 03:26:27  mike
  *      Allowed 002 (mod) op in supervisor mode.
  *

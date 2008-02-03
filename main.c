@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include "defs.h"
+#ifdef DEBUG
+#include "optab.h"
+#endif
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: main.c,v 1.4.1.3 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: main.c,v 1.7 2001/02/24 04:22:19 mike Exp $";
 
 static struct   {
 	int     dsk;
@@ -25,6 +29,9 @@ ulong           run();
 extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            dump_pout(void);
+#ifdef DEBUG
+void            stat_out(void);
+#endif
 
 int
 main(argc, argv)
@@ -33,7 +40,7 @@ main(argc, argv)
 	int             i, k;
 	ulong           icnt;
 	double          sec;
-	void*           nh;
+	void            *nh;
 
 	if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
 		signal (SIGTERM, catchsig);
@@ -56,6 +63,9 @@ main(argc, argv)
 					break;
 				case 't':       /* trace on */
 					++trace;
+					break;
+				case 's':       /* statistics on */
+					++stats;
 					break;
 				case 'p':
 					++pflag;
@@ -132,6 +142,10 @@ usage:
 	fprintf(stderr,
 		"%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
 			icnt, sec, (long)(icnt/sec), (sec * 1000000) / icnt);
+#ifdef DEBUG
+	if (stats)
+		stat_out();
+#endif
 	dump_pout();
 	terminate();
 	ib_cleanup();
@@ -168,7 +182,7 @@ startwatch(void) {
 
 static int
 sv_load() {
-	void*           dh;
+	void            *dh;
 	ushort          z;
 	reg_t           cp;
 	int             i;
@@ -208,8 +222,41 @@ dump_pout(void) {
 	fclose(fp);
 }
 
+#ifdef DEBUG
+
+int
+opcomp(const void *o1, const void *o2) {
+	return ((optab_t *) o1)->o_count - ((optab_t *) o2)->o_count;
+}
+
+void
+stat_out(void) {
+	int     i;
+	int     total = 0;
+
+	qsort(optab, 0120, sizeof(optab[0]), opcomp);
+	for (i = 0; i < 0120; ++i)
+		total += optab[i].o_count;
+
+	for (i = 0; i < 0120; ++i)
+		if (optab[i].o_count)
+			printf("%s\t%10ld\t%7.4f%%\t%ld cpi\n",
+				optab[i].o_name,
+				optab[i].o_count,
+				100.0 * optab[i].o_count / total,
+				optab[i].o_ticks / optab[i].o_count);
+}
+
+#endif
+
 /*
  *      $Log: main.c,v $
+ *      Revision 1.7  2001/02/24 04:22:19  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.6  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.4.1.3  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *
@@ -223,6 +270,9 @@ dump_pout(void) {
  *      fixes for Whetstone FORTRAN test;
  *      fixes to shut -Wall up and (more importantly) make scanf (and printf
  *      	args to match the formats
+ *
+ *      Revision 1.5  2001/02/15 03:35:05  mike
+ *      Things to gather statistics.
  *
  *      Revision 1.4  1999/02/02 03:30:30  mike
  *      Added e66.

@@ -5,7 +5,7 @@
 #include "disk.h"
 #include "iobuf.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: input.c,v 1.2.1.1 2001/02/01 03:48:39 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: input.c,v 1.4 2001/02/24 03:35:12 mike Exp $";
 
 static FILE             *ibuf;
 static char             ibufname[MAXPATHLEN];
@@ -128,7 +128,14 @@ ib_cleanup(void) {
 		unlink(ibufname);
 }
 
-/*      $Log: input.c,v $
+/*
+ *      $Log: input.c,v $
+ *      Revision 1.4  2001/02/24 03:35:12  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.3  2001/02/17 03:46:43  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.2.1.1  2001/02/01 03:48:39  root
  *      e50 and -Wall fixes
  *

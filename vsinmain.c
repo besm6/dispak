@@ -3,7 +3,7 @@
 #include "defs.h"
 #include "iobuf.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinmain.c,v 1.1.1.2 2001/02/01 14:43:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinmain.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
 
 FILE    *inf;
 char    *prog;
@@ -89,7 +89,11 @@ nextw(void) {
 	return 0;
 }
 
-/*      $Log: vsinmain.c,v $
+/*
+ *      $Log: vsinmain.c,v $
+ *      Revision 1.2  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.2  2001/02/01 14:43:14  root
  *      dual output
  *

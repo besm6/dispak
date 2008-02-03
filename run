@@ -1,6 +1,6 @@
 #!/bin/csh
 #
-#       $Id: run,v 1.1.1.1 2001/02/01 03:48:39 root Exp $
+#       $Id: run,v 1.2 2001/02/17 03:41:28 mike Exp $
 #
 set cmd=./vsix
 while ( $#argv > 1 )
@@ -11,6 +11,9 @@ set no=`./vsinput $argv[1]` && exec $cmd $no
 echo $no
 #
 #       $Log: run,v $
+#       Revision 1.2  2001/02/17 03:41:28  mike
+#       Merge with dvv (who sometimes poses as root) and leob.
+#
 #       Revision 1.1.1.1  2001/02/01 03:48:39  root
 #       e50 and -Wall fixes
 #

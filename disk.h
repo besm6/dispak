@@ -1,4 +1,4 @@
-/*      $Id: disk.h,v 1.1.1.2 2001/02/05 03:52:14 root Exp $    */
+/*      $Id: disk.h,v 1.2 2001/02/17 03:41:28 mike Exp $    */
 
 #ifndef md_h_included
 #define md_h_included
@@ -28,11 +28,11 @@
 
 #define ZONE_SIZE       6144        /* bytes */
 
-extern  void*   disk_open(u_int diskno_decimal, u_int mode);   /* NULL if failure */
-extern  int     disk_close(void* disk_descr);
-extern  int     disk_setmode(void* disk_descr, u_int mode);
-extern  int     disk_readi(void* disk_descr, u_int zone, char* buf, u_int mode);
-extern  int     disk_writei(void* disk_descr, u_int zone, char* buf, u_int mode);
+extern  void    *disk_open(u_int diskno_decimal, u_int mode);   /* NULL if failure */
+extern  int     disk_close(void *disk_descr);
+extern  int     disk_setmode(void *disk_descr, u_int mode);
+extern  int     disk_readi(void *disk_descr, u_int zone, char* buf, u_int mode);
+extern  int     disk_writei(void *disk_descr, u_int zone, char* buf, u_int mode);
 
 #define disk_read(a,b,c)    disk_readi(a,b,c,DISK_MODE_QUIET)
 #define disk_write(a,b,c)   disk_writei(a,b,c,DISK_MODE_QUIET)
@@ -45,7 +45,11 @@ extern  int     disk_writei(void* disk_descr, u_int zone, char* buf, u_int mode)
 
 #endif
 
-/*      $Log: disk.h,v $
+/*
+ *      $Log: disk.h,v $
+ *      Revision 1.2  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.2  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *

@@ -1,4 +1,4 @@
-/*      $Id: diski.h,v 1.1.1.1 2001/02/01 03:47:26 root Exp $    */
+/*      $Id: diski.h,v 1.2 2001/02/17 03:41:28 mike Exp $    */
 
 #ifndef mdi_h_included
 #define mdi_h_included
@@ -48,7 +48,11 @@ typedef struct disk {
 
 #endif
 
-/*      $Log: diski.h,v $
+/*
+ *      $Log: diski.h,v $
+ *      Revision 1.2  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.1  2001/02/01 03:47:26  root
  *      *** empty log message ***
  *

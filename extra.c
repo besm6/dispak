@@ -9,7 +9,7 @@
 #define ETX     003
 #define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: extra.c,v 1.6.1.6 2001/02/06 07:37:35 dvv Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: extra.c,v 1.11 2001/02/24 04:14:29 mike Exp $";
 
 uchar   uppr[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
 áâ÷çäåöúéêëìíîïðòóôõæèãþûýùøüàñD\
@@ -144,7 +144,8 @@ print(void)
 	alureg_t        cw;
 	uinstr_t        cwl, cwr;
 	ushort          addr0, addr1;
-	uchar           indef, c;
+	uchar           indef;
+	uchar           c = 0;
 	ptr             bp;
 	int             cnt = 0, pos;
 	uchar           line[128];
@@ -326,7 +327,7 @@ e50(void) {
 		{
 			unsigned        u = (acc.r >> 12) & 077;
 			if (disks[u].diskno)
-				acc.r = disks[u].diskno;
+				acc.r = to_2_10(disks[u].diskno);
 			else if (!disks[u].diskh)
 				acc.r = 0;
 			else
@@ -351,7 +352,7 @@ e50(void) {
 			(d->tm_mon / 10) << 4  |
 			(d->tm_mon % 10);
 		acc.r = (d->tm_year % 10) << 20 |
-			((d->tm_year / 10) %10) << 16 |
+			((d->tm_year / 10) % 10) << 16 |
 			1;
 		return E_SUCCESS;
 	}
@@ -437,7 +438,6 @@ e50(void) {
 		acc.r = reg[016] = pc;
 		return E_SUCCESS;
 	default:
-printf ("e50 %o\n", reg[016]);
 		return E_UNIMP;
 	}
 }
@@ -550,7 +550,7 @@ deb(void) {
 int
 ddio(void) {
 	ushort          addr = reg[016], u, zone;
-       ushort          sector;
+	ushort          sector = 0;
 	uinstr_t        uil, uir;
 	int             r;
 	uchar           buf[6144];
@@ -596,7 +596,7 @@ ddio(void) {
 			(char *)buf);
 		if (!(uil.i_opcode & 010)) {
 			memcpy(
-                               buf + sector * 256 * 6,
+				buf + sector * 256 * 6,
 				core + addr + (uil.i_addr & 3) * 256,
 				256 * 6
 			);
@@ -623,7 +623,7 @@ ddio(void) {
 		return E_DISKERR;
 	if (uil.i_reg & 8 && uil.i_opcode & 010) {
 		memcpy(core + addr + (uil.i_addr & 3) * 256,
-                      buf + sector * 256 * 6,
+		       buf + sector * 256 * 6,
 		       256 * 6);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		for (u = addr + (uil.i_addr & 3) * 256;
@@ -1027,13 +1027,92 @@ emu_call(void) {
 			return E_DISKERR;
 		return E_SUCCESS;
 	}
+	case 'b':       /* break on first cmd */
+		breakflg = acc.r & 1;
+		break;
+	case 'v':       /* visual on */
+		visual = acc.r & 1;
+		break;
+	case 't':       /* trace on */
+		trace = acc.r & 1;
+		break;
+	case 's':       /* statistics on */
+		stats = acc.r & 1;
+		break;
+	case 'p':
+		pflag = acc.r & 1;
+		break;
+	case 'x':       /* native xcodes */
+		xnative = acc.r & 1;
+		break;
 	default:
 		return E_INT;
 	}
+	return E_SUCCESS;
+}
+
+#define FUWORD(a)       ((core[a].w_b[2] << 24) | (core[a].w_b[3] << 16) | \
+			(core[a].w_b[4] << 8) | core[a].w_b[5])
+
+int
+usyscall(void) {
+	ushort  ap = reg[016];
+	int     r;
+	ulong   ftn, a0, a1, a2;
+	extern  errno;
+
+	ftn = FUWORD(ap); ap = ADDR(ap + 1);
+	a0 = FUWORD(ap); ap = ADDR(ap + 1);
+	a1 = FUWORD(ap); ap = ADDR(ap + 1);
+	a2 = FUWORD(ap);
+
+	switch (ftn) {
+	case 0: /* open(path, flags, mode) */
+		r = open((char *) core + a0, a1, a2);
+		break;
+	case 1: /* close(fd) */
+		r = close(a0);
+		break;
+	case 2: /* read(fd, buf, size) */
+		r = read(a0, (char *) core + a1, a2);
+		break;
+	case 3: /* write(fd, buf, size) */
+		r = write(a0, (char *) core + a1, a2);
+		break;
+	case 4: /* lseek(fd, offset, whence) */
+		r = lseek(a0, a1, a2);
+		break;
+	default:
+		return E_CWERR;
+	}
+	acc.l = r >> 24;
+	acc.r = r & 0xffffff;
+	reg[016] = errno;
+	return E_SUCCESS;
+}
+
+ulong
+to_2_10(ulong src) {
+	ulong   dst = 0;
+	int     i;
+
+	for (i = 0; i < 6; ++i) {
+		if (!src)
+			break;
+		dst |= (src % 10) << (i * 4);
+		src /= 10;
+	}
+	return dst;
 }
 
 /*
  *      $Log: extra.c,v $
+ *      Revision 1.11  2001/02/24 04:14:29  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.10  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.6.1.6  2001/02/06 07:37:35  dvv
  *      ì£ÎÉÎÙ ÐÒÁ×ËÉ ü70
  *
@@ -1058,6 +1137,18 @@ emu_call(void) {
  *      Revision 1.7  2001/01/31 22:58:43  dvv
  *      fixes to for whetstone and -Wall
  *
+ *      Revision 1.9  2001/02/15 03:57:36  mike
+ *      - added some elem funcs.
+ *      - emu_call to set emulator flags
+ *      - fixed Ü50 '105' to return vol id in bcd.
+ *
+ *      Revision 1.8  2000/01/18 02:39:03  mike
+ *      Forgot the return value for usyscall()
+ *      /
+ *
+ *      Revision 1.7  2000/01/18 02:22:58  mike
+ *      On dvv's request access implemented to some unix sys calls.
+ *
  *      Revision 1.6  1999/02/20 04:59:40  mike
  *      e50 '7701' (exform) A3 style. Many fixes.
  *
@@ -1074,9 +1165,6 @@ emu_call(void) {
  *      e72 ='20xxxxxxxx77' should not be checking for the
  *          presence of a volume. And it doesn't any more.
  *      Allowed reading of IPZ(071) (ÏÂÝÔÏÍ).
- *
- *      Revision 1.3.2.1  2001/02/05 22:06:16  dvv
- *      ì£ÎÉÎÙ ÐÒÁ×ËÉ ÄÌÑ ü70 (ÞÔÏÂÙ *algol ÒÁÂÏÔÁÌ)
  *
  *      Revision 1.3  1999/01/27 00:24:50  mike
  *      e64 and e62 '41' implemented in supervisor.

@@ -1,4 +1,13 @@
 #include <stdio.h>
+#include <strings.h>
+
+#ifdef __GNUC__
+#define	GCC_SPECIFIC(x)	x
+#else
+#define	GCC_SPECIFIC(x)
+#endif	/* __GNUC__ */
+
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: dpout.c,v 1.4 2001/02/24 03:31:03 mike Exp $";
 
 #define PARASZ  (256 * 6)
 #define PUT(c)  { \
@@ -24,7 +33,8 @@ void            dump(unsigned sz), rstline();
 
 int
 main(int argc, char **argv) {
-	unsigned        w = 0, b;
+	unsigned        w = 0;
+	unsigned        b = 0;
 
 	if (argc != 2) {
 		fprintf(stderr, "Arg count.\n");
@@ -115,3 +125,13 @@ rstline(void) {
 	pos = 0;
 	maxp = -1;
 }
+
+/*
+ *      $Log: dpout.c,v $
+ *      Revision 1.4  2001/02/24 03:31:03  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.3  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
+ */

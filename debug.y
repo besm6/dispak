@@ -9,7 +9,7 @@
 
 #define PROMPT "- "
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: debug.y,v 1.5.1.1 2001/02/01 03:47:26 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: debug.y,v 1.6 2001/02/17 03:41:28 mike Exp $";
 
 static alureg_t wd;
 extern void     ib_cleanup(void);
@@ -385,6 +385,9 @@ okno (int trace)
 
 /*
  *      $Log: debug.y,v $
+ *      Revision 1.6  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.5.1.1  2001/02/01 03:47:26  root
  *      *** empty log message ***
  *

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: zdump.c,v 1.2.1.2 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: zdump.c,v 1.3 2001/02/17 03:41:28 mike Exp $";
 
 static char     upp[] = "0123456789+-/,. E@()x=;[]*'\"#<>:\
 áâ÷çäåöúéêëìíîïğòóôõæèãşûıùøüàñD\
@@ -11,7 +11,7 @@ void dump (unsigned, unsigned, unsigned);
 
 int
 main(int argc, char **argv) {
-	void*     diskh;
+	void      *diskh;
 	unsigned  diskno, zs, ze, addr = 0, l, r, b = 0;
 	unsigned char   buf[6144], *cp;
 
@@ -90,7 +90,11 @@ dump(unsigned addr, unsigned l, unsigned r) {
 	putchar('\n');
 }
 
-/*      $Log: zdump.c,v $
+/*
+ *      $Log: zdump.c,v $
+ *      Revision 1.3  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.2.1.2  2001/02/05 03:52:14  root
  *      ĞÒÁ×ËÉ ĞÏÄ ÁÌØÆÕ, Tru64 cc
  *

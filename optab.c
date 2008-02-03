@@ -1,7 +1,7 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: optab.c,v 1.3.1.2 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: optab.c,v 1.4 2001/02/17 03:41:28 mike Exp $";
 
 extern int      add(), aax(), aex(), arx(),
 		avx(), aox(), b6div(),  mul(),  apx(), aux(), acx(),
@@ -91,7 +91,11 @@ optab_t optab[] = {
 	{"vlm", 0,      I_VLM,  F_REG, },                       /*  37 */
 };
 
-/*      $Log: optab.c,v $
+/*
+ *      $Log: optab.c,v $
+ *      Revision 1.4  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.3.1.2  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *

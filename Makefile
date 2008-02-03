@@ -1,9 +1,9 @@
 #
-#       $Id: Makefile,v 1.7.1.3 2001/02/06 07:32:31 dvv Exp $
+#       $Id: Makefile,v 1.11 2001/02/24 04:25:29 mike Exp $
 #
 SHELL   = /bin/sh
 YACC    = bison -y
-REL     =2.3
+REL     =2.4
 TOP     =vsix-$(REL)
 OPT     = -ffast-math -O3 -fomit-frame-pointer
 DEB     = -DDEBUG -g
@@ -28,7 +28,7 @@ ALL     = vsix vsinput imgtodisk zdump dpout
 all: ${ALL}
 
 vsix: ${OBJS}
-	$(CC) $(CFLAGS) -o vsix $(OBJS) -lm -lrt
+	$(CC) $(CFLAGS) -o vsix $(OBJS) -lm # -lrt
 
 vsinput:        $(VSIOBJS)
 	$(CC) $(CFLAGS) -o vsinput $(VSIOBJS)
@@ -43,7 +43,7 @@ main.o zdump.o imgtodisk.o:    disk.h
 
 disk.o:         disk.h diski.h
 
-cu.o optab.o:   defs.h optab.h
+main.o cu.o optab.o:   defs.h optab.h
 
 main.o debug.o arith.o input.o extra.o vsinput.o vsinmain.o: defs.h
 
@@ -65,8 +65,20 @@ tests.tgz:      $(TESTS)
 
 disks.tgz:      $(DDISKS)
 	cd ..;tar cf - $(DDDISKS) | gzip > $(TOP)/$@
+
+.c,v.c:
+	co $@
 #
 #       $Log: Makefile,v $
+#       Revision 1.11  2001/02/24 04:25:29  mike
+#       Bumped up the release id.
+#
+#       Revision 1.10  2001/02/24 04:19:26  mike
+#       Added a dependency.
+#
+#       Revision 1.9  2001/02/17 03:41:28  mike
+#       Merge with dvv (who sometimes poses as root) and leob.
+#
 #       Revision 1.7.1.3  2001/02/06 07:32:31  dvv
 #       *** empty log message ***
 #
@@ -81,6 +93,9 @@ disks.tgz:      $(DDISKS)
 #
 #       Revision 1.8  2001/01/31 22:58:43  dvv
 #       fixes to for whetstone and -Wall
+#
+#       Revision 1.8  2001/02/16 04:54:08  mike
+#       stuff
 #
 #       Revision 1.7  1999/02/20 05:03:31  mike
 #       Rel. 2.3

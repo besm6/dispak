@@ -1,22 +1,17 @@
 #include <math.h>
 #include "defs.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.1.1.3 2001/02/05 05:44:28 dvv Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.4 2001/02/24 03:33:43 mike Exp $";
 
 typedef union   {
 		double                  d;
 		struct  {
-#if defined (__alpha) || defined (__ia64)
+#ifdef M_WORDSWAP
 			unsigned _lol;
 			unsigned _hil;
 #else
-#ifdef M_WORDSWAP
-			unsigned long   _lol;
-			unsigned long   _hil;
-#else
-			unsigned long   _hil;
-			unsigned long   _lol;
-#endif
+			unsigned _hil;
+			unsigned _lol;
 #endif
 		}       l;
 	}       math_t;
@@ -322,6 +317,7 @@ qzero:
 	}
 
 	TO_NAT(acc, arg);
+
 	if (neg) {
 		arg.d = -arg.d;
 		neg = 0;
@@ -356,7 +352,10 @@ qzero:
 		return E_INT;
 	}
 
-	o = (arg.hil >> 20) & 0x7ff;
+	if ((neg = arg.d < 0.0))
+		arg.d *= -1.0;
+
+	o = arg.hil >> 20;
 	o = o - 1022 + 64;
 	if (o < 0)
 		goto qzero;
@@ -364,7 +363,7 @@ qzero:
 	acc.ml = ((arg.hil & 0xfffff) | 0x100000) >> 5;
 	acc.mr = ((arg.hil & 0x1f) << 19) |
 			(arg.lol >> 13);
-	if (arg.hil >> 31)
+	if (neg)
 		NEGATE(acc);
 	if ((o > 0x7f) && !dis_exc)
 		return E_OVFL;
@@ -644,7 +643,14 @@ yta() {
 	return E_SUCCESS;
 }
 
-/*      $Log: arith.c,v $
+/*
+ *      $Log: arith.c,v $
+ *      Revision 1.4  2001/02/24 03:33:43  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.3  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.3  2001/02/05 05:44:28  dvv
  *      добавлена поддержка ia64, Linux
  *
@@ -656,6 +662,9 @@ yta() {
  *
  *      Revision 1.2  2001/01/31 22:58:43  dvv
  *      fixes to for whetstone and -Wall
+ *
+ *      Revision 1.2  2001/02/15 04:19:30  mike
+ *      Fixed incorrect handling of negative args in elfun().
  *
  *      Revision 1.1  1998/12/30 02:51:02  mike
  *      Initial revision

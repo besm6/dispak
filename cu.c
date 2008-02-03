@@ -3,7 +3,7 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: cu.c,v 1.4.1.2 2001/02/06 07:32:31 dvv Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: cu.c,v 1.7 2001/02/17 03:41:28 mike Exp $";
 
 long    aumodes[] = {
 	0,
@@ -78,6 +78,19 @@ _abort(err) {
 	LOAD(acc, reg[STACKREG] | (supmode & sup_mmap));\
 }
 
+static inline unsigned long long
+rdtsc(void)
+{
+#ifdef i386
+	unsigned long long      rv;
+
+	asm volatile(".byte 0x0f, 0x31" : "=A" (rv));
+	return (rv);
+#else
+	return 0ull;
+#endif
+}
+
 #ifdef DEBUG
 #undef  FRUN
 #define FRUN    C_BPW
@@ -93,6 +106,8 @@ ulong   run() {
 	int                     i;
 	ulong                   icount = 0;
 	uchar                   mem;
+	uchar                   last_op = 0;
+	unsigned long long      tsc = rdtsc();
 
 FOREVER
 
@@ -159,6 +174,14 @@ dbg:
 		for (cmdflg = 1; cmdflg; command());
 	}
 	++icount;
+#ifdef DEBUG
+	if (stats) {
+		++optab[ui.i_opcode].o_count;
+		tsc += optab[last_op].o_ticks += rdtsc() - tsc;
+		last_op = ui.i_opcode;
+	} else
+		tsc = rdtsc();
+#endif
 
 	abpc = pc;
 	abright = right;
@@ -514,6 +537,17 @@ mtj:
 			err = resources();
 			goto errchk;
 		case 074:
+			if ((acc.l == 0x737973) &&      /* "syscal" */
+					(acc.r = 0x63616c)) {
+				err = usyscall();
+				goto errchk;
+			}
+			if ((accex.l == 0x737973) &&      /* "syscal" */
+					(accex.r = 0x63616c)) {
+				accex = zeroword;
+				err = emu_call();
+				goto errchk;
+			}
 			err = eexit();
 			if (err == E_TERM)
 				STOP;
@@ -773,7 +807,11 @@ priv() {
 	return E_PRIV;
 }
 
-/*      $Log: cu.c,v $
+/*
+ *      $Log: cu.c,v $
+ *      Revision 1.7  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.4.1.2  2001/02/06 07:32:31  dvv
  *      добавлены несколько экстракодов для ФОРТРАН-ДУБНА
  *
@@ -784,6 +822,13 @@ priv() {
  *      fixes for Whetstone FORTRAN test;
  *      fixes to shut -Wall up and (more importantly) make scanf (and printf
  *      	args to match the formats
+ *
+ *      Revision 1.6  2001/02/15 03:44:01  mike
+ *      Stats gathering.
+ *      emu_call() from *74.
+ *
+ *      Revision 1.5  2000/01/18 02:22:58  mike
+ *      On dvv's request access implemented to some unix sys calls.
  *
  *      Revision 1.4  1999/02/02 03:26:27  mike
  *      Allowed 002 (mod) op in supervisor mode.

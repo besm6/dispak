@@ -14,7 +14,7 @@
 #define EAT_CH(c)       {ASSERT_CH(c); nextc();}
 #define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinput.c,v 1.5.1.2 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinput.c,v 1.7 2001/02/17 03:41:28 mike Exp $";
 
 static unsigned                 lineno;
 static unsigned                 level, array;
@@ -206,7 +206,7 @@ mpar:
 				}
 				while (isdigit(*cp))
 					++cp;
-				if (*cp == 'C') {
+				if (*cp == (uchar) 'С' || *cp == 'C') {
 					i = chunk;
 					chunk += u * 040;
 					u = i;
@@ -222,7 +222,6 @@ mpar:
 				++psp.nvol;
 			}
 		}
-/*** nextart:	*/
 		NEXT_ART();
 	}
 
@@ -481,7 +480,7 @@ inperr(char *s) {
 
 static uchar
 *passload(char *src) {
-	void*   dh;
+	void    *dh;
 	ulong   sz;
 	uchar   *buf, *cp;
 
@@ -579,6 +578,9 @@ parity(unsigned byte) {
 
 /*
  *      $Log: vsinput.c,v $
+ *      Revision 1.7  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.5.1.2  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *
@@ -589,6 +591,9 @@ parity(unsigned byte) {
  *      fixes for Whetstone FORTRAN test;
  *      fixes to shut -Wall up and (more importantly) make scanf (and printf
  *      	args to match the formats
+ *
+ *      Revision 1.6  2001/02/16 04:21:31  mike
+ *      В заказе сегментов МД может быть как латинская, так и русская 'C'.
  *
  *      Revision 1.5  1999/02/20 04:59:40  mike
  *      e50 '7701' (exform) A3 style. Many fixes.

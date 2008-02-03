@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: imgtodisk.c,v 1.1.1.2 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: imgtodisk.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
 
 int
 main(int argc, char **argv) {
 	unsigned        diskno = 0;
-	void*           hdisk;
+	void            *hdisk;
 	int             fd, i;
 	char            buf[6144];
 
@@ -37,7 +37,11 @@ main(int argc, char **argv) {
 	exit(0);
 }
 
-/*      $Log: imgtodisk.c,v $
+/*
+ *      $Log: imgtodisk.c,v $
+ *      Revision 1.2  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.2  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *

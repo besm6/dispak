@@ -1,4 +1,4 @@
-/*      $Id: defs.h,v 1.5.1.4 2001/02/05 05:44:28 dvv Exp $    */
+/*      $Id: defs.h,v 1.8 2001/02/24 04:21:18 mike Exp $    */
 
 #ifndef defs_h
 #define defs_h                          /* to avoid multiple inclusions */
@@ -81,7 +81,7 @@ typedef unsigned long   ulong;
 #endif
 
 typedef struct  {
-	void*           diskh;
+	void            *diskh;
 	ushort          offset;
 	ushort          diskno;
 	ushort          mode;
@@ -368,12 +368,13 @@ EXTERN int              notty;
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
 EXTERN int              trace;          /* trace flag */
+EXTERN int              stats;          /* gather statistics flag */
 EXTERN char             *lineptr;
 EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
 EXTERN char             *myname;        /* program name                 */
 EXTERN ddisk_t          disks[NDISKS];  /* disks & drums        */
-EXTERN void*            drumh;          /* our drums            */
+EXTERN void             *drumh;         /* our drums            */
 EXTERN unsigned         lpbufh;         /* lpr buffer handle    */
 EXTERN ushort           abpc;
 EXTERN uchar            abright;
@@ -403,6 +404,7 @@ extern uchar            ctext[];
 extern void     stopwatch(void), startwatch(void);
 extern uchar    eraise(ulong newev);
 extern void     alrm_handler(int sig);
+extern ulong    to_2_10(ulong src);
 
 /*
  *      error codes
@@ -424,11 +426,11 @@ extern void     alrm_handler(int sig);
 
 extern unsigned char    *errtxt[];
 
-
 void command (void);
 void where (void);
 
 /* extra.c */
+int usyscall(void);
 int emu_call (void);
 void terminate (void);
 int e50 (void);
@@ -469,6 +471,12 @@ void unpack (ushort);
 #endif  /* defs_h */
 
 /*      $Log: defs.h,v $
+ *      Revision 1.8  2001/02/24 04:21:18  mike
+ *      Cleaning up warnings.
+ *
+ *      Revision 1.7  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.5.1.4  2001/02/05 05:44:28  dvv
  *      добавлена поддержка ia64, Linux
  *
@@ -488,6 +496,10 @@ void unpack (ushort);
  *      fixes for Whetstone FORTRAN test;
  *      fixes to shut -Wall up and (more importantly) make scanf (and printf
  *      	args to match the formats
+ *
+ *      Revision 1.6  2001/02/15 04:53:01  mike
+ *      - stats.
+ *      - to_2_10()
  *
  *      Revision 1.5  1999/02/09 01:23:14  mike
  *      jmp history now only stores user mode addresses.

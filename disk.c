@@ -1,6 +1,6 @@
 #include "diski.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: disk.c,v 1.1.1.2 2001/02/05 03:52:14 root Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: disk.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
 
 static int disk_positioni(disk_t *, u_int);
 static int disk_makezonei(disk_t *, u_int);
@@ -148,8 +148,8 @@ disk_open(u_int diskno, u_int mode) {
 /* disk_close is MANDATORY if synchronous_descriptors isn't defined */
 
 int
-disk_close(void* ud) {
-    disk_t *d = (disk_t*) ud;
+disk_close(void *ud) {
+    disk_t *d = (disk_t *) ud;
     int i;
     u_long pos = 0;
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -179,7 +179,7 @@ disk_close(void* ud) {
     return DISK_IO_OK;
 }
 
-int disk_setmode(void* ud, u_int mode) {
+int disk_setmode(void *ud, u_int mode) {
     disk_t *d = (disk_t*) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -206,8 +206,8 @@ int disk_setmode(void* ud, u_int mode) {
  * gracefully; mode = DISK_MODE_LOUD returns DISK_IO_NEW
  */
 
-int disk_readi(void* ud, u_int zone, char *buf, u_int mode) {
-    disk_t *d = (disk_t*) ud;
+int disk_readi(void *ud, u_int zone, char *buf, u_int mode) {
+    disk_t *d = (disk_t *) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
 	fprintf(stderr, "disk_readi: bad descriptor\n");
@@ -243,7 +243,7 @@ int disk_readi(void* ud, u_int zone, char *buf, u_int mode) {
     return DISK_IO_OK;
 }
 
-int disk_writei(void* ud, u_int zone, char *buf, u_int mode) {
+int disk_writei(void *ud, u_int zone, char *buf, u_int mode) {
     disk_t *d = (disk_t*) ud;
 
     if (!d || d->d_magic != DESCR_MAGIC) {
@@ -390,7 +390,11 @@ static int disk_formcodei(char *buf) {
     return DISK_IO_OK;
 }
 
-/*      $Log: disk.c,v $
+/*
+ *      $Log: disk.c,v $
+ *      Revision 1.2  2001/02/17 03:41:28  mike
+ *      Merge with dvv (who sometimes poses as root) and leob.
+ *
  *      Revision 1.1.1.2  2001/02/05 03:52:14  root
  *      правки под альфу, Tru64 cc
  *
