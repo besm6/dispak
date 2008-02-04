@@ -1,0 +1,118 @@
+BESM-6 was a mainframe with an operating system designed at the time when
+the batch execution model was predominant. There were just a few process
+slots (say, 15), and it was not unusual for a task to wait in the "input queue"
+for a long time before it would be assigned a process slot and would start
+executing. The task, whether entered into the system from punch cards 
+by an operator, or spawned by a process, consisted of the following parts:
+1. The passport, containing identifying information and resource requests.
+2. One or more data sets.
+3. The terminator.
+
+(Wherever Russian words or abbreviations were used, the corresponding English
+ones will be used below.)
+
+1. The passport must start with the identifying line:
+
+USER NNNNXX^
+or
+USER NNNNXXYYYYYY^
+
+(The overbar character, represented here by caret, was used as the newline
+character, so that multiple passport lines could be combined on one punch card.
+Where N, X, Y were decimal digits. NNNN was the account number proper, and
+the rest were used according to the local budgeting rules, if any, 
+or at the user's discretion. The suggested meaning of the 12 digits 
+was DGPECUTASKVA, where
+D - department
+G - group
+PE - person
+CU - customer
+TASK - task
+VA - variant
+implying that a programmer could work on several tasks for several customers
+at once.
+
+There was a way to set a password per user id. If a password (up to 6 digits)
+was set, it had to be specified as USER NNNNXX/PASSWD^ Some organizations,
+e.g. the Computing center of the Academy of sciences, did not use passwords,
+relying on the honor system and the logging capabilities of the OS.
+
+Next, the following resource request lines in any order must be present:
+TIME HHMMSS^   (leading zeros could be omitted)
+
+There is no default for the CPU time allotment, as its amount was used to assign
+the process to a particular queue and a group of process slots.
+
+START octal^   (the execution entry point)
+
+PAGE list of octal ranges^ or RAM decimal^ (up to 32 pages)
+
+If PAGE was specified, the entry point had to be within one of the listed
+pages.
+
+The following requests were optional:
+
+PRINT decimal^ (meters of paper for printing, default 7, max 64)
+
+There were 240 lines per meter.
+
+TRACT decimal^ (space on magnetic drums for temporary storage, 1 tract = 1 page)
+
+TAPE NN(XXXX[-RW])^ (NN was octal 30-67; -RW requested the read-write access)
+ 
+There was no filesystem - the disk packs and the tape reels had numerical 
+identifiers. The request was used to indicate to the operator which disk packs
+or tapes had to be installed before a task occupies a process slot. The task
+then used the specified NN numbers as file handles. Handles numbered 0 to 27
+octal were used for the temporary (drum) storage.
+
+TELE^ (the task will be interactive, awaiting connection from a terminal)
+
+The passport ends with a character E.
+
+2. A data set consists of a sequence of data elements. In all element types
+but L and A the spacing characters and punchcard boundaries are ignored.
+
+S octal
+
+Specifies the load address of the subsequent elements. Must be the first
+in a set.
+
+C 9 or 18 octals
+
+One or two machine instructions in an easy to read format
+(there could be two instructions per word)
+
+W up to 16 octals
+
+Arbitrary data (not an executable word)
+
+N floating point number
+
+L 6 characters
+
+Text literal in GOST encoding
+
+A N
+
+N = 0, 1, or 2 - introduces continuous text in various encodings, ending
+with a _$ character pair
+
+N = 3 - introduces binary data (raw punchcard images), ending with a card
+with all punches in cols 1 and 41.
+
+A data set ends with a character E
+
+3. Terminator
+
+The character sequence FINISH
+
+The program 'vsinput' reads the file which name is given in the command line
+and, if successful, forms an input queue entry and prints its number.
+
+The program 'vsix', given an input queue number and a file name, 
+loads and runs the task from the input queue, forming an output print stream 
+in the file.
+
+The program 'dpout' reads an output stream file and outputs a file in Unicode.
+
