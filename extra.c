@@ -2,14 +2,13 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
 
 #define ETX     003
 #define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
-
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: extra.c,v 1.11 2001/02/24 04:14:29 mike Exp $";
 
 uchar   uppr[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
 áâ÷çäåöúéêëìíîïðòóôõæèãþûýùøüàñD\
@@ -183,6 +182,9 @@ print(void)
 			return E_SUCCESS;
 		} else {
 			switch (c) {
+			case 0176:
+				line[pos++] = ' ';
+				break;
 			case 0201:
 				if (pos) {
 					lflush(line);
@@ -201,6 +203,7 @@ print(void)
 				break;
 			case 0143:
 			case 0242:
+			case 0341:
 				continue;
 			case 0173:
 				pos = getbyte(&bp) % 128;
@@ -302,6 +305,8 @@ e50(void) {
 		return elfun(EF_COS);
 	case 3:
 		return elfun(EF_ARCTG);
+	case 4:
+		return elfun(EF_ARCSIN);
 	case 5:
 		return elfun(EF_ALOG);
 	case 6:
@@ -397,6 +402,21 @@ e50(void) {
 			acc.r = 1;
 		else
 			acc.r = 077777;
+		return E_SUCCESS;
+	case 0165:      /* BESM owner + version + sys. disk info */
+		acc.l = koi8[(uchar)'B' - 32] << 8 |
+			koi8[(uchar)'ì' - 32];
+		acc.r = koi8[(uchar)'á' - 32] << 16 |
+			koi8[(uchar)'ä' - 32] << 8 |
+			koi8[(uchar)'E' - 32];
+		accex.l = koi8[(uchar)'ì' - 32] << 16 |
+			koi8[(uchar)'å' - 32] << 8 |
+			koi8[(uchar)'ã' - 32];
+		accex.r = koi8[(uchar)'ü' - 32] << 16 |
+			koi8[(uchar)'÷' - 32] << 8 |
+			koi8[(uchar)'í' - 32];
+		reg[016] = 0x222;
+		reg[015] = 2053;
 		return E_SUCCESS;
 	case 0177:      /* resource request     */
 		acc.l = acc.r = 0;
@@ -500,6 +520,10 @@ e63(void) {
 	struct timeval  ct;
 
 	switch (reg[016]) {
+	case 0: /* ×ÒÅÍÑ ÄÏ ËÏÎÃÁ ÒÅÛÅÎÉÑ ÚÁÄÁÞÉ × ×ÉÄÅ float */
+		acc.l = 0xd00000;
+		acc.r = 3600;
+		return E_SUCCESS;
 	case 1:
 		if (pflag) {
 			gettimeofday(&ct, NULL);
@@ -665,6 +689,11 @@ ttout(uchar flags, ushort a1, ushort a2) {
 			break;
 		case 0143:
 			break;
+		case 0146:	/* assuming ANSI compatibility */
+			PUTB('\33');
+			PUTB('[');
+			PUTB('D');
+			break;
 		case 021:
 			if (flags == 0220) {
 				PUTB('\n');
@@ -674,8 +703,13 @@ ttout(uchar flags, ushort a1, ushort a2) {
 		default:
 			if (*sp < 0134)
 				PUTB(upp[*sp]);
-			else
-				PUTB('?');
+			else {
+				PUTB('[');
+				PUTB('0' + (*sp >> 6));
+				PUTB('0' + ((*sp >> 3) & 7));
+				PUTB('0' + (*sp & 7));
+				PUTB(']');
+			}
 			break;
 		}
 		++sp;
@@ -720,6 +754,33 @@ done:
 	while ((dp - core[a1].w_b) % 6)
 		PUTB(0);
 	eraise(4);
+	return E_SUCCESS;
+}
+STATIC int punch(ushort a1, ushort a2) {
+	static FILE * fd = 0;
+	unsigned char * sp;
+	int bytecnt = 0, max;
+	if (!punchfile)
+		return E_SUCCESS;
+	if (!fd) {
+		if (!(fd = fopen(punchfile, "w"))) {
+			perror(punchfile);
+			punchfile = 0;
+			return E_UNIMP;
+		}
+		/* fputs("P4 80 N\n", fd); */
+	}
+	if ((a2 - a1 + 1) % 24 != 0)
+		return E_CWERR;
+	sp = core[a1].w_b;
+	max = (a2 - a1 + 1) * 6;
+	while (bytecnt < max) {
+		if (bytecnt % 6) {
+			fputc(*sp, fd);
+		}
+		sp++;
+		bytecnt++;
+	}
 	return E_SUCCESS;
 }
 
@@ -774,6 +835,10 @@ oporos:
 					ADDR(reg[uir.i_reg] + uir.i_addr));
 			return E_SUCCESS;
 		default:
+			if (uil.i_opcode == 010) {      /* punchcards */
+				return punch(ADDR(reg[uil.i_reg] + uil.i_addr),
+				 ADDR(reg[uir.i_reg] + uir.i_addr));
+			}
 			return E_UNIMP;
 		}
 		if (uir.i_opcode & 0100)
@@ -811,13 +876,23 @@ physaddr(void) {
 		acc.l = 0;
 		acc.r = 0;
 		break;
-	case 0221:                      /* GOD? */
+	case 0221:                      /* GOD */
 		acc.l = 0;
 		acc.r = 1;
 		break;
 	case 0322:
-		acc.l = 040500000;
+		acc.l = 040500000;	/* EXP0 */
 		acc.r = 0;
+		break;
+	case 0476:
+		acc.l = 0; acc.r = 077740000; /* íïîéô */
+		break;
+	case 0500: /* ÄÌÑ íó äõâîá */
+	case 01026:
+		acc.l = acc.r = 0;
+		break;
+	case 0522:
+		acc.l = 0777; acc.r = 0; /* E33ð25 */
 		break;
 	case 02100:                     /* ? (try also 0100000) */
 		acc.l = acc.r = 0;
@@ -855,7 +930,9 @@ resources(void) {
 			if (disks[arg[i]].diskh)
 				disk_close(disks[arg[i]].diskh);
 			disks[arg[i]].diskh = 0;
-			disks[arg[i]].diskno = 0;
+			if (arg[i] != (phdrum >> 8)) {
+				disks[arg[i]].diskno = 0;
+			}
 		}
 		return E_SUCCESS;
 	case 047:
@@ -1059,7 +1136,6 @@ usyscall(void) {
 	ushort  ap = reg[016];
 	int     r;
 	ulong   ftn, a0, a1, a2;
-	extern  errno;
 
 	ftn = FUWORD(ap); ap = ADDR(ap + 1);
 	a0 = FUWORD(ap); ap = ADDR(ap + 1);
@@ -1107,6 +1183,9 @@ to_2_10(ulong src) {
 
 /*
  *      $Log: extra.c,v $
+ *      Revision 1.12  2008/01/26 20:45:59  leob
+ *      More e-codes, portable errno
+ *
  *      Revision 1.11  2001/02/24 04:14:29  mike
  *      Cleaning up warnings.
  *

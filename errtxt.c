@@ -4,9 +4,6 @@
 #define	GCC_SPECIFIC(x)
 #endif	/* __GNUC__ */
 
-
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: errtxt.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
-
 unsigned char   *errtxt[] = {
 	" Неизвестная ош.",     /*  0 */
 	" КОНЕЦ ЗАДАЧИ",        /*  1 */

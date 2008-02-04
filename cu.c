@@ -3,8 +3,6 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: cu.c,v 1.7 2001/02/17 03:41:28 mike Exp $";
-
 long    aumodes[] = {
 	0,
 	1,              /* LG */
@@ -13,6 +11,7 @@ long    aumodes[] = {
 };
 
 extern void     ib_cleanup(void);
+extern ulong icnt;
 
 void
 unpack(pc)
@@ -166,14 +165,17 @@ FOREVER
 
 	ui = uicore[pcm][right];
 	op = optab[ui.i_opcode];
-	if (((cf & C_BPT) && !right) | stepflg | breakflg) {
+	
+	if (((cf & C_BPT) && !right) | (stepflg == 1) | breakflg) {
 dbg:
 		pcm_dbg = pcm;
-		stepflg = breakflg = 0;
+		stepflg = breakflg = quitflg = 0;
 		where();
 		for (cmdflg = 1; cmdflg; command());
-	}
-	++icount;
+		if (quitflg) STOP;
+	} else if (stepflg)
+		 --stepflg;
+	icnt = ++icount;
 #ifdef DEBUG
 	if (stats) {
 		++optab[ui.i_opcode].o_count;
@@ -495,6 +497,9 @@ mtj:
 		case 053:
 			err = e53();
 			goto errchk;
+		case 054:
+			err = elfun(EF_ARCSIN);
+			goto errchk;
 		case 055:
 			err = elfun (EF_ALOG);
 			goto errchk;
@@ -809,6 +814,9 @@ priv() {
 
 /*
  *      $Log: cu.c,v $
+ *      Revision 1.8  2008/01/26 20:42:06  leob
+ *      e54 = arcsin
+ *
  *      Revision 1.7  2001/02/17 03:41:28  mike
  *      Merge with dvv (who sometimes poses as root) and leob.
  *

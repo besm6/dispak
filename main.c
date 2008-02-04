@@ -8,8 +8,6 @@
 #endif
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: main.c,v 1.7 2001/02/24 04:22:19 mike Exp $";
-
 static struct   {
 	int     dsk;
 	ushort  zone;
@@ -22,7 +20,7 @@ static struct   {
 };
 
 static char     *pout = NULL;
-
+char		*punchfile = NULL;
 extern int      input(unsigned);
 void            catchsig(int sig);
 ulong           run();
@@ -33,12 +31,12 @@ void            dump_pout(void);
 void            stat_out(void);
 #endif
 
+ulong           icnt;
 int
 main(argc, argv)
 	char **argv;
 {
 	int             i, k;
-	ulong           icnt;
 	double          sec;
 	void            *nh;
 
@@ -75,6 +73,9 @@ main(argc, argv)
 					break;
 				case 'o':
 					pout = &argv[i][k] + 1;
+					goto brk;
+				case 'c':
+					punchfile = &argv[i][k] + 1;
 					goto brk;
 				default:
 					fprintf  (stderr,
@@ -251,6 +252,9 @@ stat_out(void) {
 
 /*
  *      $Log: main.c,v $
+ *      Revision 1.8  2008/01/26 20:46:34  leob
+ *      Added punching
+ *
  *      Revision 1.7  2001/02/24 04:22:19  mike
  *      Cleaning up warnings.
  *

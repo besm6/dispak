@@ -9,10 +9,12 @@
 
 #define PROMPT "- "
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: debug.y,v 1.6 2001/02/17 03:41:28 mike Exp $";
+static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: debug.y,v 1.7 2008/01/26 20:47:35 leob Exp $";
 
 static alureg_t wd;
 extern void     ib_cleanup(void);
+extern uchar itm2koi[];
+static void pfloat();
 
 void yyerror (char*);
 int yylex (void);
@@ -21,7 +23,7 @@ int yylex (void);
 %%
 command:        /* void */
 	|       quit
-			{ terminate(); ib_cleanup(); exit (0); }
+			{ quitflg = 1; cmdflg = 0; }
 	|       file
 			{
 			puts(ifile);
@@ -36,6 +38,8 @@ command:        /* void */
 			}
 	|       step
 			{ stepflg = 1; cmdflg = 0; }
+	|       step 'n' decimal
+			{ stepflg = $3; cmdflg = 0; }
 	|       step octal
 			{
 			cmdflg = 0;
@@ -79,9 +83,11 @@ command:        /* void */
 			}
 	|       'a' '-'
 			{ printf ("%08lo%08lo\n", acc.l, acc.r); }
+	|       'a' 'd'
+			{ pfloat (acc.l, acc.r); }
 	|       'y' '-'
 			{ printf ("%08lo%08lo\n", accex.l, accex.r); }
-	|       'i' '-'
+	|       'i' octal '-'
 			{ printf ("%05o\n", reg[$2&037]); }
 	|       octal '-'
 			{ int   i;
@@ -129,6 +135,16 @@ command:        /* void */
 					$1 += 1;
 				}
 			}
+	|       octal 'I'
+			{
+				int     i, j;
+				for (j = 0; j < 8; ++j) {
+					for (i = 0; i < 6; ++i)
+						putchar(itm2koi[core[$1].w_b[i]]);
+					putchar('\n');
+					$1 += 1;
+				}
+			}
 	|       octal 'i'
 			{ int i;
 				for (i = 0; i < 8; ++i) {
@@ -158,6 +174,11 @@ command:        /* void */
 						(ulong)wd.r & 07777);
 					$1 += 1;
 				}
+			}
+	|	octal 'd'
+			{
+				if ($1) { LOAD(wd, $1); pfloat(wd.l, wd.r); }
+				else printf("0.0");
 			}
 	|       'a' '=' word
 			{ acc = wd; }
@@ -237,6 +258,8 @@ d4:             '4'     { $$  = 4; };
 d5:             '5'     { $$  = 5; };
 d6:             '6'     { $$  = 6; };
 d7:             '7'     { $$  = 7; };
+d8:		'8'	{ $$  = 8; };
+d9:		'9'	{ $$  = 9; };
 
 odigit:         d0      { $$  = $1; }
 	|       d1      { $$  = $1; }
@@ -247,9 +270,17 @@ odigit:         d0      { $$  = $1; }
 	|       d6      { $$  = $1; }
 	|       d7      { $$  = $1; }
 	;
+ddigit:		odigit	{ $$ = $1; }
+	|	d8	{ $$ = $1; }
+	|	d9	{ $$ = $1; }
+	;
 
 octal:          octal odigit    { $$ = $1 << 3 | $2; }
 	|       odigit          { $$ = $1; }
+	;
+
+decimal:	decimal ddigit	{ $$ = $1 * 10 + $2; }
+	|	ddigit		{ $$ = $1; }
 	;
 
 o2:             odigit odigit   { $$ = $1  <<  3 | $2; }
@@ -335,9 +366,9 @@ okno (int trace)
 {
 	word_t  *wp;
 	int     i;
-
+        extern ulong icnt;
 	wp = &core[pcm_dbg];
-	printf ("%c%05o%c", pcm_dbg & 0x8000 ? 'S' : ' ',
+	printf ("icnt %d; %c%05o%c", icnt, pcm_dbg & 0x8000 ? 'S' : ' ',
 				ADDR(pcm_dbg), right ? ' ' : ':');
 	if (right)
 		if (Rstruct(*wp))
@@ -383,8 +414,23 @@ okno (int trace)
 	printf ("\n");
 }
 
+static void pfloat(unsigned long l, unsigned long r) {
+	int e = (l >> 17) - 64;
+	int manh = l & 0xffff;
+	int manl = r;
+	double d = (double) manh + (double) manl / (1u<<24);
+	d /= (1u<<16);
+	if (l & 0x10000) d -= 1.0;
+	while (e) { d *= e > 0 ? 2.0 : 0.5; e = e > 0 ? e-1 : e+1; }
+	printf("%25.15g\n", d);
+}
+
+
 /*
  *      $Log: debug.y,v $
+ *      Revision 1.7  2008/01/26 20:47:35  leob
+ *      ITM encoding, floating point
+ *
  *      Revision 1.6  2001/02/17 03:41:28  mike
  *      Merge with dvv (who sometimes poses as root) and leob.
  *

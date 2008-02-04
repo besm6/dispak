@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: imgtodisk.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
-
 int
 main(int argc, char **argv) {
 	unsigned        diskno = 0;

@@ -1,7 +1,5 @@
 #include "diski.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: disk.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
-
 static int disk_positioni(disk_t *, u_int);
 static int disk_makezonei(disk_t *, u_int);
 static int disk_writedescri(disk_t *, int);
@@ -228,7 +226,11 @@ int disk_readi(void *ud, u_int zone, char *buf, u_int mode) {
     if (disk_positioni(d, zone) == DISK_IO_NEW) {
 	switch (mode) {
 	case DISK_MODE_QUIET:
-	    disk_formcodei(buf);
+	    if (getenv("ZERODRUM") == 0 || d->d_diskno != 0)
+		disk_formcodei(buf);
+	    else
+		memset(buf, 0, ZONE_SIZE);
+
 	    return DISK_IO_OK;
 
 	case DISK_MODE_LOUD:
@@ -348,13 +350,13 @@ static int disk_makezonei(disk_t *d, u_int zone) {
     putlong(d->d_md[block]->md_pos[zone % BLOCK_ZONES], pos);
     d->d_modif[block] = 1;
 
-    /* no matter whether disk_writedescr is dummy or not,
-     * the file position after it will be correct:
-     * immediately after the space allocated for the descriptor.
-     */
-
     if (disk_writedescr(d, block) != DISK_IO_OK)
 	return DISK_IO_ENWRITE;
+
+    /*
+     * go back to the zone
+     */
+    lseek(d->d_fileno, pos, SEEK_SET);
     return DISK_IO_OK;
 }
 
@@ -392,6 +394,9 @@ static int disk_formcodei(char *buf) {
 
 /*
  *      $Log: disk.c,v $
+ *      Revision 1.3  2008/01/26 20:44:37  leob
+ *      Zeroing drums, proper return to the zone
+ *
  *      Revision 1.2  2001/02/17 03:41:28  mike
  *      Merge with dvv (who sometimes poses as root) and leob.
  *

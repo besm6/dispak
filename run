@@ -1,13 +1,11 @@
-#!/bin/csh
-#
-#       $Id: run,v 1.2 2001/02/17 03:41:28 mike Exp $
-#
-set cmd=./vsix
-while ( $#argv > 1 )
-	set cmd = ( $cmd $argv[1] )
-	shift argv
-end
-set no=`./vsinput $argv[1]` && exec $cmd $no
+#!/bin/sh
+cmd=./vsix
+while [ $# -gt 1 ]; do
+        cmd="$cmd $1"
+        shift
+done
+echo will run $cmd
+no=`./vsinput $1` && exec $cmd $no
 echo $no
 #
 #       $Log: run,v $

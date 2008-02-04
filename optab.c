@@ -1,8 +1,6 @@
 #include "defs.h"
 #include "optab.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: optab.c,v 1.4 2001/02/17 03:41:28 mike Exp $";
-
 extern int      add(), aax(), aex(), arx(),
 		avx(), aox(), b6div(),  mul(),  apx(), aux(), acx(),
 		anx(), epx(), emx(),  asx(), yta(),

@@ -1,4 +1,4 @@
-/*      $Id: defs.h,v 1.8 2001/02/24 04:21:18 mike Exp $    */
+/*      $Id: defs.h,v 1.9 2008/01/26 20:40:57 leob Exp $    */
 
 #ifndef defs_h
 #define defs_h                          /* to avoid multiple inclusions */
@@ -367,9 +367,11 @@ EXTERN int              breakflg;       /* break on next command */
 EXTERN int              notty;
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
+EXTERN int		quitflg;	/* "quit" command flag */
 EXTERN int              trace;          /* trace flag */
 EXTERN int              stats;          /* gather statistics flag */
 EXTERN char             *lineptr;
+EXTERN char		*punchfile;	/* card puncher file */
 EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
 EXTERN char             *myname;        /* program name                 */
@@ -470,7 +472,11 @@ void unpack (ushort);
 
 #endif  /* defs_h */
 
-/*      $Log: defs.h,v $
+/*
+ *      $Log: defs.h,v $
+ *      Revision 1.9  2008/01/26 20:40:57  leob
+ *      Added punching
+ *
  *      Revision 1.8  2001/02/24 04:21:18  mike
  *      Cleaning up warnings.
  *

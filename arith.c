@@ -1,8 +1,6 @@
 #include <math.h>
 #include "defs.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: arith.c,v 1.5 2006/03/19 08:41:56 leob Exp $";
-
 typedef union   {
 		double                  d;
 		struct  {

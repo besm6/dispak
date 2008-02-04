@@ -12,9 +12,8 @@
 #define NEXT_ART()      {while (ch != '^') nextc(); nextc(); SKIP_SP();}
 #define ASSERT_CH(c)    {if (ch != c) goto fs;}
 #define EAT_CH(c)       {ASSERT_CH(c); nextc();}
-#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
-
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinput.c,v 1.7 2001/02/17 03:41:28 mike Exp $";
+#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) == '\r' ? 0174 : (c) <= ' ' ? 017 : koi8[(c) - 32])
+#define KOI2ITM(c)      ((c) <= ' ' ? 040 : (c) == '\n' ? 0214 : kitm[(c) - 32])
 
 static unsigned                 lineno;
 static unsigned                 level, array;
@@ -30,6 +29,7 @@ static int                      ibufno;
 static char                     ibufname[MAXPATHLEN];
 static ushort                   chunk;
 
+static int			raw = 0;
 static unsigned                 nextc(void);
 static int                      scan(int edit);
 static void                     inperr(char *);
@@ -46,6 +46,57 @@ NEXT_NS()
 	SKIP_SP();
 	return ch;
 }
+
+/* ß is a placeholder */
+uchar itm2koi[] =
+"0123456789ßßßßß " /* 000-017 */
+"ßßßßßßßßßßßßßßßß" /* 020-037 */
+" '$_|;,.^)ß[>?:=" /* 040-057 */
+"v+%!`:]/-&xß<`(ß" /* 060-077 */
+"ßßßßßßßßßßßßßßßß" /* 100-117 */
+"ßßßßßßßßßßßß\"ÿß'"/* 120-137 */
+"ßßß@ß~<>-ß#ßßßßß" /* 140-157 */
+"ßßßßßßßß*ßßßßßeß" /* 160-177 */
+"ßTßOßHNMßLRGIPCV" /* 200-217 */
+"EZDBSYFXAWJßUQKß" /* 220-237 */
+"ßßßßßßßßßßßßßßßß" /* 240-257 */
+"ßßßßßßßßßßßßßßßß" /* 260-277 */
+"ßýßßßßßßßìßçéðãö" /* 300-317 */
+"üúäâûùæøßþêßàñßß" /* 320-337 */
+"ßßßßßßßßßßßßßßßß" /* 340-357 */
+"ßßßßßßßßßßßßßßßß" /* 360-377 */
+; 
+
+static uchar kitm[] = {
+	0017, 0063, 0134, 0152, 0042, 0062, 0071, 0041, /*  !"#$%&' */
+	0076, 0051, 0170, 0061, 0046, 0070, 0047, 0067, /* ()*+,-./ */
+	0000, 0001, 0002, 0003, 0004, 0005, 0006, 0007, /* 01234567 */
+	0010, 0011, 0056, 0045, 0074, 0057, 0054, 0055, /* 89:;<=>? */
+	0143, 0230, 0223, 0216, 0222, 0220, 0226, 0213, /* @ABCDEFG */
+	0205, 0214, 0232, 0236, 0211, 0207, 0206, 0203, /* HIJKLMNO */
+	0215, 0235, 0212, 0224, 0201, 0234, 0217, 0231, /* PQRSTUVW */
+	0227, 0225, 0221, 0053, 0000, 0066, 0050, 0043, /* XYZ[\]^_ */
+	0064, 0230, 0223, 0216, 0222, 0220, 0226, 0213, /* `abcdefg */
+	0205, 0214, 0232, 0236, 0211, 0207, 0206, 0203, /* hijklmno */
+	0215, 0235, 0212, 0224, 0201, 0234, 0217, 0231, /* pqrstuvw */
+	0227, 0225, 0221, 0000, 0044, 0000, 0145, 0000, /* xyz{|}~  */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, /* */
+	0334, 0230, 0323, 0316, 0322, 0220, 0326, 0313, /* àáâãäåæç */
+	0227, 0314, 0332, 0236, 0311, 0207, 0205, 0203, /* èéêëìíîï */
+	0315, 0335, 0215, 0216, 0201, 0225, 0317, 0223, /* ðñòóôõö÷ */
+	0327, 0325, 0321, 0324, 0320, 0301, 0331, 0136, /* øùúûüýþ  */
+	0334, 0230, 0323, 0316, 0322, 0220, 0326, 0313, /* ÀÁÂÃÄÅÆÇ */
+	0227, 0314, 0332, 0236, 0311, 0207, 0205, 0203, /* ÈÉÊËÌÍÎÏ */
+	0315, 0335, 0215, 0216, 0201, 0225, 0317, 0223, /* ÐÑÒÓÔÕÖ× */
+	0327, 0325, 0321, 0324, 0320, 0301, 0331, 0136  /* ØÙÚÛÜÝÞ  */
+};
 
 int
 vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit) {
@@ -183,7 +234,7 @@ mpar:
 					((psp.phys >= 030) && (psp.phys < 070)) ||
 					(psp.phys >= 0100))
 				goto mpar;
-		} else if (!strncmp(art, "ìåî", 3)) {
+		} else if (!strncmp(art, "ìåî", 3) || !strncmp(art, "TAP", 3)) {
 			if (!cp)
 				goto mpar;
 			while (*cp) {
@@ -206,7 +257,8 @@ mpar:
 				}
 				while (isdigit(*cp))
 					++cp;
-				if (*cp == (uchar) 'ó' || *cp == 'C') {
+				if (*cp == (uchar) 'ó' || *cp == 'C' ||
+				    *cp == (uchar) 'Ó' || *cp == 'c') {
 					i = chunk;
 					chunk += u * 040;
 					u = i;
@@ -307,12 +359,14 @@ noend:
 				}
 				w = w << 8 | KOI2UPP(ch);
 			}
+			nextc();
 			if ((i = dump(W_DATA, w)))
 				return i;
 			break;
 		case U('á'):
 			nextc();
-			if (ch == '1') {
+			if (ch == '0' || ch == '1') {
+			    uchar itm = ch == '0';
 			    unsigned pch = 0;
 			    for (;;) {
 				w = 0;
@@ -331,7 +385,8 @@ noend:
 					goto a1done;
 				    }
 				    pch = ch;
-				    w = w << 8 | KOI2UPP(ch);
+				    w = w << 8 | 
+					(itm ? KOI2ITM(ch) : KOI2UPP(ch));
 				}
 				if ((i = dump(W_DATA, w)))
 					return i;
@@ -344,6 +399,8 @@ a1done:
 
 			    NEXT_NS();
 			    for (;;) {
+				/* ` in 1st pos is special */
+				raw = ch == '`';
 				memset((char *) w, 0, sizeof(w));
 				for (i = 0; i < 120 && ch != '\n'; ++i) {
 				    if (ch == -1)
@@ -351,6 +408,7 @@ a1done:
 				    s[i] = ch;
 				    nextc();
 				    if (i == 5 && !strncmp(s, "``````", 6)) {
+					raw = 0;
 					for (c = 0; c < 24; ++c)
 					    if ((i = dump(W_DATA, 1ull)))
 						return i;
@@ -362,18 +420,39 @@ a1done:
 				while (ch != '\n' && ch != -1)
 				    nextc();
 				nextc();
-				for (i = 0; s[i]; ++i) {
-				    c = KOI2UPP(s[i]);
-				    w[i / 5] <<= 8;
-				    w[i / 5] |= c | parity(c) << 7;
+				raw = 0;
+                                if (s[0] == '`') {
+                                    FILE * f = fopen(s+1, "r");
+                                    uchar p[120];
+                                    if (!f) {
+                                        inperr("íáóóé÷ ðõóô");
+                                        return -1;
+                                    }
+                                    while (120 == fread(p, 1, 120, f)) {
+                                        memset((char *) w, 0, sizeof(w));
+                                        for (i = 0; i < 120; ++i) {
+                                            w[i / 5] <<= 8;
+                                            w[i / 5] |= p[i];
+                                        }
+                                        for (c = 0; c < 24; ++c)
+                                            if ((i = dump(W_DATA, w[c])))
+                                                return i;
+                                    }
+                                    fclose(f);
+                                } else {
+                                    for (i = 0; s[i]; ++i) {
+                                        c = KOI2UPP(s[i]);
+                                        w[i / 5] <<= 8;
+                                        w[i / 5] |= c | parity(c) << 7;
+                                    }
+                                    if (i % 5)
+                                        w[i / 5] <<= 8 * (5 - i % 5);
+                                    for (c = 0; c < 24; ++c)
+                                        if ((i = dump(W_DATA, w[c])))
+                                            return i;
 				}
-				if (i % 5)
-				    w[i / 5] <<= 8 * (5 - i % 5);
-				for (c = 0; c < 24; ++c)
-				    if ((i = dump(W_DATA, w[c])))
-					return i;
 			    }
-a3over:
+a3over:;
 			} else
 				goto fs;
 			break;
@@ -420,6 +499,8 @@ nextc(void) {
 		++lineno;
 		return ch;
 	}
+	if (raw)
+		return ch;
 	if (ch >= 0300 && ch <= 0337)
 		return ch += 040;
 	if (isalpha (ch)) {
@@ -578,6 +659,9 @@ parity(unsigned byte) {
 
 /*
  *      $Log: vsinput.c,v $
+ *      Revision 1.8  2008/01/26 20:39:30  leob
+ *      Raw card image, ITM encoding
+ *
  *      Revision 1.7  2001/02/17 03:41:28  mike
  *      Merge with dvv (who sometimes poses as root) and leob.
  *

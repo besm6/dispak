@@ -3,8 +3,6 @@
 #include "defs.h"
 #include "iobuf.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: vsinmain.c,v 1.2 2001/02/17 03:41:28 mike Exp $";
-
 FILE    *inf;
 char    *prog;
 

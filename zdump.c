@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "disk.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: zdump.c,v 1.3 2001/02/17 03:41:28 mike Exp $";
-
 static char     upp[] = "0123456789+-/,. E@()x=;[]*'\"#<>:\
 бвчздецъйклмнопртуфхжигюыэщшьасD\
 FGIJLNQRSUVWZ^<>V&??:=%$|-_!";

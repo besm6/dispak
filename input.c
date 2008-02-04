@@ -5,8 +5,6 @@
 #include "disk.h"
 #include "iobuf.h"
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: input.c,v 1.4 2001/02/24 03:35:12 mike Exp $";
-
 static FILE             *ibuf;
 static char             ibufname[MAXPATHLEN];
 static struct passport  psp;
@@ -89,6 +87,9 @@ e60(void) {
 	struct ibword   ibw[24];
 	int             i;
 	ulong           pos;
+
+	if (reg[016] == 0)
+		return E_SUCCESS;
 
 	if ((pos = ftell(ibuf)) == enda3) {
 		reg[016] = 0;
