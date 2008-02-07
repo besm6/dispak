@@ -206,6 +206,7 @@ print(void)
 			case 0341:
 				continue;
 			case 0173:
+			case 0200:
 				pos = getbyte(&bp) % 128;
 				continue;
 			default:
@@ -609,7 +610,7 @@ ddio(void) {
         * есть не номер тракта, а номер сектора (обмен по КУС).
         */
                if (uil.i_addr & 04000) {
-                 zone = uir.i_addr & 0177; 
+                 zone = uir.i_addr & 0177;
                  sector = zone & 3;
                  zone >>= 2;
                } else {
