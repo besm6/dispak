@@ -52,6 +52,7 @@ uchar   koi8[] = {
 };
 
 uchar   ctext[] = " .âãäæçé()*êìñö/0123456789ø,ð-+ùúABCDEFGHIJKLMNOPQRSTUVWXYZûüýþà";
+extern uchar itm2koi[];
 
 static void     exform(void);
 
@@ -111,16 +112,6 @@ terminate(void) {
 			disk_close(disks[u].diskh);
 }
 
-int
-isend(int c) {
-	switch (c) {
-	case 0172: case 0231: case 377:
-		return 1;
-	default:
-		return 0;
-	}
-}
-
 void
 lflush(uchar *line) {
 	int     i;
@@ -136,18 +127,331 @@ lflush(uchar *line) {
 	memset(line, ' ', i + 1);
 }
 
+/*
+ * Print string in GOST format.
+ * Return next data address.
+ */
+static ushort
+print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
+{
+	ptr             bp;
+	uchar           c;
+
+	bp.p_w = addr0;
+	bp.p_b = 0;
+	for (;;) {
+		if (! bp.p_w)
+			return 0;
+
+		/* No data to print. */
+		if (addr1 && bp.p_w == addr1 + 1)
+			return bp.p_w;
+
+		/* No space left on line. */
+		if (pos == 128) {
+			if (! addr1) {
+				if (bp.p_b)
+					++bp.p_w;
+				return bp.p_w;
+			}
+			lflush(line);
+			putchar('\n');
+			pos = 0;
+		}
+		c = getbyte(&bp);
+/*printf ("-%03o", c);*/
+		switch (c) {
+		case 0172: /* end of information */
+		case 0231:
+		case 0377:
+			if (bp.p_b)
+				++bp.p_w;
+/*printf ("\n");*/
+			return bp.p_w;
+		case 0176: /* blank */
+			line[pos++] = ' ';
+			break;
+		case 0201: /* new page */
+			if (pos) {
+				lflush(line);
+				pos = 0;
+			}
+			putchar('\f');
+			line[pos++] = ' ';
+			break;
+		case 0175:
+		case 0214: /* new line */
+			if (pos) {
+				lflush(line);
+				pos = 0;
+			}
+			putchar('\n');
+			break;
+		case 0143:
+		case 0242: /* ignore */
+		case 0341:
+			break;
+		case 0173:
+		case 0200: /* set position */
+			c = getbyte(&bp);
+/*printf ("-%03o", c);*/
+			pos = c % 128;
+			break;
+		default:
+			if (c < sizeof uppr)
+				line[pos++] = upp[c];
+			else
+				line[pos++] = '$';
+			break;
+		}
+	}
+}
+
+/*
+ * Print string in ITM format.
+ * Return next data address.
+ */
+static ushort
+print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
+{
+	ptr             bp;
+	uchar           c, lastc;
+
+	bp.p_w = addr0;
+	bp.p_b = 0;
+	for (;;) {
+		if (! bp.p_w)
+			return 0;
+
+		/* No data to print. */
+		if (addr1 && bp.p_w == addr1 + 1) {
+/*printf ("\n");*/
+			return bp.p_w;
+		}
+		/* No space left on line. */
+		if (pos == 128) {
+			if (! addr1) {
+				if (bp.p_b)
+					++bp.p_w;
+				return bp.p_w;
+			}
+			lflush(line);
+			putchar('\n');
+			pos = 0;
+		}
+		c = getbyte(&bp);
+/*printf ("-%03o", c);*/
+		switch (c) {
+		case 0140: /* end of information */
+			if (bp.p_b)
+				++bp.p_w;
+/*printf ("\n");*/
+			return bp.p_w;
+		case 040: /* blank */
+			line[pos++] = ' ';
+			break;
+		case 0173: /* repeat last symbol */
+			c = getbyte(&bp);
+/*printf ("-%03o", c);*/
+			if (pos < 1)
+				break;
+			lastc = line[pos-1];
+			if (c == 040) {
+				/* fill line by last symbol (?) */
+				memset (line, lastc, 128);
+				lflush(line);
+				pos = 0;
+			} else
+				while (c-- & 017)
+					line[pos++] = lastc;
+			break;
+		default:
+			line[pos++] = itm2koi[c];
+			break;
+		}
+	}
+}
+
+/*
+ * Print word(s) in octal format.
+ * Return next data address.
+ */
+static ushort
+print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
+	int digits, int width, int repeat)
+{
+	unsigned long long w;
+	int i;
+
+	if (digits > 16)
+		digits = 16;
+	for (;;) {
+		if (! addr0)
+			return 0;
+
+		/* No data to print. */
+		if (addr1 && addr0 == addr1 + 1)
+			return addr0;
+
+		/* No space left on line. */
+		if (pos + digits > 128) {
+			if (! addr1)
+				return 0;
+			return addr1 + 1;
+		}
+		w = (unsigned long long) core[addr0].w_b[0] << 40 |
+			(unsigned long long) core[addr0].w_b[1] << 32 |
+			(unsigned long) core[addr0].w_b[2] << 24 |
+			(unsigned long) core[addr0].w_b[3] << 16 |
+			core[addr0].w_b[4] << 8 | core[addr0].w_b[5];
+		++addr0;
+
+		w <<= 64 - digits * 3;
+		for (i=0; i<digits; ++i) {
+			line[pos++] = ((int) (w >> 61) & 7) | '0';
+			w <<= 3;
+		}
+
+		if (! repeat)
+			return addr0;
+		--repeat;
+		if (width)
+			pos += width - digits;
+	}
+}
+
+/*
+ * Print CPU instruction(s).
+ * Return next data address.
+ */
+static ushort
+print_command(ushort addr0, ushort addr1, uchar *line, int pos,
+	int width, int repeat)
+{
+	unsigned long a, b;
+
+	for (;;) {
+		if (! addr0)
+			return 0;
+
+		/* No data to print. */
+		if (addr1 && addr0 == addr1 + 1)
+			return addr0;
+
+		/* No space left on line. */
+		if (pos + 23 > 128) {
+			if (! addr1)
+				return 0;
+			return addr1 + 1;
+		}
+		a = (unsigned long) core[addr0].w_b[0] << 16 |
+			core[addr0].w_b[1] << 8 | core[addr0].w_b[2];
+		b = (unsigned long) core[addr0].w_b[3] << 16 |
+			core[addr0].w_b[4] << 8 | core[addr0].w_b[5];
+		++addr0;
+
+		line[pos++] = (a >> 23 & 1) | '0';
+		line[pos++] = (a >> 20 & 7) | '0';
+		line[pos++] = ' ';
+		if (a & 02000000) {
+			/* long address command */
+			line[pos++] = (a >> 18 & 3) | '0';
+			line[pos++] = (a >> 15 & 7) | '0';
+			line[pos++] = ' ';
+			line[pos++] = (a >> 12 & 7) | '0';
+		} else {
+			/* short address command */
+			line[pos++] = (a >> 18 & 1) | '0';
+			line[pos++] = (a >> 15 & 7) | '0';
+			line[pos++] = (a >> 12 & 7) | '0';
+			line[pos++] = ' ';
+		}
+		line[pos++] = (a >> 9 & 7) | '0';
+		line[pos++] = (a >> 6 & 7) | '0';
+		line[pos++] = (a >> 3 & 7) | '0';
+		line[pos++] = (a & 7) | '0';
+
+		line[pos++] = ' ';
+
+		line[pos++] = (b >> 23 & 1) | '0';
+		line[pos++] = (b >> 20 & 7) | '0';
+		line[pos++] = ' ';
+		if (b & 02000000) {
+			/* long address command */
+			line[pos++] = (b >> 18 & 3) | '0';
+			line[pos++] = (b >> 15 & 7) | '0';
+			line[pos++] = ' ';
+			line[pos++] = (b >> 12 & 7) | '0';
+		} else {
+			/* short address command */
+			line[pos++] = (b >> 18 & 1) | '0';
+			line[pos++] = (b >> 15 & 7) | '0';
+			line[pos++] = (b >> 12 & 7) | '0';
+			line[pos++] = ' ';
+		}
+		line[pos++] = (b >> 9 & 7) | '0';
+		line[pos++] = (b >> 6 & 7) | '0';
+		line[pos++] = (b >> 3 & 7) | '0';
+		line[pos++] = (b & 7) | '0';
+
+		if (! repeat)
+			return addr0;
+		--repeat;
+		if (width)
+			pos += width - 23;
+	}
+}
+
+/*
+ * Print real number(s).
+ * Return next data address.
+ */
+static ushort
+print_real(ushort addr0, ushort addr1, uchar *line, int pos,
+	int digits, int width, int repeat)
+{
+	/* TODO */
+	return addr1 ? addr1 + 1 : 0;
+}
+
+/*
+ * Extracode 64: printing.
+ *
+ * The information array has the following format
+ * - First word:
+ *   iiii ........ xxxxxxxxxxxx
+ *   jjjj ........ yyyyyyyyyyyy
+ * - Other words:
+ *   ffff bbbbbbbb dddddddddddd
+ *   esss wwwwwwww rrrrrrrrrrrr
+ *
+ * Here:
+ * x+Ri	- start address of data
+ * y+Rj	- end address of data
+ * f	- print format
+ * b	- starting position, 0 - most left
+ * d 	- number of digits (for integer formats)
+ * e	- 1 for final word
+ * s	- skip this number of lines (not for real numbers?)
+ * w	- total field width (for integer formats)
+ * r	- repetition counter (0-once, 1-twice etc)
+ *
+ * Print formats:
+ * 0 	- text in GOST encoding
+ * 1	- CPU instruction
+ * 2	- octal number
+ * 3	- real number (mantissa=digits-4)
+ * 4	- text in ITM encoding
+ */
 int
 print(void)
 {
 	ushort          cwaddr = reg[016];
-	alureg_t        cw;
-	uinstr_t        cwl, cwr;
+	word_t		*wp = &core[cwaddr];
 	ushort          addr0, addr1;
-	uchar           indef;
-	uchar           c = 0;
-	ptr             bp;
-	int             cnt = 0, pos;
 	uchar           line[128];
+	int		format, offset, digits, final, width, repeat;
+
 	if (!pflag)
 		return E_SUCCESS;
 	if (xnative)
@@ -155,75 +459,63 @@ print(void)
 	if (cwaddr < 2)
 		return E_SUCCESS;
 
-	if (!(cflags[cwaddr] & C_UNPACKED))
-		unpack(cwaddr);
-	LOAD(cw, cwaddr);
+	/* Get data pointers. */
+	addr0 = ADDR(Laddr1(*wp) + reg[Lreg(*wp)]);
+	addr1 = ADDR(Raddr1(*wp) + reg[Rreg(*wp)]);
+/*printf ("*** E64  %05o-%05o\n", addr0, addr1);*/
+	if (addr1 <= addr0)
+		addr1 = 0; /* No limit */
 
-	cwl = uicore[cwaddr][0];
-	cwr = uicore[cwaddr][1];
-
-	addr0 = ADDR((cw.l & 077777) + reg[cwl.i_reg]);
-	addr1 = ADDR((cw.r & 077777) + reg[cwr.i_reg]);
-	indef = addr1 <= addr0;
-	bp.p_w = addr0;
-	bp.p_b = 0;
-
+	/* Execute every format word in order. */
 	memset(line, ' ', sizeof(line));
-	pos = 0;
+	for (;;) {
+		++wp;
+		if (wp >= core+CORESZ || ! addr0)
+			return E_NOTERM;
 
-	while (bp.p_w)
-		if ((!indef && (bp.p_w == addr1 + 1)) ||
-				(addr1 == 0 && ++cnt == 128) ||
-				(isend(c = getbyte(&bp)))) {
-			lflush(line);
-			if (c != 0172 || pos)
-				putchar('\n');
-			fflush(stdout);
-			return E_SUCCESS;
-		} else {
-			switch (c) {
-			case 0176:
-				line[pos++] = ' ';
-				break;
-			case 0201:
-				if (pos) {
-					lflush(line);
-					pos = 0;
-				}
-				putchar('\f');
-				line[pos++] = ' ';
-				break;
-			case 0175:
-			case 0214:
-				if (pos) {
-					lflush(line);
-					pos = 0;
-				}
-				putchar('\n');
-				break;
-			case 0143:
-			case 0242:
-			case 0341:
-				continue;
-			case 0173:
-			case 0200:
-				pos = getbyte(&bp) % 128;
-				continue;
-			default:
-				if (c < sizeof uppr)
-					line[pos++] = upp[c];
-				else
-					line[pos++] = '$';
-				break;
-			}
-			if (pos == 128) {
-				lflush(line);
-				putchar('\n');
-				pos = 0;
-			}
+		format = Lreg(*wp);
+		offset = wp->w_b[1] >> 4 | ((wp->w_b[0] << 4) & 0xf0);
+		digits = Laddr2(*wp);
+		final = Rreg(*wp);
+		width = wp->w_b[4] >> 4 | ((wp->w_b[3] << 4) & 0xf0);
+		repeat = Raddr2(*wp);
+/* printf ("        %05o-%05o  format=%d offset=%d digits=%d end=%#o width=%d repeat=%d\n",
+addr0, addr1, format, offset, digits, final, width, repeat); */
+		switch (format) {
+		case 0:	/* text in GOST encoding */
+			addr0 = print_gost(addr0, addr1, line, offset);
+			break;
+		case 1:	/* CPU instruction */
+			addr0 = print_command(addr0, addr1, line, offset,
+				width, repeat);
+			break;
+		case 2: /* octal number */
+			addr0 = print_octal(addr0, addr1, line, offset,
+				digits, width, repeat);
+			break;
+		case 3: /* real number */
+			addr0 = print_real(addr0, addr1, line, offset,
+				digits, width, repeat);
+/*			final &= ~7;*/
+			break;
+		case 4:	/* text in ITM encoding */
+			addr0 = print_itm(addr0, addr1, line, offset);
+			break;
 		}
 
-	return E_NOTERM;
+		/* Check the limit of data pointer. */
+		if (addr1 && addr0 == addr1 + 1)
+			break;
+		if (final & 8)
+			break;
+	}
+	lflush(line);
+	putchar('\n');
+	if (final & 7)
+		while (--final & 7)
+			putchar('\n');
+	fflush(stdout);
+	return E_SUCCESS;
 }
 
 int
