@@ -104,6 +104,10 @@ dump(unsigned sz) {
 			PUT(pc);
 			continue;
 		}
+		if (*cp == 0141) {
+			pos = 0;
+			continue;
+		}
 		if (maxp >= 0) {
 			fwrite(line, 1, maxp + 1, stdout);
 			rstline();
