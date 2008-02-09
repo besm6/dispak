@@ -239,7 +239,7 @@ mpar:
 				goto mpar;
 			while (*cp) {
 				ulong   u;
-
+				int off;
 				if (psp.nvol >= 12) {
 					inperr("меоф >= 12");
 					return -1;
@@ -249,6 +249,7 @@ mpar:
 				if (cp[2] != '(' || u < 030 || u >= 070)
 					goto fs;
 				psp.vol[psp.nvol].u = u;
+				psp.vol[psp.nvol].offset = 0;
 				u = 0;
 				sscanf(cp += 3, "%ld", &u);
 				if (!u || u >= 4096) {
@@ -267,6 +268,10 @@ mpar:
 				} else if (!strncmp(cp, "-ър", 3)) {
 					psp.vol[psp.nvol].wr = 1;
 					cp += 3;
+				} else if (*cp == '-' && sscanf(++cp, "%o", &off) > 0) {
+					psp.vol[psp.nvol].offset = off;
+					while(isdigit(*cp))
+						++cp;
 				}
 				psp.vol[psp.nvol].volno = u;
 				if (*cp++ != ')')

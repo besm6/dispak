@@ -29,6 +29,7 @@ struct passport {
 		uchar                   wr;
 		uchar                   u;
 		ushort                  volno;
+		ushort			offset;
 	}                       vol[MAXVOL];
 	ulong                   arr_end;        /* offset to input array 1 end */
 };

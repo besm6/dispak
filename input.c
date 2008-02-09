@@ -52,6 +52,8 @@ ibr:
 			disks[u].diskh = drumh;
 			disks[u].offset = no;
 			continue;
+		} else {
+			disks[u].offset = psp.vol[i].offset;
 		}
 		disks[u].diskno = no;
 		if (!(disks[u].diskh = disk_open(no, flg)))
