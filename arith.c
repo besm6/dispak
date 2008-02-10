@@ -672,6 +672,26 @@ yta() {
 }
 
 /*
+ * Fetch BESM "real" value and return it as native double.
+ */
+double
+fetch_real (int addr)
+{
+	alureg_t word;
+	math_t real;
+	int negative = 0;
+
+	LOAD(word, addr);
+	UNPCK(word);
+	if (NEGATIVE(word)) {
+		NEGATE(word);
+		negative = 1;
+	}
+	TO_NAT(word, real);
+	return negative ? -real.d : real.d;
+}
+
+/*
  *      $Log: arith.c,v $
  *      Revision 1.5  2006/03/19 08:41:56  leob
  *      Implemented correct non-restoring division. TAU goes past division.

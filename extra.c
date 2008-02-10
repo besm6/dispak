@@ -403,6 +403,29 @@ print_command(ushort addr0, ushort addr1, uchar *line, int pos,
 }
 
 /*
+ * Extract decimal exponent from the real value.
+ * Return value in range 0.1 - 0.9(9).
+ * Input value must be nonzero positive.
+ */
+static double
+real_exponent (double value, int *exponent)
+{
+	*exponent = 0;
+	if (value <= 0)
+		return 0; /* cannot happen */
+
+	while (value >= 1) {
+		++*exponent;
+		value /= 10;
+	}
+	while (value < 0.1) {
+		--*exponent;
+		value *= 10;
+	}
+	return value;
+}
+
+/*
  * Print real number(s).
  * Return next data address.
  */
@@ -410,8 +433,66 @@ static ushort
 print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 	int digits, int width, int repeat)
 {
-	/* TODO */
-	return addr1 ? addr1 + 1 : 0;
+	int i, negative, exponent, digit;
+	double value;
+
+	if (digits > 20)
+		digits = 20;
+	for (;;) {
+		if (! addr0)
+			return 0;
+
+		/* No data to print. */
+		if (addr1 && addr0 == addr1 + 1)
+			return addr0;
+
+		/* No space left on line. */
+		if (pos + digits + 2 > 128) {
+			if (! addr1)
+				return 0;
+			return addr1 + 1;
+		}
+
+		negative = (core[addr0].w_b[0] & 1);
+		if (! (core[addr0].w_b[0] >> 1) && ! core[addr0].w_b[0] &&
+		    ! core[addr0].w_b[1] && ! core[addr0].w_b[2] &&
+		    ! core[addr0].w_b[3] && ! core[addr0].w_b[4] &&
+		    ! core[addr0].w_b[5]) {
+			value = 0;
+			exponent = 0;
+		} else {
+			value = fetch_real (addr0);
+			if (value < 0)
+				value = -value;
+			value = real_exponent (value, &exponent);
+		}
+		++addr0;
+
+/*printf ("        %.13f e%+02d\n", value, exponent);*/
+		line[pos++] = ' ';
+		line[pos++] = negative ? '-' : '+';
+		for (i=0; i<digits-4; ++i) {
+			value = value * 10;
+			digit = (int) value;
+			line[pos++] = '0' + digit;
+			value -= digit;
+		}
+		line[pos++] = 'e';
+		if (exponent >= 0)
+			line[pos++] = '+';
+		else {
+			line[pos++] = '-';
+			exponent = -exponent;
+		}
+		line[pos++] = '0' + exponent / 10;
+		line[pos++] = '0' + exponent % 10;
+
+		if (! repeat)
+			return addr0;
+		--repeat;
+		if (width)
+			pos += width - digits - 2;
+	}
 }
 
 /*
@@ -447,7 +528,7 @@ int
 print(void)
 {
 	ushort          cwaddr = reg[016];
-	word_t		*wp = &core[cwaddr];
+	word_t		*wp0, *wp;
 	ushort          addr0, addr1;
 	uchar           line[128];
 	int		format, offset, digits, final, width, repeat;
@@ -460,14 +541,17 @@ print(void)
 		return E_SUCCESS;
 
 	/* Get data pointers. */
-	addr0 = ADDR(Laddr1(*wp) + reg[Lreg(*wp)]);
-	addr1 = ADDR(Raddr1(*wp) + reg[Rreg(*wp)]);
+	wp0 = &core[cwaddr];
+	addr0 = ADDR(Laddr1(*wp0) + reg[Lreg(*wp0)]);
+	addr1 = ADDR(Raddr1(*wp0) + reg[Rreg(*wp0)]);
 /*printf ("*** E64  %05o-%05o\n", addr0, addr1);*/
 	if (addr1 <= addr0)
 		addr1 = 0; /* No limit */
 
 	/* Execute every format word in order. */
 	memset(line, ' ', sizeof(line));
+again:
+	wp = wp0;
 	for (;;) {
 		++wp;
 		if (wp >= core+CORESZ || ! addr0)
@@ -479,8 +563,8 @@ print(void)
 		final = Rreg(*wp);
 		width = wp->w_b[4] >> 4 | ((wp->w_b[3] << 4) & 0xf0);
 		repeat = Raddr2(*wp);
-/* printf ("        %05o-%05o  format=%d offset=%d digits=%d end=%#o width=%d repeat=%d\n",
-addr0, addr1, format, offset, digits, final, width, repeat); */
+/*printf ("        %05o-%05o  format=%d offset=%d digits=%d end=%#o width=%d repeat=%d\n",
+addr0, addr1, format, offset, digits, final, width, repeat);*/
 		switch (format) {
 		case 0:	/* text in GOST encoding */
 			addr0 = print_gost(addr0, addr1, line, offset);
@@ -506,8 +590,15 @@ addr0, addr1, format, offset, digits, final, width, repeat); */
 		/* Check the limit of data pointer. */
 		if (addr1 && addr0 == addr1 + 1)
 			break;
-		if (final & 8)
+		if (final & 8) {
+			if (addr1) {
+				/* Repeat printing task until all data expired. */
+				lflush(line);
+				putchar('\n');
+				goto again;
+			}
 			break;
+		}
 	}
 	lflush(line);
 	putchar('\n');

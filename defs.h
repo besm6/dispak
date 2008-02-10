@@ -454,6 +454,7 @@ int ddio (void);
 int term (void);
 int resources (void);
 int eexit (void);
+double fetch_real (int);
 
 /* debug.y */
 void help (void);
