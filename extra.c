@@ -709,7 +709,7 @@ again:
 int
 e53(void) {
 	switch (reg[016]) {
-	case 010: {
+	case 010: {	/* get time since midnight */
 		struct tm       *d;
 #ifdef __linux
 		struct timeval t;
@@ -732,7 +732,7 @@ e53(void) {
 		ehandler = ADDR(acc.r);
 		acc.l = acc.r = 0;
 		return E_SUCCESS;
-	case 012:
+	case 012:		/* set event mask */
 		emask = acc.r & 0xffffff;
 		return E_SUCCESS;
 	case 017: {             /* wait for events      */
@@ -794,21 +794,21 @@ e50(void) {
 		return elfun(EF_EXP);
 	case 7:
 		return elfun(EF_ENTIER);
-	case 0100:
+	case 0100:	/* get account id */
 		acc = user;
 		return E_SUCCESS;
-	case 0101:
+	case 0101:	/* get error code */
 		acc.ml = 0;
 		acc.mr = lasterr;
 		return E_SUCCESS;
-	case 0102:
+	case 0102:	/* set number of exceptions to catch */
 		ninter = (acc.r & 0177) + 1;
 		return E_SUCCESS;
-	case 0103:
+	case 0103:	/* set exception handler address */
 		intercept = ADDR(acc.r);
 		ninter = 1;
 		return E_SUCCESS;
-	case 0105:
+	case 0105:	/* get volume number by handle */
 		acc.l = 0;
 		{
 			unsigned        u = (acc.r >> 12) & 077;
@@ -820,14 +820,14 @@ e50(void) {
 				acc.r = 077777;
 		}
 		return E_SUCCESS;
-	case 0112:
+	case 0112:	/* set volume offset in chunks of 040 blocks */
 		disks[(acc.r >> 12) & 077].offset = (acc.r << 5) & 07777;
 		return E_SUCCESS;
-	case 0113:
+	case 0113:	/* get current offset */
 		acc.l = disks[(acc.r >> 12) & 077].offset >> 5;
 		acc.r = 0;
 		return E_SUCCESS;
-	case 0114: {
+	case 0114: {	/* get date */
 		time_t t;
 		struct tm * d;
 		time(&t);
@@ -842,14 +842,14 @@ e50(void) {
 			1;
 		return E_SUCCESS;
 	}
-	case 0115: case 0116:
+	case 0115: case 0116:	/* grab/release a volume */
 		return E_SUCCESS;
-	case 0121:
+	case 0121:		/* specify volume password */
 		return E_SUCCESS;
-	case 0127:
+	case 0127:		/* query presence of passwords */
 		acc.r = acc.l = 0;
 		return E_SUCCESS;
-	case 0131: {
+	case 0131: {		/* attach volume to handle */
 		unsigned        u;
 
 		u = acc.l >> 18;
@@ -873,11 +873,13 @@ e50(void) {
 		acc.r = 0;
 		return E_SUCCESS;
 	}
-	case 0135:
+	case 0135:	/* get phys. number of a console */
 		return E_SUCCESS;
-	case 0136:
+	case 0136:	/* undocumented */
 		return E_SUCCESS;
-	case 0156:
+	case 0137:	/* undocumented */
+		return E_SUCCESS;
+	case 0156:	/* get volume type; pretend it is 29.5 Mb disk */
 		acc.l = 0;
 		if (disks[(acc.r >> 12) & 077].diskno)
 			acc.r = 1;
@@ -905,7 +907,7 @@ e50(void) {
 	case 0200:      /* page status  */
 		acc.l = acc.r = 0;      /* present */
 		return E_SUCCESS;
-	case 0202:
+	case 0202:	/* get error description */
 		{
 			uchar           *sp;
 			unsigned        di;
@@ -917,7 +919,7 @@ e50(void) {
 					koi8[*sp++ - 32] : 017;
 		}
 		return E_SUCCESS;
-	case 07700:
+	case 07700:	/* set alarm */
 		if (!(acc.r & 0x7fff)) {
 			struct itimerval        itv = {{0, 0}, {0, 0}};
 			setitimer(ITIMER_REAL, &itv, NULL);
@@ -931,10 +933,10 @@ e50(void) {
 			setitimer(ITIMER_REAL, &itv, NULL);
 		}
 		return E_SUCCESS;
-	case 07701:
+	case 07701:	/* form new task */
 		exform();
 		return E_SUCCESS;
-	case 07702:
+	case 07702:	/* where am I? for position-independent code */
 		acc.l = 0;
 		acc.r = reg[016] = pc;
 		return E_SUCCESS;
@@ -959,27 +961,31 @@ e62(void) {
 	int             e;
 
 	switch (reg[016]) {
-	case 0:
+	case 0:		/* unconditional termination */
 		return E_TERM;
-	case 0044:
+	case 0044:	/* cancel output stream, but we don't */
 		return E_SUCCESS;
-	case 0053:
+	case 0053:	/* set extracode intercept mask, we feign sucess */
 		acc.l = 0;
 		acc.r = 077777;
 		return E_SUCCESS;
-	case 0103:
+	case 0102:	/* stop reading from terminal */
+		return E_SUCCESS;
+	case 0103:	/* get logical console number by physical */
 		acc.l = acc.r = 0;
 		return E_SUCCESS;
-	case 0120:
+	case 0120:	/* undocumented */
 		return E_SUCCESS;
-	case 0124:
+	case 0123:	/* enable-disable punching */
+		return E_SUCCESS;
+	case 0124:	/* as e70 but with control word in ACC (unsafe) */
 		LOAD(r, 1);
 		STORE(acc, 1);
 		reg[016] = 1;
 		e = ddio();
 		STORE(r, 1);
 		return e;
-	default:
+	default:	/* set volume offset or close volume */
 		u = reg[016] >> 9;
 		if ((u >= 030) && (u < 070)) {
 			if (!disks[u].diskno)
@@ -1033,6 +1039,7 @@ int parity(int byte) {
 	return !byte;
 }
 
+/* get front panel switches */
 int
 e61(void) {
 	int             i;
@@ -1140,63 +1147,65 @@ ddio(void) {
 	return E_SUCCESS;
 }
 
+#define E71BUFSZ (0324*6)
 #define PUTB(c) *dp++ = (c)
 STATIC int
 ttout(uchar flags, ushort a1, ushort a2) {
-	uchar   buf[0324 * 6], *sp, *dp;
-
-	sp = core[a1].w_b;
-	dp = buf;
+	uchar   *sp, *start;
+	start = sp = core[a1].w_b;
 	if (flags == 0220) {
-		PUTB(' ');
+		/* output to operator's console - first char is channel num */
+		putchar(' ');
 		++sp;
 	}
-	while (((dp - buf) < sizeof(buf)) && ((dp - buf) < (a2 - a1 + 1) * 6)) {
+	while ((sp - start < E71BUFSZ) && (sp - start < (a2 - a1 + 1) * 6)) {
 		if (flags & 1) {
-			PUTB(*sp & 0x7f);
+			/* bit 37 means raw I/O */
+			putchar(*sp & 0x7f);
 		} else
 		switch (*sp) {
 		case 0172:
 		case 0377:
-			if (!(flags & 010))
-				PUTB('\n');
+			if (!(flags & 010)) {
+				/* if not a prompt */
+				putchar('\n');
+			}
 			goto done;
 		case 0175:
+			/* maybe should output backslash here ? */
 		case 0214:
-			PUTB('\n');
+			putchar('\n');
 			break;
 		case 0136:
-			PUTB('?');
+			putchar('?');
 			break;
 		case 0143:
+			/* zero-width space */
 			break;
-		case 0146:	/* assuming ANSI compatibility */
-			PUTB('\33');
-			PUTB('[');
-			PUTB('D');
+		case 0146:
+		case 0170:
+			/* non-destructive backspace */
+			/* assuming ANSI compatibility */
+			fputs("\033[D", stdout);
 			break;
 		case 021:
 			if (flags == 0220) {
-				PUTB('\n');
+				/* up arrow is end of text for op. console */
+				putchar('\n');
 				goto done;
 			}
 			/* fall thru */
 		default:
-			if (*sp < 0134)
-				PUTB(upp[*sp]);
+			if (*sp <= 0134)
+				putchar(upp[*sp]);
 			else {
-				PUTB('[');
-				PUTB('0' + (*sp >> 6));
-				PUTB('0' + ((*sp >> 3) & 7));
-				PUTB('0' + (*sp & 7));
-				PUTB(']');
+				printf("[%03o]", *sp);
 			}
 			break;
 		}
 		++sp;
 	}
 done:
-	fwrite(buf, 1, dp - buf, stdout);
 	fflush(stdout);
 
 	if (!(flags & 010))
