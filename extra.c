@@ -127,6 +127,86 @@ lflush(uchar *line) {
 	memset(line, ' ', i + 1);
 }
 
+void
+print_text_debug (ushort addr0, ushort addr1, int itm_flag, int pos)
+{
+	ptr             bp;
+	int		c;
+
+	printf ("*** E64  %s ", itm_flag ? "itm" : "gost");
+	bp.p_w = addr0;
+	bp.p_b = 0;
+	for (;;) {
+		if (! bp.p_w) {
+done:			printf ("\n");
+			return;
+		}
+		if (addr1 && bp.p_w == addr1 + 1)
+			goto done;
+
+		/* No space left on line. */
+		if (! addr1 && pos == 128) {
+			c = getbyte(&bp);
+			printf (" (%03o)", c);
+			if (c > 11)
+				c = 11;
+			while (c-- > 0)
+			goto done;
+		}
+
+		c = getbyte(&bp);
+		printf ("-%03o", c);
+
+		/* end of information */
+		if (itm_flag)
+			switch (c) {
+			case 0140: /* end of information */
+				goto done;
+			case 0173: /* repeat last symbol */
+				c = getbyte(&bp);
+				printf ("-%03o", c);
+				if (c == 040)
+					pos = 0;
+				else
+					pos += c & 017;
+				break;
+			default:
+				++pos;
+				break;
+			}
+		else {
+			switch (c) {
+			case 0172:
+			case 0231:
+			case 0377:
+				goto done;
+			case 0201: /* new page */
+				if (pos > 0)
+					pos = 0;
+				++pos;
+				break;
+			case 0175:
+			case 0214: /* new line */
+				pos = 0;
+				break;
+			case 0143:
+			case 0242: /* ignore */
+			case 0341:
+				break;
+			case 0173:
+			case 0200: /* set position */
+				c = getbyte(&bp);
+				printf ("-%03o", c);
+				pos = c % 128;
+				break;
+			default:
+				++pos;
+				break;
+			}
+		}
+	}
+}
+
 /*
  * Print string in GOST format.
  * Return next data address.
@@ -150,6 +230,14 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
 		/* No space left on line. */
 		if (pos == 128) {
 			if (! addr1) {
+				lflush(line);
+				c = getbyte(&bp);
+				if (c != 0172 && c != 0231) {
+					if (c > 11)
+						c = 11;
+					while (c-- > 1)
+						putchar('\n');
+				}
 				if (bp.p_b)
 					++bp.p_w;
 				return bp.p_w;
@@ -159,14 +247,12 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
 			pos = 0;
 		}
 		c = getbyte(&bp);
-/*printf ("-%03o", c);*/
 		switch (c) {
 		case 0172: /* end of information */
 		case 0231:
 		case 0377:
 			if (bp.p_b)
 				++bp.p_w;
-/*printf ("\n");*/
 			return bp.p_w;
 		case 0176: /* blank */
 			line[pos++] = ' ';
@@ -194,7 +280,6 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
 		case 0173:
 		case 0200: /* set position */
 			c = getbyte(&bp);
-/*printf ("-%03o", c);*/
 			pos = c % 128;
 			break;
 		default:
@@ -224,10 +309,9 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 			return 0;
 
 		/* No data to print. */
-		if (addr1 && bp.p_w == addr1 + 1) {
-/*printf ("\n");*/
+		if (addr1 && bp.p_w == addr1 + 1)
 			return bp.p_w;
-		}
+
 		/* No space left on line. */
 		if (pos == 128) {
 			if (! addr1) {
@@ -240,19 +324,16 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 			pos = 0;
 		}
 		c = getbyte(&bp);
-/*printf ("-%03o", c);*/
 		switch (c) {
 		case 0140: /* end of information */
 			if (bp.p_b)
 				++bp.p_w;
-/*printf ("\n");*/
 			return bp.p_w;
 		case 040: /* blank */
 			line[pos++] = ' ';
 			break;
 		case 0173: /* repeat last symbol */
 			c = getbyte(&bp);
-/*printf ("-%03o", c);*/
 			if (pos < 1)
 				break;
 			lastc = line[pos-1];
@@ -260,6 +341,7 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 				/* fill line by last symbol (?) */
 				memset (line, lastc, 128);
 				lflush(line);
+				putchar('\n');
 				pos = 0;
 			} else
 				while (c-- & 017)
@@ -414,9 +496,17 @@ real_exponent (double value, int *exponent)
 	if (value <= 0)
 		return 0; /* cannot happen */
 
+	while (value >= 1000000) {
+		*exponent += 6;
+		value /= 1000000;
+	}
 	while (value >= 1) {
 		++*exponent;
 		value /= 10;
+	}
+	while (value < 0.0000001) {
+		*exponent -= 6;
+		value *= 1000000;
 	}
 	while (value < 0.1) {
 		--*exponent;
@@ -468,7 +558,6 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 		}
 		++addr0;
 
-/*printf ("        %.13f e%+02d\n", value, exponent);*/
 		line[pos++] = ' ';
 		line[pos++] = negative ? '-' : '+';
 		for (i=0; i<digits-4; ++i) {
@@ -513,7 +602,7 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
  * b	- starting position, 0 - most left
  * d 	- number of digits (for integer formats)
  * e	- 1 for final word
- * s	- skip this number of lines (not for real numbers?)
+ * s	- skip this number of lines
  * w	- total field width (for integer formats)
  * r	- repetition counter (0-once, 1-twice etc)
  *
@@ -531,7 +620,7 @@ print(void)
 	word_t		*wp0, *wp;
 	ushort          addr0, addr1;
 	uchar           line[128];
-	int		format, offset, digits, final, width, repeat;
+	int		format, offset, digits, final, width, repeat, i;
 
 	if (!pflag)
 		return E_SUCCESS;
@@ -544,7 +633,6 @@ print(void)
 	wp0 = &core[cwaddr];
 	addr0 = ADDR(Laddr1(*wp0) + reg[Lreg(*wp0)]);
 	addr1 = ADDR(Raddr1(*wp0) + reg[Rreg(*wp0)]);
-/*printf ("*** E64  %05o-%05o\n", addr0, addr1);*/
 	if (addr1 <= addr0)
 		addr1 = 0; /* No limit */
 
@@ -563,10 +651,17 @@ again:
 		final = Rreg(*wp);
 		width = wp->w_b[4] >> 4 | ((wp->w_b[3] << 4) & 0xf0);
 		repeat = Raddr2(*wp);
-/*printf ("        %05o-%05o  format=%d offset=%d digits=%d end=%#o width=%d repeat=%d\n",
-addr0, addr1, format, offset, digits, final, width, repeat);*/
+#if 0
+		printf ("*** E64  %05o-%05o  format=%d offset=%d", addr0, addr1, format, offset);
+		if (digits) printf (" digits=%d", digits);
+		if (width) printf (" width=%d", width);
+		if (repeat) printf (" repeat=%d", repeat);
+		if (final) printf (" FINAL=%#o", final);
+		printf ("\n");
+#endif
 		switch (format) {
 		case 0:	/* text in GOST encoding */
+/*print_text_debug (addr0, addr1, 0, offset);*/
 			addr0 = print_gost(addr0, addr1, line, offset);
 			break;
 		case 1:	/* CPU instruction */
@@ -580,31 +675,33 @@ addr0, addr1, format, offset, digits, final, width, repeat);*/
 		case 3: /* real number */
 			addr0 = print_real(addr0, addr1, line, offset,
 				digits, width, repeat);
-/*			final &= ~7;*/
 			break;
 		case 4:	/* text in ITM encoding */
+/*print_text_debug (addr0, addr1, 1, offset);*/
 			addr0 = print_itm(addr0, addr1, line, offset);
 			break;
 		}
-
-		/* Check the limit of data pointer. */
-		if (addr1 && addr0 == addr1 + 1)
-			break;
 		if (final & 8) {
-			if (addr1) {
+			lflush(line);
+			if (addr1 && addr0 <= addr1) {
 				/* Repeat printing task until all data expired. */
-				lflush(line);
 				putchar('\n');
 				goto again;
 			}
+			if (final & 7) {
+				for (i=final & 7; i>=0; --i)
+					putchar('\n');
+			} else
+				putchar('\n');
+			break;
+		}
+		/* Check the limit of data pointer. */
+		if (addr1 && addr0 > addr1) {
+			lflush(line);
+			putchar('\n');
 			break;
 		}
 	}
-	lflush(line);
-	putchar('\n');
-	if (final & 7)
-		while (--final & 7)
-			putchar('\n');
 	fflush(stdout);
 	return E_SUCCESS;
 }
