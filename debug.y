@@ -368,7 +368,7 @@ okno (int trace)
 	int     i;
         extern ulong icnt;
 	wp = &core[pcm_dbg];
-	printf ("icnt %d; %c%05o%c", icnt, pcm_dbg & 0x8000 ? 'S' : ' ',
+	printf ("icnt %ld; %c%05o%c", icnt, pcm_dbg & 0x8000 ? 'S' : ' ',
 				ADDR(pcm_dbg), right ? ' ' : ':');
 	if (right)
 		if (Rstruct(*wp))

@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
+#include <stdlib.h>
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
