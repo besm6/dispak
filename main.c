@@ -1,12 +1,56 @@
+/*
+ * BESM-6 emulator.
+ * Usage:
+ *	besm6 [<options>...] <input-buf-number>
+ *
+ * Options:
+ *	-x, --native
+ *		use native extracode E64
+ *	-b, --break
+ *		break on first cmd
+ *	-v, --visual
+ *		visual mode for debugger
+ *	-t, --trace
+ *		trace all extracodes
+ *	-s, --stats
+ *		show statistics for machine instructions
+ *	-p, --output-enable
+ *		display printing output on stdout (default for batch tasks)
+ *	--output-disable
+ *		no printing output (default for TELE tasks)
+ *	-o file, --output=file
+ *		redirect printing output to file
+ *	-l, --output-latin
+ *		use Latin letters for output
+ *	--output-cyrillic
+ *		use Cyrillic letters for output (default)
+ *	--output-raw=file
+ *		dump raw output to file
+ *	-c file, --punch=file
+ *		punch to file
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <getopt.h>
 #include "defs.h"
 #ifdef DEBUG
 #include "optab.h"
 #endif
 #include "disk.h"
+
+#define PACKAGE	"besm6"
+#define VERSION "2.5"
 
 static struct   {
 	int     dsk;
@@ -19,7 +63,8 @@ static struct   {
 	{0,      0,      0,      0,		},
 };
 
-static char     *pout = NULL;
+static char     *pout_file = NULL;
+static char     *pout_raw = NULL;
 char		*punchfile = NULL;
 extern int      input(unsigned);
 void            catchsig(int sig);
@@ -32,84 +77,163 @@ void            stat_out(void);
 #endif
 
 ulong           icnt;
+
+enum {
+	OPT_CYRILLIC,
+	OPT_OUTPUT_DISABLE,
+	OPT_OUTPUT_RAW,
+};
+
+/* Table of options. */
+static struct option longopts[] = {
+	/* option	     has arg		integer code */
+	{ "help",		0,	0,	'h'		},
+	{ "version",		0,	0,	'V'		},
+	{ "output-latin",	0,	0,	'l'		},
+	{ "output-cyrillic",	0,	0,	OPT_CYRILLIC	},
+	{ "break",		0,	0,	'b'		},
+	{ "visual",		0,	0,	'v'		},
+	{ "trace",		0,	0,	't'		},
+	{ "stats",		0,	0,	's'		},
+	{ "output-enable",	0,	0,	'p'		},
+	{ "output-disable",	0,	0,	OPT_OUTPUT_DISABLE },
+	{ "native",		0,	0,	'x'		},
+	{ "output",		1,	0,	'o'		},
+	{ "output-raw",		1,	0,	OPT_OUTPUT_RAW },
+	{ "punch",		1,	0,	'c'		},
+	{ 0,			0,	0,	0		},
+};
+
+static void
+usage ()
+{
+	fprintf (stderr, "%s version %s, Copyright 1968-1987 USSR\n", PACKAGE, VERSION);
+	fprintf (stderr, "This is free software, covered by the GNU General Public License.\n");
+	fprintf (stderr, "\n");
+	fprintf (stderr, "Emulator of BESM-6, soviet computer of 60-x.\n");
+	fprintf (stderr, "Usage:\n");
+	fprintf (stderr, "\t%s [options] <input-buf-number>\n", PACKAGE);
+	fprintf (stderr, "Options:\n");
+        fprintf (stderr, "\t-x, --native\n");
+        fprintf (stderr, "\t\tuse native extracode E64\n");
+        fprintf (stderr, "\t-b, --break\n");
+        fprintf (stderr, "\t\tbreak on first cmd\n");
+        fprintf (stderr, "\t-v, --visual\n");
+        fprintf (stderr, "\t\tvisual mode for debugger\n");
+        fprintf (stderr, "\t-t, --trace\n");
+        fprintf (stderr, "\t\ttrace all extracodes\n");
+        fprintf (stderr, "\t-s, --stats\n");
+        fprintf (stderr, "\t\tshow statistics for machine instructions\n");
+        fprintf (stderr, "\t-p, --output-enable\n");
+        fprintf (stderr, "\t\tdisplay printing output on stdout (default for batch tasks)\n");
+        fprintf (stderr, "\t--output-disable\n");
+        fprintf (stderr, "\t\tno printing output (default for TELE tasks)\n");
+        fprintf (stderr, "\t-o file, --output=file\n");
+        fprintf (stderr, "\t\tredirect printing output to file\n");
+        fprintf (stderr, "\t--output-raw=file\n");
+        fprintf (stderr, "\t\tdump raw output to file\n");
+        fprintf (stderr, "\t-l, --output-latin\n");
+        fprintf (stderr, "\t\tuse Latin letters for output\n");
+        fprintf (stderr, "\t--output-cyrillic\n");
+        fprintf (stderr, "\t\tuse Cyrillic letters for output (default)\n");
+        fprintf (stderr, "\t-c file, --punch=file\n");
+        fprintf (stderr, "\t\tpunch to file\n");
+	exit (1);
+}
+
 int
-main(argc, argv)
-	char **argv;
+main(int argc, char **argv)
 {
 	int             i, k;
 	double          sec;
 	void            *nh;
+
+	myname = argv[0];
+
+	for (;;) {
+		i = getopt_long (argc, argv, "hVlbvtspxo:c:", longopts, 0);
+		if (i < 0)
+			break;
+		switch (i) {
+		case 'h':
+			usage ();
+			break;
+		case 'V':
+			printf ("Version: %s\n", VERSION);
+			return 0;
+		case 'l':		/* use Latin letters for output */
+			upp = uppl;
+			break;
+		case OPT_CYRILLIC:	/* use Cyrillic letters for output */
+			upp = uppr;
+			break;
+		case 'b':		/* break on first cmd */
+			breakflg = 1;
+			break;
+		case 'v':		/* visual on */
+			visual = 1;
+			break;
+		case 't':		/* trace on */
+			++trace;
+			break;
+		case 's':		/* statistics on */
+			++stats;
+			break;
+		case 'p':		/* enable printing output (e64) */
+			pout_enable = 1;
+			break;
+		case OPT_OUTPUT_DISABLE: /* disable printing output */
+			pout_disable = 1;
+			break;
+		case 'x':		/* native xcodes */
+			xnative = 1;
+			break;
+		case 'o':
+			pout_file = optarg;
+			pout_enable = 1;
+			break;
+		case OPT_OUTPUT_RAW:
+			pout_raw = optarg;
+			pout_enable = 1;
+			break;
+		case 'c':
+			punchfile = optarg;
+			break;
+		}
+	}
+	if (optind >= argc)
+		usage ();
+
+	if (optind < argc-1) {
+		fprintf (stderr, "%s: too many files\n", myname);
+		exit (1);
+	}
+	ifile = argv[optind];
 
 	if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
 		signal (SIGTERM, catchsig);
 	if (signal (SIGINT, SIG_IGN) != SIG_IGN)
 		signal (SIGINT, catchsig);
 
-	myname = argv[0];
-	for (i=1; i<argc; i++) {
-		if (argv[i][0] == '-')
-			for (k=1; argv[i][k]; k++)
-				switch (argv[i][k]) {
-				case 'l':	/* use Latin letters for output */
-					upp = uppl;
-					break;
-				case 'b':       /* break on first cmd */
-					breakflg = 1;
-					break;
-				case 'v':       /* visual on */
-					visual = 1;
-					break;
-				case 't':       /* trace on */
-					++trace;
-					break;
-				case 's':       /* statistics on */
-					++stats;
-					break;
-				case 'p':
-					++pflag;
-					break;
-				case 'x':       /* native xcodes */
-					xnative = 1;
-					break;
-				case 'o':
-					pout = &argv[i][k] + 1;
-					goto brk;
-				case 'c':
-					punchfile = &argv[i][k] + 1;
-					goto brk;
-				default:
-					fprintf  (stderr,
-						"%s: bad flag: %c\n",
-						myname, argv[i][k]);
-					exit (1);
-				}
-		else if (ifile) {
-			fprintf (stderr,  "%s: too many files\n",
-				myname);
-			exit (1);
-		} else
-			    ifile = argv[i];
-brk:
-		continue;
-	}
-	if (!ifile) {
-usage:
-		fprintf(stderr, "Usage: %s [-bvp] <n>, where n is ibuf number.\n", myname);
-		exit(1);
-	}
-
 	i = 0;
 	while (*ifile && !isdigit(0xFF & *ifile))
 		++ifile;
 	sscanf(ifile, "%o", &i);
-	if (!i || i >= 0200)
-		goto usage;
+	if (! i || i >= 0200)
+		usage ();
 	if (!(drumh = disk_open(0, DISK_READ_WRITE | DISK_TEMP)))
 		exit(1);
 	k = input(i);
 	if (k < 0) {
 		fprintf(stderr, " ïû ÷÷ä %03o\n", i);
 		exit(1);
+	}
+	if (notty) {
+		/* Batch task. */
+		pout_enable = ! pout_disable;
+	} else {
+		/* TELE task. */
+		pout_disable = ! pout_enable;
 	}
 
 	if (!sv_load()) {
@@ -207,12 +331,13 @@ void
 dump_pout(void) {
 	FILE    *fp;
 	ushort  z;
-	uchar   buf[6144];
+	char   buf[6144];
 
-	if (!pout || !pflag || !xnative)
+	if (! pout_raw || ! pout_enable || ! xnative)
 		return;
-	if (!(fp = fopen(pout, "w"))) {
-		perror(pout);
+	fp = fopen(pout_raw, "w");
+	if (! fp) {
+		perror(pout_raw);
 		return;
 	}
 

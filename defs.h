@@ -380,7 +380,8 @@ EXTERN void             *drumh;         /* our drums            */
 EXTERN unsigned         lpbufh;         /* lpr buffer handle    */
 EXTERN ushort           abpc;
 EXTERN uchar            abright;
-EXTERN uchar            pflag;          /* e64 printing allowed */
+EXTERN uchar            pout_enable;	/* e64 printing allowed */
+EXTERN uchar            pout_disable;	/* e64 printing suppressed */
 EXTERN uchar            xnative;        /* native xcodes */
 EXTERN ushort           lasterr;
 EXTERN ushort           intercept;

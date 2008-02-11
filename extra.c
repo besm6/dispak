@@ -622,7 +622,7 @@ print(void)
 	uchar           line[128];
 	int		format, offset, digits, final, width, repeat, i;
 
-	if (!pflag)
+	if (! pout_enable)
 		return E_SUCCESS;
 	if (xnative)
 		return E_UNIMP;
@@ -1012,7 +1012,7 @@ e63(void) {
 		acc.r = 3600;
 		return E_SUCCESS;
 	case 1:
-		if (pflag) {
+		if (pout_enable) {
 			gettimeofday(&ct, NULL);
 			printf("чтенс уюефб: %2f\n",
 					TIMEDIFF(start_time, ct) - excuse);
@@ -1607,7 +1607,7 @@ emu_call(void) {
 		stats = acc.r & 1;
 		break;
 	case 'p':
-		pflag = acc.r & 1;
+		pout_enable = acc.r & 1;
 		break;
 	case 'x':       /* native xcodes */
 		xnative = acc.r & 1;

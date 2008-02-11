@@ -101,7 +101,7 @@ ulong   run() {
 	ushort                  cf;
 	uinstr_t                ui;
 	reg_t                   nextpc, pcm;
-	ushort                  cnt, r, err;
+	ushort                  cnt, r, err = 0;
 	int                     i;
 	ulong                   icount = 0;
 	uchar                   mem;
@@ -165,7 +165,7 @@ FOREVER
 
 	ui = uicore[pcm][right];
 	op = optab[ui.i_opcode];
-	
+
 	if (((cf & C_BPT) && !right) | (stepflg == 1) | breakflg) {
 dbg:
 		pcm_dbg = pcm;

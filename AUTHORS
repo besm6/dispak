@@ -1,0 +1,17 @@
+To find out what should go in this file, see "Information For
+Maintainers of GNU Software", the section called "Recording Changes":
+http://www.gnu.org/prep/maintain/maintain.html#Recording-Contributors
+
+
+Serge Vakulenko:
+	An early version of emulator, including embedded
+	debugger (debug.y). Extracode 64 (printing).
+
+Michael Yaroslavtsev:
+	Disks, input and output queues, most extracodes and supervisor.
+
+Leonid Broukhis:
+	Correct arithmetics, punching, some extracodes.
+
+Dmitry Volodin:
+	Porting to Linux and ia64.
