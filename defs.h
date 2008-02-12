@@ -472,6 +472,9 @@ void unpack (ushort);
 void pout_decode (char *fout);
 void pout_decode_file (char *inname, char *outname);
 
+/* vsinput.c */
+int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
+
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
 #else

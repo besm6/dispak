@@ -34,8 +34,6 @@ struct passport {
 	ulong                   arr_end;        /* offset to input array 1 end */
 };
 
-extern int      vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
-
 /*      $Log: iobuf.h,v $
  *      Revision 1.3  1999/02/09 01:33:37  mike
  *      Design flaw fix: it was not possible to change

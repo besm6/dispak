@@ -31,7 +31,7 @@ main(int argc, char **argv) {
 		sscanf(argv[4 + b], "%o", &addr);
 
 	for (; zs < ze; ++zs) {
-		if (disk_read(diskh, zs, buf) != DISK_IO_OK)
+		if (disk_read(diskh, zs, (char*) buf) != DISK_IO_OK)
 			exit(1);
 
 		if (b)

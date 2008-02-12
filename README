@@ -107,8 +107,6 @@ A data set ends with a character E
 
 The character sequence FINISH
 
-The program 'vsinput' reads the file which name is given in the command line
-and, if successful, forms an input queue entry and prints its number.
-
-The program 'vsix', given an input queue number and a file name,
-loads and runs the task from the input queue.
+The program 'besm6' reads the file which name is given in the command line
+and, if successful, forms an input queue entry, loads and runs the task
+from the input queue.

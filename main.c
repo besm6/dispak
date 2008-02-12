@@ -1,7 +1,19 @@
 /*
  * BESM-6 emulator.
- * Usage:
- *	besm6 [<options>...] <input-buf-number>
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
+/* Usage:
+ *	besm6 [options...] task-file
+ *	besm6 [options...] input-buf-number
+ *	besm6 [options...] --decode-output raw-file
  *
  * Options:
  *	-x, --native
@@ -32,15 +44,6 @@
  *		punch to file
  *	-punch-binary
  *		punch in binary format (default dots and holes)
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.
- *
- * You can redistribute this program and/or modify it under the terms of
- * the GNU General Public License as published by the Free Software Foundation;
- * either version 2 of the License, or (at your discretion) any later version.
- * See the accompanying file "COPYING" for more details.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +78,7 @@ ulong           run();
 extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            pout_dump(char *filename);
+static FILE	*input_fd;
 #ifdef DEBUG
 void            stat_out(void);
 #endif
@@ -119,6 +123,7 @@ usage ()
 	fprintf (stderr, "\n");
 	fprintf (stderr, "Emulator of BESM-6, soviet computer of 60-x.\n");
 	fprintf (stderr, "Usage:\n");
+	fprintf (stderr, "\t%s [options] <task-file>\n", PACKAGE);
 	fprintf (stderr, "\t%s [options] <input-buf-number>\n", PACKAGE);
 	fprintf (stderr, "\t%s [options] --decode-output <raw-file>\n", PACKAGE);
 	fprintf (stderr, "Options:\n");
@@ -153,12 +158,25 @@ usage ()
 	exit (1);
 }
 
+static unsigned
+cget(void)
+{
+	return getc(input_fd);
+}
+
+static void
+diag(char *s)
+{
+	fputs(s, stderr);
+}
+
 int
 main(int argc, char **argv)
 {
 	int             i, k;
 	double          sec;
 	void            *nh;
+	char 		*endptr;
 	int		decode_output = 0;
 
 	myname = argv[0];
@@ -241,13 +259,25 @@ main(int argc, char **argv)
 	if (signal (SIGINT, SIG_IGN) != SIG_IGN)
 		signal (SIGINT, catchsig);
 
-	i = 0;
-	while (*ifile && !isdigit(0xFF & *ifile))
-		++ifile;
-	sscanf(ifile, "%o", &i);
-	if (! i || i >= 0200)
-		usage ();
-	if (!(drumh = disk_open(0, DISK_READ_WRITE | DISK_TEMP)))
+	i = strtol(ifile, &endptr, 8);
+	if (*endptr == 0) {
+		/* Input buf number. */
+		fprintf (stderr, "%s: incorrect queue number %03o\n", myname, i);
+		exit (1);
+	} else {
+		/* Task passport file. */
+		input_fd = fopen(ifile, "r");
+		if (! input_fd) {
+			perror(ifile);
+			exit(1);
+		}
+		i = vsinput(cget, diag, 1);
+		if (i < 0)
+			exit(1);
+		fclose (input_fd);
+	}
+	drumh = disk_open(0, DISK_READ_WRITE | DISK_TEMP);
+	if (! drumh)
 		exit(1);
 	k = input(i);
 	if (k < 0) {
