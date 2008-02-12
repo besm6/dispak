@@ -372,6 +372,7 @@ EXTERN int              trace;          /* trace flag */
 EXTERN int              stats;          /* gather statistics flag */
 EXTERN char             *lineptr;
 EXTERN char		*punchfile;	/* card puncher file */
+EXTERN uchar		punch_binary;	/* punch in binary format */
 EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
 EXTERN char             *myname;        /* program name                 */

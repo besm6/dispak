@@ -30,6 +30,8 @@
  *		display output buffer of previous task run
  *	-c file, --punch=file
  *		punch to file
+ *	-punch-binary
+ *		punch in binary format (default dots and holes)
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -84,6 +86,7 @@ enum {
 	OPT_OUTPUT_DISABLE,
 	OPT_OUTPUT_RAW,
 	OPT_DECODE_OUTPUT,
+	OPT_PUNCH_BINARY,
 };
 
 /* Table of options. */
@@ -104,6 +107,7 @@ static struct option longopts[] = {
 	{ "output-raw",		1,	0,	OPT_OUTPUT_RAW },
 	{ "decode-output",	0,	0,	OPT_DECODE_OUTPUT },
 	{ "punch",		1,	0,	'c'		},
+	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
 	{ 0,			0,	0,	0		},
 };
 
@@ -144,6 +148,8 @@ usage ()
         fprintf (stderr, "\t\tuse Cyrillic letters for output (default)\n");
         fprintf (stderr, "\t-c file, --punch=file\n");
         fprintf (stderr, "\t\tpunch to file\n");
+        fprintf (stderr, "\t-punch-binary\n");
+        fprintf (stderr, "\t\tpunch in binary format (default dots and holes)\n");
 	exit (1);
 }
 
@@ -208,6 +214,9 @@ main(int argc, char **argv)
 			break;
 		case 'c':
 			punchfile = optarg;
+			break;
+		case OPT_PUNCH_BINARY:	/* punch in binary format */
+			punch_binary = 1;
 			break;
 		}
 	}

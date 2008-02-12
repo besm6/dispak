@@ -1246,6 +1246,7 @@ done:
 	eraise(4);
 	return E_SUCCESS;
 }
+
 STATIC int punch(ushort a1, ushort a2) {
 	static FILE * fd = 0;
 	unsigned char * sp;
@@ -1266,10 +1267,27 @@ STATIC int punch(ushort a1, ushort a2) {
 	max = (a2 - a1 + 1) * 6;
 	while (bytecnt < max) {
 		if (bytecnt % 6) {
-			fputc(*sp, fd);
+			if (punch_binary)
+				fputc(*sp, fd);
+			else if (bytecnt % 6) {
+				fputc(*sp & 0x80 ? 'O' : '.', fd);
+				fputc(*sp & 0x40 ? 'O' : '.', fd);
+				fputc(*sp & 0x20 ? 'O' : '.', fd);
+				fputc(*sp & 0x10 ? 'O' : '.', fd);
+				fputc(*sp & 0x08 ? 'O' : '.', fd);
+				fputc(*sp & 0x04 ? 'O' : '.', fd);
+				fputc(*sp & 0x02 ? 'O' : '.', fd);
+				fputc(*sp & 0x01 ? 'O' : '.', fd);
+			}
 		}
 		sp++;
 		bytecnt++;
+		if (! punch_binary) {
+			if (bytecnt % 12 == 0)
+				fputc('\n', fd);
+			if (bytecnt % 144 == 0)
+				fputc('\n', fd);
+		}
 	}
 	return E_SUCCESS;
 }
