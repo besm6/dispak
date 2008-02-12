@@ -65,7 +65,7 @@ uchar itm2koi[] =
 "üúäâûùæøßþêßàñßß" /* 320-337 */
 "ßßßßßßßßßßßßßßßß" /* 340-357 */
 "ßßßßßßßßßßßßßßßß" /* 360-377 */
-; 
+;
 
 static uchar kitm[] = {
 	0017, 0063, 0134, 0152, 0042, 0062, 0071, 0041, /*  !"#$%&' */
@@ -183,7 +183,7 @@ d_6_12:
 			pname[0] = KOI2UPP(ch);
 			nextc();
 			pname[1] = KOI2UPP(ch);
-			spass = stpsp = passload(pname);
+			spass = stpsp = passload((char*) pname);
 			if (!spass) {
 				inperr("îåô óôðáóð");
 				return -1;
@@ -206,35 +206,36 @@ d_6_12:
 		for (cp = art; ch != '^'; nextc())
 			*cp++ = ch;
 		*cp = 0;
-		if ((cp = strchr(art, ' ')))
+		if ((cp = (uchar*) strchr((char*)art, ' ')))
 			++cp;
-		if (!strncmp(art, "÷èï", 3)) {
+		if (!strncmp((char*)art, "÷èï", 3)) {
 			if (!*cp) {
 mpar:
 				inperr("îåô ðáòáí");
 				return -1;
 			}
-			sscanf(cp, "%lo", &psp.entry);
-		} else if (!strncmp(art, "áãð", 3)) {
+			sscanf((char*)cp, "%lo", &psp.entry);
+		} else if (!strncmp((char*)art, "áãð", 3)) {
 			if (!*cp)
 				goto mpar;
-			sscanf(cp, "%hu", &psp.lprlim);
+			sscanf((char*)cp, "%hu", &psp.lprlim);
 			if (psp.lprlim == 0 || psp.lprlim > 128)
 				psp.lprlim = 128;
 			psp.lprlim = 0200000 - psp.lprlim * 236;
-		} else if (!strncmp(art, "ôåì", 3)) {
+		} else if (!strncmp((char*)art, "ôåì", 3)) {
 			psp.tele = 1;
-		} else if (!strncmp(art, "æéú", 3)) {
+		} else if (!strncmp((char*)art, "æéú", 3)) {
 			if (!cp)
 				goto mpar;
 			while (*cp && !isdigit(*cp))
 				++cp;
-			sscanf (cp, "%lo", &psp.phys);
+			sscanf ((char*)cp, "%lo", &psp.phys);
 			if (!psp.phys ||
 					((psp.phys >= 030) && (psp.phys < 070)) ||
 					(psp.phys >= 0100))
 				goto mpar;
-		} else if (!strncmp(art, "ìåî", 3) || !strncmp(art, "TAP", 3)) {
+		} else if (!strncmp((char*)art, "ìåî", 3) ||
+		    !strncmp((char*)art, "TAP", 3)) {
 			if (!cp)
 				goto mpar;
 			while (*cp) {
@@ -245,13 +246,14 @@ mpar:
 					return -1;
 				}
 				u = 0;
-				sscanf(cp, "%lo", &u);
+				sscanf((char*) cp, "%lo", &u);
 				if (cp[2] != '(' || u < 030 || u >= 070)
 					goto fs;
 				psp.vol[psp.nvol].u = u;
 				psp.vol[psp.nvol].offset = 0;
 				u = 0;
-				sscanf(cp += 3, "%ld", &u);
+				cp += 3;
+				sscanf((char*) cp, "%ld", &u);
 				if (!u || u >= 4096) {
 					inperr("ðìïè ôïí");
 					return -1;
@@ -265,10 +267,11 @@ mpar:
 					u = i;
 					psp.vol[psp.nvol].wr = 2;
 					++cp;
-				} else if (!strncmp(cp, "-úð", 3)) {
+				} else if (!strncmp((char*)cp, "-úð", 3)) {
 					psp.vol[psp.nvol].wr = 1;
 					cp += 3;
-				} else if (*cp == '-' && sscanf(++cp, "%o", &off) > 0) {
+				} else if (*cp == '-' &&
+				    sscanf((char*) ++cp, "%o", &off) > 0) {
 					psp.vol[psp.nvol].offset = off;
 					while(isdigit(*cp))
 						++cp;
@@ -390,7 +393,7 @@ noend:
 					goto a1done;
 				    }
 				    pch = ch;
-				    w = w << 8 | 
+				    w = w << 8 |
 					(itm ? KOI2ITM(ch) : KOI2UPP(ch));
 				}
 				if ((i = dump(W_DATA, w)))
@@ -412,7 +415,7 @@ a1done:
 					goto noend;
 				    s[i] = ch;
 				    nextc();
-				    if (i == 5 && !strncmp(s, "``````", 6)) {
+				    if (i == 5 && !strncmp((char*) s, "``````", 6)) {
 					raw = 0;
 					for (c = 0; c < 24; ++c)
 					    if ((i = dump(W_DATA, 1ull)))
@@ -427,7 +430,7 @@ a1done:
 				nextc();
 				raw = 0;
                                 if (s[0] == '`') {
-                                    FILE * f = fopen(s+1, "r");
+                                    FILE *f = fopen((char*) s+1, "r");
                                     uchar p[120];
                                     if (!f) {
                                         inperr("íáóóé÷ ðõóô");
@@ -577,8 +580,8 @@ static uchar
 	dh = disk_open(2053, DISK_READ_ONLY);
 	if (!dh)
 		return NULL;
-	disk_read(dh, 0543, buf);
-	disk_read(dh, 0544, buf + 6144);
+	disk_read(dh, 0543, (char*) buf);
+	disk_read(dh, 0544, (char*) buf + 6144);
 	disk_close(dh);
 	for (cp = buf; (cp < (buf + 12288)) && *cp;
 				cp += ((cp[4] << 8) | cp[5]) * 6)

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "defs.h"
+#include "disk.h"
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
@@ -17,79 +19,35 @@
 	++pos; \
 }
 
-unsigned char   upp[] = "0123456789+-/,. e@()x=;[]*`'#<>:\
-бвчздецъйклмнопртуфхжигюыэщшьасD\
-FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"я`'";
+extern unsigned char *upp;
 
-FILE    *fp;
-unsigned char   para[PARASZ];
-char            line[129];
-int             pos;
-int             maxp;
-unsigned char   pc;
+static unsigned char	para[PARASZ];
+static char		line[129];
+static int		pos;
+static int		maxp;
+static int		done;
+static int		bytes_total, bytes_tail;
+static unsigned char	lastc;
 
-void            dump(unsigned sz), rstline();
-
-int
-main(int argc, char **argv) {
-	unsigned        w = 0;
-	unsigned        b = 0;
-
-	if (argc != 2) {
-		fprintf(stderr, "Arg count.\n");
-		exit(1);
-	}
-
-	if (!(fp = fopen(argv[1], "r"))) {
-		perror(argv[1]);
-		exit(1);
-	}
-
-	rstline();
-	while (fread(para, 1, PARASZ, fp) == PARASZ) {
-
-		if (!w) {
-			w = (para[4] << 8 & 0x300) | para[5];
-			if (w) {
-				w *= 6;
-				b = para[4] >> 7 | para[3] << 1;
-				b = ((b ^ 0xf) + 1) & 0xf;
-				b = 6 - b;
-			} else
-				dump(PARASZ);
-		}
-		if (w) {
-			if (w > PARASZ) {
-				w -= PARASZ;
-				dump(PARASZ);
-			} else {
-				if (b) {
-				    memcpy(para + w - 6, para + w - b, b);
-				    dump(w - 6 + b);
-				} else
-				    dump(w);
-				break;
-			}
-		}
-	}
-
-	if (maxp >= 0) {
-		fwrite(line, 1, maxp + 1, stdout);
-		putchar('\n');
-	}
-
-	return 0;
+static void
+rstline(void)
+{
+	memset(line, ' ', 128);
+	line[128] = 0;
+	pos = 0;
+	maxp = -1;
 }
 
-void
-dump(unsigned sz) {
+static void
+dump(FILE *fout, unsigned sz)
+{
 	unsigned char   *cp, rc;
 
 	for (cp = para + 12; cp - para < sz; ++cp) {
 		switch (*cp) {
 		case 0177:
 			for (rc = *++cp; rc; --rc)
-				PUT(pc);
+				PUT(lastc);
 			continue;
 		case 0174:
 		case 0175:
@@ -101,8 +59,8 @@ dump(unsigned sz) {
 			continue;
 		}
 		if (*cp <= 0140) {
-			pc = *cp - 1;
-			PUT(pc);
+			lastc = *cp - 1;
+			PUT(lastc);
 			continue;
 		}
 		if (*cp == 0141) {
@@ -110,25 +68,131 @@ dump(unsigned sz) {
 			continue;
 		}
 		if (maxp >= 0) {
-			fwrite(line, 1, maxp + 1, stdout);
+			fwrite(line, 1, maxp + 1, fout);
 			rstline();
 		}
 		if (*cp == 0176)
-			putchar('\f');
+			putc('\f', fout);
 		else
 			for (rc = *cp - 0141; rc; --rc)
-				putchar('\n');
+				putc('\n', fout);
+	}
+}
+
+static void
+decode (FILE *fout, char *data)
+{
+	unsigned        bytes_total = 0;
+	unsigned        bytes_tail = 0;
+
+	if (done)
+		return;
+	memcpy (para, data, PARASZ);
+	if (! bytes_total) {
+		bytes_total = (para[4] << 8 & 0x300) | para[5];
+		if (bytes_total) {
+			bytes_total *= 6;
+			bytes_tail = para[4] >> 7 | para[3] << 1;
+			bytes_tail = ((bytes_tail ^ 0xf) + 1) & 0xf;
+			bytes_tail = 6 - bytes_tail;
+		} else
+			dump(fout, PARASZ);
+	}
+	if (bytes_total) {
+		if (bytes_total > PARASZ) {
+			bytes_total -= PARASZ;
+			dump(fout, PARASZ);
+		} else {
+			if (bytes_tail) {
+				memcpy(para + bytes_total - 6,
+					para + bytes_total - bytes_tail,
+					bytes_tail);
+				dump(fout, bytes_total - 6 + bytes_tail);
+			} else
+				dump(fout, bytes_total);
+			done = 1;
+		}
 	}
 }
 
 void
-rstline(void) {
-	memset(line, ' ', 128);
-	line[128] = 0;
-	pos = 0;
-	maxp = -1;
+pout_decode (char *outname)
+{
+	char		buf[6144];
+	FILE		*fout;
+	int		z;
+
+	if (outname) {
+		fout = fopen (outname, "w");
+		if (! fout) {
+			perror (outname);
+			return;
+		}
+	} else
+		fout = stdout;
+
+	bytes_total = 0;
+	bytes_tail = 0;
+	done = 0;
+	rstline();
+	for (z=0; ; ++z) {
+		if (disk_readi(disks[OSD_NOMML3].diskh, z, buf,
+		    DISK_MODE_LOUD) != DISK_IO_OK)
+			break;
+		decode (fout, buf);
+		decode (fout, buf + PARASZ);
+		decode (fout, buf + 2*PARASZ);
+		decode (fout, buf + 3*PARASZ);
+	}
+	decode (fout, (char*) (core + 0160000));
+	decode (fout, (char*) (core + 0160000) + PARASZ);
+	decode (fout, (char*) (core + 0160000) + 2*PARASZ);
+	decode (fout, (char*) (core + 0160000) + 3*PARASZ);
+
+	if (maxp >= 0) {
+		fwrite(line, 1, maxp + 1, fout);
+		putc('\n', fout);
+	}
+	if (fout != stdout)
+		fclose (fout);
 }
 
+void
+pout_decode_file (char *inname, char *outname)
+{
+	char		buf [PARASZ];
+	FILE		*fin, *fout;
+
+	fin = fopen (inname, "r");
+	if (! fin) {
+		perror (inname);
+		return;
+	}
+	if (outname) {
+		fout = fopen (outname, "w");
+		if (! fout) {
+			perror (outname);
+			fclose (fin);
+			return;
+		}
+	} else
+		fout = stdout;
+
+	bytes_total = 0;
+	bytes_tail = 0;
+	done = 0;
+	rstline();
+	while (fread(buf, 1, PARASZ, fin) == PARASZ)
+		decode (fout, buf);
+	fclose (fin);
+
+	if (maxp >= 0) {
+		fwrite(line, 1, maxp + 1, fout);
+		putc('\n', fout);
+	}
+	if (fout != stdout)
+		fclose (fout);
+}
 /*
  *      $Log: dpout.c,v $
  *      Revision 1.5  2008/01/26 20:45:16  leob

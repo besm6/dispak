@@ -4,7 +4,7 @@
 #define	GCC_SPECIFIC(x)
 #endif	/* __GNUC__ */
 
-unsigned char   *errtxt[] = {
+char   *errtxt[] = {
 	" Неизвестная ош.",     /*  0 */
 	" КОНЕЦ ЗАДАЧИ",        /*  1 */
 	" Внутр.ош.эмул",       /*  2 */

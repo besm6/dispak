@@ -796,6 +796,8 @@ done:
 	}
 
 ENDFOREVER
+	if (pout_enable && xnative)
+		pout_decode(pout_file);
 	pc = abpc;
 	right = abright;
 /*      fprintf(stderr, "Error %d\n", err);     */

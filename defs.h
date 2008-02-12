@@ -382,6 +382,7 @@ EXTERN ushort           abpc;
 EXTERN uchar            abright;
 EXTERN uchar            pout_enable;	/* e64 printing allowed */
 EXTERN uchar            pout_disable;	/* e64 printing suppressed */
+EXTERN char		*pout_file;	/* e64 output file name */
 EXTERN uchar            xnative;        /* native xcodes */
 EXTERN ushort           lasterr;
 EXTERN ushort           intercept;
@@ -465,6 +466,10 @@ void okno (int);
 
 /* cu.c */
 void unpack (ushort);
+
+/* dpout.c */
+void pout_decode (char *fout);
+void pout_decode_file (char *inname, char *outname);
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x

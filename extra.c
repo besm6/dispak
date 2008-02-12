@@ -1222,7 +1222,7 @@ ttin(uchar flags, ushort a1, ushort a2) {
 	else
 		fputs("-\r", stdout);
 	fflush(stdout);
-	fgets(buf, sizeof(buf), stdin);
+	fgets((char*) buf, sizeof(buf), stdin);
 	dp = core[a1].w_b;
 	sp = buf;
 	while (dp - core[a1].w_b < (a2 - a1 + 1) * 6) {
@@ -1535,8 +1535,9 @@ diag(char *s) {
 	uchar    *cp, *dp;
 
 	if (diagaddr) {
-		for (cp = s, dp = (uchar *) (core + diagaddr + 1); *cp; ++cp, ++dp)
-			*dp = KOI2UPP(*cp);
+		dp = (uchar*) (core + diagaddr + 1);
+		for (cp=(uchar*)s; *cp; ++cp)
+			*dp++ = KOI2UPP(*cp);
 		*dp = 0172;
 		enreg.l = 0;
 		enreg.r = strlen(s) / 6 + 1;

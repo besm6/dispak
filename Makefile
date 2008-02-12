@@ -5,9 +5,9 @@ DEB		= -DDEBUG -g
 CFLAGS		= ${OPT} ${DEB}
 CC		= gcc -D_GCC_ -Wall
 OBJS		= main.o cu.o optab.o arith.o debug.o input.o extra.o disk.o \
-		  errtxt.o vsinput.o
+		  errtxt.o vsinput.o dpout.o
 VSIOBJS		= vsinmain.o vsinput.o disk.o
-ALL		= vsix vsinput dpout
+ALL		= vsix vsinput
 
 all:		${ALL} diskdir/2099
 		${MAKE} -C besmdisk all

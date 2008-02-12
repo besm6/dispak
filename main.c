@@ -26,6 +26,8 @@
  *		use Cyrillic letters for output (default)
  *	--output-raw=file
  *		dump raw output to file
+ *	--decode-output
+ *		display output buffer of previous task run
  *	-c file, --punch=file
  *		punch to file
  *
@@ -63,7 +65,6 @@ static struct   {
 	{0,      0,      0,      0,		},
 };
 
-static char     *pout_file = NULL;
 static char     *pout_raw = NULL;
 char		*punchfile = NULL;
 extern int      input(unsigned);
@@ -71,7 +72,7 @@ void            catchsig(int sig);
 ulong           run();
 extern void     ib_cleanup(void);
 static int      sv_load(void);
-void            dump_pout(void);
+void            pout_dump(char *filename);
 #ifdef DEBUG
 void            stat_out(void);
 #endif
@@ -82,6 +83,7 @@ enum {
 	OPT_CYRILLIC,
 	OPT_OUTPUT_DISABLE,
 	OPT_OUTPUT_RAW,
+	OPT_DECODE_OUTPUT,
 };
 
 /* Table of options. */
@@ -100,6 +102,7 @@ static struct option longopts[] = {
 	{ "native",		0,	0,	'x'		},
 	{ "output",		1,	0,	'o'		},
 	{ "output-raw",		1,	0,	OPT_OUTPUT_RAW },
+	{ "decode-output",	0,	0,	OPT_DECODE_OUTPUT },
 	{ "punch",		1,	0,	'c'		},
 	{ 0,			0,	0,	0		},
 };
@@ -107,12 +110,13 @@ static struct option longopts[] = {
 static void
 usage ()
 {
-	fprintf (stderr, "%s version %s, Copyright 1968-1987 USSR\n", PACKAGE, VERSION);
+	fprintf (stderr, "%s version %s, Copyright 1967-1987 USSR\n", PACKAGE, VERSION);
 	fprintf (stderr, "This is free software, covered by the GNU General Public License.\n");
 	fprintf (stderr, "\n");
 	fprintf (stderr, "Emulator of BESM-6, soviet computer of 60-x.\n");
 	fprintf (stderr, "Usage:\n");
 	fprintf (stderr, "\t%s [options] <input-buf-number>\n", PACKAGE);
+	fprintf (stderr, "\t%s [options] --decode-output <raw-file>\n", PACKAGE);
 	fprintf (stderr, "Options:\n");
         fprintf (stderr, "\t-x, --native\n");
         fprintf (stderr, "\t\tuse native extracode E64\n");
@@ -132,6 +136,8 @@ usage ()
         fprintf (stderr, "\t\tredirect printing output to file\n");
         fprintf (stderr, "\t--output-raw=file\n");
         fprintf (stderr, "\t\tdump raw output to file\n");
+        fprintf (stderr, "\t--decode-output <raw-file>\n");
+        fprintf (stderr, "\t\tdecode raw output file to text\n");
         fprintf (stderr, "\t-l, --output-latin\n");
         fprintf (stderr, "\t\tuse Latin letters for output\n");
         fprintf (stderr, "\t--output-cyrillic\n");
@@ -147,6 +153,7 @@ main(int argc, char **argv)
 	int             i, k;
 	double          sec;
 	void            *nh;
+	int		decode_output = 0;
 
 	myname = argv[0];
 
@@ -196,11 +203,21 @@ main(int argc, char **argv)
 			pout_raw = optarg;
 			pout_enable = 1;
 			break;
+		case OPT_DECODE_OUTPUT:
+			decode_output = 1;
+			break;
 		case 'c':
 			punchfile = optarg;
 			break;
 		}
 	}
+	if (decode_output) {
+		if (optind != argc-1)
+			usage ();
+		pout_decode_file(argv[optind], pout_file);
+		exit (0);
+	}
+
 	if (optind >= argc)
 		usage ();
 
@@ -271,7 +288,8 @@ main(int argc, char **argv)
 	if (stats)
 		stat_out();
 #endif
-	dump_pout();
+	if (pout_enable && xnative && pout_raw)
+		pout_dump(pout_raw);
 	terminate();
 	ib_cleanup();
 	return (0);
@@ -328,16 +346,15 @@ sv_load() {
 }
 
 void
-dump_pout(void) {
+pout_dump(char *filename)
+{
 	FILE    *fp;
 	ushort  z;
 	char   buf[6144];
 
-	if (! pout_raw || ! pout_enable || ! xnative)
-		return;
-	fp = fopen(pout_raw, "w");
+	fp = fopen(filename, "w");
 	if (! fp) {
-		perror(pout_raw);
+		perror(filename);
 		return;
 	}
 
