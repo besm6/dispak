@@ -319,8 +319,7 @@ main(int argc, char **argv)
 	sec = TIMEDIFF(start_time, stop_time) - excuse;
 	if (!sec)
 		sec = 0.000001;
-	fprintf(stderr,
-		"%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
+	printf("%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
 			icnt, sec, (long)(icnt/sec), (sec * 1000000) / icnt);
 
 	if (stats)

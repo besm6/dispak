@@ -795,8 +795,8 @@ ENDFOREVER
 		pout_decode(pout_file);
 	pc = abpc;
 	right = abright;
-/*      fprintf(stderr, "Error %d\n", err);     */
-	fprintf(stderr, "%s\n", errtxt[err]);
+/*      printf("Error %d\n", err);     */
+	printf("%s\n", errtxt[err]);
 	pcm_dbg = pcm;
 	where();
 

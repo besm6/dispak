@@ -177,6 +177,7 @@ pout_decode_file (char *inname, char *outname)
 		}
 	} else
 		fout = stdout;
+	fflush (stderr);
 
 	bytes_total = 0;
 	bytes_tail = 0;
@@ -190,6 +191,7 @@ pout_decode_file (char *inname, char *outname)
 		fwrite(line, 1, maxp + 1, fout);
 		putc('\n', fout);
 	}
+	fflush (fout);
 	if (fout != stdout)
 		fclose (fout);
 }

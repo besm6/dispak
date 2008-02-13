@@ -112,7 +112,7 @@ terminate(void) {
 			disk_close(disks[u].diskh);
 }
 
-void
+static int
 lflush(uchar *line) {
 	int     i;
 
@@ -121,10 +121,11 @@ lflush(uchar *line) {
 			break;
 
 	if (i < 0)
-		return;
+		return 0;
 
 	fwrite(line, 1, i + 1, stdout);
 	memset(line, ' ', i + 1);
+	return 1;
 }
 
 void
@@ -239,7 +240,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 		case 0172: /* end of information */
 		case 0231:
 		case 0377:
-			if (! addr1)
+			if (pos==0 || pos==128)
 				*need_newline = 0;
 			if (bp.p_b)
 				++bp.p_w;
@@ -266,8 +267,6 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			break;
 		case 0173:
 		case 0200: /* set position */
-			if (pos == 128 && ! addr1)
-				putchar('\n');
 			c = getbyte(&bp);
 			pos = c % 128;
 			break;
@@ -279,10 +278,9 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 addchar:
 			if (pos == 128) {
 				/* No space left on line. */
-				if (c > 0 && c <= 11) {
-					while (--c > 1)
-						putchar('\n');
-				}
+				c &= 017;
+				while (c-- > 2)
+					putchar('\n');
 				if (bp.p_b)
 					++bp.p_w;
 				return bp.p_w;
@@ -291,8 +289,8 @@ addchar:
 			if (pos == 128) {
 				/* No space left on line. */
 				lflush(line);
+				putchar('\n');
 				if (addr1) {
-					putchar('\n');
 					pos = 0;
 				}
 			}
@@ -696,15 +694,14 @@ again:
 			break;
 		}
 		if (final & 8) {
-			lflush(line);
+			final &= 7;
+			if (lflush(line) || (need_newline && ! final))
+				++final;
 			if (addr1 && addr0 <= addr1) {
 				/* Repeat printing task until all data expired. */
 				putchar('\n');
 				goto again;
 			}
-			final &= 7;
-			if (! final || need_newline)
-				++final;
 			while (final-- > 0)
 				putchar('\n');
 			break;
@@ -725,7 +722,7 @@ e53(void) {
 	switch (reg[016]) {
 	case 010: {	/* get time since midnight */
 		struct tm       *d;
-#ifdef __linux
+#if defined (__linux) || ! defined (CLOCK_REALTIME)
 		struct timeval t;
 		gettimeofday (&t, NULL);
 #else
@@ -734,7 +731,7 @@ e53(void) {
 #endif
 		d = localtime (&t.tv_sec);
 		acc.r = ((d->tm_hour * 60 + d->tm_min) * 60 + d->tm_sec) * 50 +
-#ifdef __linux
+#if defined (__linux) || ! defined (CLOCK_REALTIME)
 				t.tv_usec / 20000;
 #else
 				t.tv_nsec / 20000000;
