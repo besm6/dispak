@@ -13,6 +13,7 @@ AC_PROG_CC
 AC_PROG_YACC
 
 # Checks for libraries.
+AC_CHECK_LIB([m], [sin])
 
 # Checks for header files.
 

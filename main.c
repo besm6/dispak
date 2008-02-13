@@ -58,9 +58,6 @@
 #endif
 #include "disk.h"
 
-#define PACKAGE	"besm6"
-#define VERSION "2.5"
-
 static struct   {
 	int     dsk;
 	ushort  zone;
@@ -121,14 +118,15 @@ static struct option longopts[] = {
 static void
 usage ()
 {
-	fprintf (stderr, "%s version %s, Copyright 1967-1987 USSR\n", PACKAGE, VERSION);
+	fprintf (stderr, "%s version %s, Copyright 1967-1987 USSR\n",
+		PACKAGE_NAME, PACKAGE_VERSION);
 	fprintf (stderr, "This is free software, covered by the GNU General Public License.\n");
 	fprintf (stderr, "\n");
 	fprintf (stderr, "Emulator of BESM-6, soviet computer of 60-x.\n");
 	fprintf (stderr, "Usage:\n");
-	fprintf (stderr, "  %s [options] <task-file>\n", PACKAGE);
-	fprintf (stderr, "  %s [options] <input-buf-number>\n", PACKAGE);
-	fprintf (stderr, "  %s [options] --decode-output <raw-file>\n", PACKAGE);
+	fprintf (stderr, "  %s [options] <task-file>\n", PACKAGE_NAME);
+	fprintf (stderr, "  %s [options] <input-buf-number>\n", PACKAGE_NAME);
+	fprintf (stderr, "  %s [options] --decode-output <raw-file>\n", PACKAGE_NAME);
 	fprintf (stderr, "Options:\n");
 	fprintf (stderr, "  -x, --native           use native extracode E64\n");
 	fprintf (stderr, "  -b, --break            break on first cmd\n");
@@ -145,6 +143,8 @@ usage ()
 	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
 	fprintf (stderr, "  --punch-binary         punch in binary format (default dots and holes)\n");
 	fprintf (stderr, "  --bootstrap            used to generate contents of the system disk\n");
+
+	fprintf (stderr, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 	exit (1);
 }
 
@@ -180,7 +180,7 @@ main(int argc, char **argv)
 			usage ();
 			break;
 		case 'V':
-			printf ("Version: %s\n", VERSION);
+			printf ("Version: %s\n", PACKAGE_VERSION);
 			return 0;
 		case 'l':		/* use Latin letters for output */
 			upp = uppl;
