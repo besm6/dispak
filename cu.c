@@ -17,8 +17,8 @@ void
 unpack(pc)
 	ushort  pc;
 {
-	REGISTER word_t         *wp = &core[pc];
-	REGISTER uinstr_t       *ip = uicore[pc];
+	word_t         *wp = &core[pc];
+	uinstr_t       *ip = uicore[pc];
 	ip->i_reg = Lreg(*wp);
 	ip->i_opcode = Lopcode(*wp);
 	ip->i_addr = Laddr(*wp);
@@ -90,14 +90,9 @@ rdtsc(void)
 #endif
 }
 
-#ifdef DEBUG
-#undef  FRUN
-#define FRUN    C_BPW
-#endif
-
 ulong   run() {
-	REGISTER optab_t        op;
-	REGISTER ushort         addr;
+	optab_t        op;
+	ushort         addr;
 	ushort                  cf;
 	uinstr_t                ui;
 	reg_t                   nextpc, pcm;
@@ -176,14 +171,13 @@ dbg:
 	} else if (stepflg)
 		 --stepflg;
 	icnt = ++icount;
-#ifdef DEBUG
+
 	if (stats) {
 		++optab[ui.i_opcode].o_count;
 		tsc += optab[last_op].o_ticks += rdtsc() - tsc;
 		last_op = ui.i_opcode;
 	} else
 		tsc = rdtsc();
-#endif
 
 	abpc = pc;
 	abright = right;

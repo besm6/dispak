@@ -190,13 +190,11 @@ command:        /* void */
 			{ STORE(wd, $1); }
 	|       jhb
 			{
-#ifdef DEBUG
 				int     i;
 				for (i = 0; i < JHBSZ; ++i)
 					printf("%05lo->%05lo\n",
 						(ulong)jhbuf[(jhbi + i) % JHBSZ] >> 16,
 						(ulong)jhbuf[(jhbi + i) % JHBSZ] & 077777);
-#endif
 			}
 	|       execute o2 lcmd o5
 			{

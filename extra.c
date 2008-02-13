@@ -1170,7 +1170,7 @@ ddio(void) {
 
 #define E71BUFSZ (324*6)
 #define PUTB(c) *dp++ = (c)
-STATIC int
+int
 ttout(uchar flags, ushort a1, ushort a2) {
 	uchar   *sp, *start;
 	start = sp = core[a1].w_b;
@@ -1234,7 +1234,7 @@ done:
 	return E_SUCCESS;
 }
 
-STATIC int
+int
 ttin(uchar flags, ushort a1, ushort a2) {
 	uchar   buf[0324 * 6], *sp, *dp;
 
@@ -1268,7 +1268,7 @@ done:
 	return E_SUCCESS;
 }
 
-STATIC int punch(ushort a1, ushort a2) {
+int punch(ushort a1, ushort a2) {
 	static FILE * fd = 0;
 	unsigned char * sp;
 	int bytecnt = 0, max;
@@ -1282,8 +1282,6 @@ STATIC int punch(ushort a1, ushort a2) {
 		}
 		/* fputs("P4 80 N\n", fd); */
 	}
-	if ((a2 - a1 + 1) % 24 != 0)
-		return E_CWERR;
 	sp = core[a1].w_b;
 	max = (a2 - a1 + 1) * 6;
 	while (bytecnt < max) {
@@ -1309,6 +1307,21 @@ STATIC int punch(ushort a1, ushort a2) {
 			if (bytecnt % 144 == 0)
 				fputc('\n', fd);
 		}
+	}
+	/* if a partial card was punched, flush it */
+	if ((a2 - a1 + 1) % 24 != 0) {
+		int remain = 24 - (a2 - a1 + 1) % 24;
+		while (remain--) {
+			if (punch_binary)
+				fwrite("\0\0\0\0\0", 5, 1, fd);
+			else {
+				fwrite("........................................", 40, 1, fd);
+				if (remain % 2 == 0)
+					fputc('\n', fd);
+			}
+		}
+		if (! punch_binary)
+			fputc('\n', fd);
 	}
 	return E_SUCCESS;
 }

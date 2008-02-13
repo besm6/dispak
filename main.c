@@ -55,9 +55,7 @@
 #include <ctype.h>
 #include <getopt.h>
 #include "defs.h"
-#ifdef DEBUG
 #include "optab.h"
-#endif
 #include "disk.h"
 
 static struct   {
@@ -80,9 +78,7 @@ extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            pout_dump(char *filename);
 static FILE	*input_fd;
-#ifdef DEBUG
 void            stat_out(void);
-#endif
 
 ulong           icnt;
 
@@ -326,10 +322,10 @@ main(int argc, char **argv)
 	fprintf(stderr,
 		"%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
 			icnt, sec, (long)(icnt/sec), (sec * 1000000) / icnt);
-#ifdef DEBUG
+
 	if (stats)
 		stat_out();
-#endif
+
 	if (pout_enable && xnative && pout_raw)
 		pout_dump(pout_raw);
 	terminate();
@@ -407,8 +403,6 @@ pout_dump(char *filename)
 	fclose(fp);
 }
 
-#ifdef DEBUG
-
 int
 opcomp(const void *o1, const void *o2) {
 	return ((optab_t *) o1)->o_count - ((optab_t *) o2)->o_count;
@@ -431,8 +425,6 @@ stat_out(void) {
 				100.0 * optab[i].o_count / total,
 				optab[i].o_ticks / optab[i].o_count);
 }
-
-#endif
 
 /*
  *      $Log: main.c,v $

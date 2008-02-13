@@ -539,9 +539,10 @@ prettycard(unsigned char * s, unsigned long long w[]) {
 	    return -1;
 	nextc();
 	if (bit % 80 == 79)
-		nextc();
+		nextc(); /* skip linefeed between punchlines */
     }
-    nextc(); /* there is an empty line after a card */
+    if (ch == '\n')
+	nextc(); /* there may be an empty line after a card */
     return 0;
 }
 

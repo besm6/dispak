@@ -27,9 +27,6 @@ typedef unsigned long   ulong;
 #define EXTERN  extern
 #endif
 
-#ifdef DEBUG
-#define REGISTER
-#define STATIC
 #define JHBSZ   16
 #define JMP(addr)       { \
 	pc = (addr); \
@@ -39,14 +36,6 @@ typedef unsigned long   ulong;
 		jhbi = (jhbi + 1) % JHBSZ; \
 	} \
 }
-#else
-#define REGISTER register
-#define STATIC  static
-#define JMP(addr)       { \
-	pc = (addr); \
-	right = 0; \
-}
-#endif
 
 	/* basic constants */
 
@@ -263,34 +252,18 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 
 #define NEGATIVE(R)     (((R).ml & 0x10000) != 0)
 
-#if defined(M_WORDSWAP) && !defined(DEBUG)
-#define LOAD(reg,addr) {\
-	__asm__("movl\t%0, %%eax" : : "X" (*(ulong *)(core + (addr))) : "%eax");\
-	__asm__("xchgb\t%ah,%al");\
-	__asm__("rorl\t$16,%eax");\
-	__asm__("movzbw\t%%ah,%%cx" : : : "%cx");\
-	__asm__("xchgb\t%ah,%al");\
-	__asm__("shll\t$16,%ecx");\
-	__asm__("shrl\t$8,%eax");\
-	__asm__("movw\t%0, %%cx" : : "X" (*((ulong *)(core + (addr)) + 1)) : "%cx");\
-	__asm__("movl\t%%eax,%0" : "=m" (reg.l));\
-	__asm__("xchgb\t%ch,%cl");\
-	__asm__("movl\t%%ecx,%0" : "=m" (reg.r));\
-}
-
-#else
 #define LOAD(reg,addr) \
 { \
 	uchar *_cp = core[addr].w_b; \
 	(reg).l = ((long) _cp[0] << 16) | (_cp[1] << 8) | _cp[2]; \
 	(reg).r = ((long) _cp[3] << 16) | (_cp[4] << 8) | _cp[5]; \
 }
-#endif
+
 #define STORE(reg,addr) \
 	if (addr) { \
 		uchar *_cp = core[addr].w_b; \
 		unsigned long _l; \
-		if (FRUN & cflags[addr]) {\
+		if (C_BPW & cflags[addr]) {\
 			where();\
 			for (cmdflg = 1; cmdflg; command());\
 		}\
@@ -304,8 +277,6 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 		_cp[5] = _l; \
 		cflags[addr] &= ~C_UNPACKED; \
 	} else
-
-#define FRUN 0
 
 #define UNPCK(R)        { \
 	(R).o = ((R).l >> 17) & 0x7f; \
@@ -393,10 +364,8 @@ EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
 extern uchar            koi8[], uppl[], uppr[], *upp;
 EXTERN ushort           phdrum;
-#ifdef DEBUG
 EXTERN ulong            jhbuf[JHBSZ];
 EXTERN int              jhbi;
-#endif
 EXTERN ulong            ecode_intr;
 
 EXTERN ushort           ehandler;
