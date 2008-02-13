@@ -44,6 +44,9 @@
  *		punch to file
  *	-punch-binary
  *		punch in binary format (default dots and holes)
+ *	--bootstrap
+ *		run in user mode only to build 2099 (no E66, cannot use -x)
+ *		
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +94,7 @@ enum {
 	OPT_OUTPUT_RAW,
 	OPT_DECODE_OUTPUT,
 	OPT_PUNCH_BINARY,
+	OPT_BOOTSTRAP,
 };
 
 /* Table of options. */
@@ -112,6 +116,7 @@ static struct option longopts[] = {
 	{ "decode-output",	0,	0,	OPT_DECODE_OUTPUT },
 	{ "punch",		1,	0,	'c'		},
 	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
+	{ "bootstrap",		0,	0,	OPT_BOOTSTRAP	},
 	{ 0,			0,	0,	0		},
 };
 
@@ -153,8 +158,10 @@ usage ()
         fprintf (stderr, "\t\tuse Cyrillic letters for output (default)\n");
         fprintf (stderr, "\t-c file, --punch=file\n");
         fprintf (stderr, "\t\tpunch to file\n");
-        fprintf (stderr, "\t-punch-binary\n");
+        fprintf (stderr, "\t--punch-binary\n");
         fprintf (stderr, "\t\tpunch in binary format (default dots and holes)\n");
+        fprintf (stderr, "\t--bootstrap\n");
+        fprintf (stderr, "\t\tused to generate contents of the system disk\n");
 	exit (1);
 }
 
@@ -236,7 +243,14 @@ main(int argc, char **argv)
 		case OPT_PUNCH_BINARY:	/* punch in binary format */
 			punch_binary = 1;
 			break;
+		case OPT_BOOTSTRAP:	/* no supervisor, for bootstrapping 2009 */
+			bootstrap = 1;
+			break;
 		}
+	}
+	if (bootstrap) {
+		/* silently */
+		xnative = 0;
 	}
 	if (decode_output) {
 		if (optind != argc-1)
@@ -292,7 +306,7 @@ main(int argc, char **argv)
 		pout_disable = ! pout_enable;
 	}
 
-	if (!sv_load()) {
+	if (!bootstrap && !sv_load()) {
 		fprintf(stderr, "Error loading supervisor.\n");
 		exit(1);
 	}

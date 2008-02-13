@@ -14,14 +14,16 @@ all:		${ALL} diskdir/2099
 besm6:		${OBJS}
 		${CC} ${CFLAGS} -o besm6 ${OBJS} -lm
 
-diskdir/2099:	make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6
+diskdir/2099:	make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
 		${MAKE} besm6
-		./besm6 disp99.b6
-		./besm6 e64.b6
-		./besm6 ekdisp.b6
-		./besm6 sostav.b6
-		./besm6 spe66.b6
-		./besm6 make2099.b6
+		/bin/echo -n DISK > diskdir/2099
+		./besm6 --bootstrap macros.b6
+		./besm6 --bootstrap disp99.b6
+		./besm6 --bootstrap e64.b6
+		./besm6 --bootstrap ekdisp.b6
+		./besm6 --bootstrap sostav.b6
+		./besm6 --bootstrap spe66.b6
+		./besm6 --bootstrap make2099.b6
 
 clean:
 		rm -f ${ALL} *.o *.b *~ core tags diskdir/ibuf/[0-9][0-9][0-9]

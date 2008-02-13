@@ -37,9 +37,9 @@ ibr:
 	accex.r = psp.lprlim;
 	reg[PSREG] = 02003;
 	reg[INTRETREG] = psp.entry;
-	pc = 010;
+	pc = bootstrap ? psp.entry : 010;
 	right = 0;
-	supmode = 0100000;
+	supmode = bootstrap ? 0 : 0100000;
 	sup_mmap = 0100000;
 	notty = !psp.tele;
 	for (i = 0; i < psp.nvol; ++i) {

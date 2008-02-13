@@ -385,6 +385,7 @@ EXTERN uchar            pout_enable;	/* e64 printing allowed */
 EXTERN uchar            pout_disable;	/* e64 printing suppressed */
 EXTERN char		*pout_file;	/* e64 output file name */
 EXTERN uchar            xnative;        /* native xcodes */
+EXTERN uchar		bootstrap;	/* run without disk 2099 */
 EXTERN ushort           lasterr;
 EXTERN ushort           intercept;
 EXTERN ushort           ninter;
