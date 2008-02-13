@@ -28,7 +28,7 @@
  *		show statistics for machine instructions
  *	-p, --output-enable
  *		display printing output on stdout (default for batch tasks)
- *	--output-disable
+ *	-q, --output-disable
  *		no printing output (default for TELE tasks)
  *	-o file, --output=file
  *		redirect printing output to file
@@ -46,7 +46,6 @@
  *		punch in binary format (default dots and holes)
  *	--bootstrap
  *		run in user mode only to build 2099 (no E66, cannot use -x)
- *		
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,7 +89,6 @@ ulong           icnt;
 
 enum {
 	OPT_CYRILLIC,
-	OPT_OUTPUT_DISABLE,
 	OPT_OUTPUT_RAW,
 	OPT_DECODE_OUTPUT,
 	OPT_PUNCH_BINARY,
@@ -109,7 +107,7 @@ static struct option longopts[] = {
 	{ "trace",		0,	0,	't'		},
 	{ "stats",		0,	0,	's'		},
 	{ "output-enable",	0,	0,	'p'		},
-	{ "output-disable",	0,	0,	OPT_OUTPUT_DISABLE },
+	{ "output-disable",	0,	0,	'q'		},
 	{ "native",		0,	0,	'x'		},
 	{ "output",		1,	0,	'o'		},
 	{ "output-raw",		1,	0,	OPT_OUTPUT_RAW },
@@ -144,7 +142,7 @@ usage ()
         fprintf (stderr, "\t\tshow statistics for machine instructions\n");
         fprintf (stderr, "\t-p, --output-enable\n");
         fprintf (stderr, "\t\tdisplay printing output on stdout (default for batch tasks)\n");
-        fprintf (stderr, "\t--output-disable\n");
+        fprintf (stderr, "\t-q, --output-disable\n");
         fprintf (stderr, "\t\tno printing output (default for TELE tasks)\n");
         fprintf (stderr, "\t-o file, --output=file\n");
         fprintf (stderr, "\t\tredirect printing output to file\n");
@@ -189,7 +187,7 @@ main(int argc, char **argv)
 	myname = argv[0];
 
 	for (;;) {
-		i = getopt_long (argc, argv, "hVlbvtspxo:c:", longopts, 0);
+		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);
 		if (i < 0)
 			break;
 		switch (i) {
@@ -220,7 +218,7 @@ main(int argc, char **argv)
 		case 'p':		/* enable printing output (e64) */
 			pout_enable = 1;
 			break;
-		case OPT_OUTPUT_DISABLE: /* disable printing output */
+		case 'q':		/* disable printing output */
 			pout_disable = 1;
 			break;
 		case 'x':		/* native xcodes */

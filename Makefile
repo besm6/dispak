@@ -16,14 +16,17 @@ besm6:		${OBJS}
 
 diskdir/2099:	make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
 		${MAKE} besm6
-		/bin/echo -n DISK > diskdir/2099
-		./besm6 --bootstrap macros.b6
-		./besm6 --bootstrap disp99.b6
-		./besm6 --bootstrap e64.b6
-		./besm6 --bootstrap ekdisp.b6
-		./besm6 --bootstrap sostav.b6
-		./besm6 --bootstrap spe66.b6
-		./besm6 --bootstrap make2099.b6
+		echo -n DISK > diskdir/2099
+		./besm6 -q --bootstrap macros.b6
+		./besm6 -q --bootstrap disp99.b6
+		./besm6 -q --bootstrap e64.b6
+		./besm6 -q --bootstrap ekdisp.b6
+		./besm6 -q --bootstrap sostav.b6
+		./besm6 -q --bootstrap spe66.b6
+		./besm6 -q --bootstrap make2099.b6
+
+log:		.svn
+		svn log > ChangeLog
 
 clean:
 		rm -f ${ALL} *.o *.b *~ core tags diskdir/ibuf/[0-9][0-9][0-9]
