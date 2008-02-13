@@ -3,8 +3,9 @@
 #ifndef defs_h
 #define defs_h                          /* to avoid multiple inclusions */
 
+#include "config.h"
 #include <sys/types.h>
-#ifdef __FreeBSD__
+#ifndef HAVE_ULONG
 typedef unsigned long   ulong;
 #endif
 #include <sys/param.h>
@@ -75,10 +76,6 @@ typedef unsigned long   ulong;
 	/* basic types */
 
 typedef unsigned char   uchar;
-
-#ifndef _GCC_
-typedef unsigned long   ulong;
-#endif
 
 typedef struct  {
 	void            *diskh;
