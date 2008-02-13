@@ -144,16 +144,6 @@ done:			printf ("\n");
 		if (addr1 && bp.p_w == addr1 + 1)
 			goto done;
 
-		/* No space left on line. */
-		if (! addr1 && pos == 128) {
-			c = getbyte(&bp);
-			printf (" (%03o)", c);
-			if (c > 11)
-				c = 11;
-			while (c-- > 0)
-			goto done;
-		}
-
 		c = getbyte(&bp);
 		printf ("-%03o", c);
 
@@ -171,7 +161,15 @@ done:			printf ("\n");
 					pos += c & 017;
 				break;
 			default:
+				/* No space left on line. */
+				if (! addr1 && pos == 128)
+					goto done;
 				++pos;
+				if (pos == 128) {
+					/* No space left on line. */
+					putchar('/');
+					pos = 0;
+				}
 				break;
 			}
 		else {
@@ -200,7 +198,16 @@ done:			printf ("\n");
 				pos = c % 128;
 				break;
 			default:
+				/* No space left on line. */
+				if (pos == 128)
+					goto done;
 				++pos;
+				if (pos == 128) {
+					/* No space left on line. */
+					putchar('/');
+					if (addr1)
+						pos = 0;
+				}
 				break;
 			}
 		}
@@ -212,10 +219,10 @@ done:			printf ("\n");
  * Return next data address.
  */
 static ushort
-print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
+print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 {
 	ptr             bp;
-	uchar           c;
+	uchar           c, ch;
 
 	bp.p_w = addr0;
 	bp.p_b = 0;
@@ -227,36 +234,16 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
 		if (addr1 && bp.p_w == addr1 + 1)
 			return bp.p_w;
 
-		/* No space left on line. */
-		if (pos == 128) {
-			if (! addr1) {
-				lflush(line);
-				c = getbyte(&bp);
-				if (c != 0172 && c != 0231) {
-					if (c > 11)
-						c = 11;
-					while (c-- > 1)
-						putchar('\n');
-				}
-				if (bp.p_b)
-					++bp.p_w;
-				return bp.p_w;
-			}
-			lflush(line);
-			putchar('\n');
-			pos = 0;
-		}
 		c = getbyte(&bp);
 		switch (c) {
 		case 0172: /* end of information */
 		case 0231:
 		case 0377:
+			if (! addr1)
+				*need_newline = 0;
 			if (bp.p_b)
 				++bp.p_w;
 			return bp.p_w;
-		case 0176: /* blank */
-			line[pos++] = ' ';
-			break;
 		case 0201: /* new page */
 			if (pos) {
 				lflush(line);
@@ -279,14 +266,36 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos)
 			break;
 		case 0173:
 		case 0200: /* set position */
+			if (pos == 128 && ! addr1)
+				putchar('\n');
 			c = getbyte(&bp);
 			pos = c % 128;
 			break;
+		case 0176: /* blank */
+			ch = ' ';
+			goto addchar;
 		default:
-			if (c < sizeof uppr)
-				line[pos++] = upp[c];
-			else
-				line[pos++] = '$';
+			ch = (c < sizeof uppr) ? upp[c] : '$';
+addchar:
+			if (pos == 128) {
+				/* No space left on line. */
+				if (c > 0 && c <= 11) {
+					while (--c > 1)
+						putchar('\n');
+				}
+				if (bp.p_b)
+					++bp.p_w;
+				return bp.p_w;
+			}
+			line[pos++] = ch;
+			if (pos == 128) {
+				/* No space left on line. */
+				lflush(line);
+				if (addr1) {
+					putchar('\n');
+					pos = 0;
+				}
+			}
 			break;
 		}
 	}
@@ -620,7 +629,8 @@ print(void)
 	word_t		*wp0, *wp;
 	ushort          addr0, addr1;
 	uchar           line[128];
-	int		format, offset, digits, final, width, repeat, i;
+	int		format, offset, digits, final, width, repeat;
+	int		need_newline;
 
 	if (! pout_enable)
 		return E_SUCCESS;
@@ -651,18 +661,21 @@ again:
 		final = Rreg(*wp);
 		width = wp->w_b[4] >> 4 | ((wp->w_b[3] << 4) & 0xf0);
 		repeat = Raddr2(*wp);
-#if 0
-		printf ("*** E64  %05o-%05o  format=%d offset=%d", addr0, addr1, format, offset);
-		if (digits) printf (" digits=%d", digits);
-		if (width) printf (" width=%d", width);
-		if (repeat) printf (" repeat=%d", repeat);
-		if (final) printf (" FINAL=%#o", final);
-		printf ("\n");
-#endif
+		if (trace_e64) {
+			printf ("*** E64  %05o-%05o  format=%d offset=%d", addr0, addr1, format, offset);
+			if (digits) printf (" digits=%d", digits);
+			if (width) printf (" width=%d", width);
+			if (repeat) printf (" repeat=%d", repeat);
+			if (final) printf (" FINAL=%#o", final);
+			printf ("\n");
+		}
+		need_newline = 1;
 		switch (format) {
 		case 0:	/* text in GOST encoding */
-/*print_text_debug (addr0, addr1, 0, offset);*/
-			addr0 = print_gost(addr0, addr1, line, offset);
+			if (trace_e64)
+				print_text_debug (addr0, addr1, 0, offset);
+			addr0 = print_gost(addr0, addr1, line, offset,
+				&need_newline);
 			break;
 		case 1:	/* CPU instruction */
 			addr0 = print_command(addr0, addr1, line, offset,
@@ -677,7 +690,8 @@ again:
 				digits, width, repeat);
 			break;
 		case 4:	/* text in ITM encoding */
-/*print_text_debug (addr0, addr1, 1, offset);*/
+			if (trace_e64)
+				print_text_debug (addr0, addr1, 1, offset);
 			addr0 = print_itm(addr0, addr1, line, offset);
 			break;
 		}
@@ -688,10 +702,10 @@ again:
 				putchar('\n');
 				goto again;
 			}
-			if (final & 7) {
-				for (i=final & 7; i>=0; --i)
-					putchar('\n');
-			} else
+			final &= 7;
+			if (! final || need_newline)
+				++final;
+			while (final-- > 0)
 				putchar('\n');
 			break;
 		}
@@ -1016,8 +1030,13 @@ e63(void) {
 	case 1:
 		if (pout_enable) {
 			gettimeofday(&ct, NULL);
-			printf("чтенс уюефб: %2f\n",
-					TIMEDIFF(start_time, ct) - excuse);
+			if (xnative) {
+				/* TODO */
+			} else {
+				/* TODO: to pout_file */
+				/* printf ("чтенс уюефб: %2f\n",
+					TIMEDIFF(start_time, ct) - excuse); */
+			}
 		}
 		return E_SUCCESS;
 	case 3:

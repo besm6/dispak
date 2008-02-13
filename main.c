@@ -24,6 +24,8 @@
  *		visual mode for debugger
  *	-t, --trace
  *		trace all extracodes
+ *	--trace-e64
+ *		trace extracode 064
  *	-s, --stats
  *		show statistics for machine instructions
  *	-p, --output-enable
@@ -90,6 +92,7 @@ enum {
 	OPT_DECODE_OUTPUT,
 	OPT_PUNCH_BINARY,
 	OPT_BOOTSTRAP,
+	OPT_TRACE_E64,
 };
 
 /* Table of options. */
@@ -102,6 +105,7 @@ static struct option longopts[] = {
 	{ "break",		0,	0,	'b'		},
 	{ "visual",		0,	0,	'v'		},
 	{ "trace",		0,	0,	't'		},
+	{ "trace-e64",		0,	0,	OPT_TRACE_E64	},
 	{ "stats",		0,	0,	's'		},
 	{ "output-enable",	0,	0,	'p'		},
 	{ "output-disable",	0,	0,	'q'		},
@@ -132,6 +136,7 @@ usage ()
 	fprintf (stderr, "  -b, --break            break on first cmd\n");
 	fprintf (stderr, "  -v, --visual           visual mode for debugger\n");
 	fprintf (stderr, "  -t, --trace            trace all extracodes\n");
+	fprintf (stderr, "  --trace-e64            trace extracode 064\n");
 	fprintf (stderr, "  -s, --stats            show statistics for machine instructions\n");
 	fprintf (stderr, "  -p, --output-enable    display printing output (default for batch tasks)\n");
 	fprintf (stderr, "  -q, --output-disable   no printing output (default for TELE tasks)\n");
@@ -228,6 +233,9 @@ main(int argc, char **argv)
 			break;
 		case OPT_BOOTSTRAP:	/* no supervisor, for bootstrapping 2009 */
 			bootstrap = 1;
+			break;
+		case OPT_TRACE_E64:	/* trace extracode 064 */
+			trace_e64 = 1;
 			break;
 		}
 	}

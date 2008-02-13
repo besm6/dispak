@@ -6,9 +6,12 @@ all-local: diskdir/2099
 	${MAKE} -C besmdisk all
 
 clean-local:
-	-rm -rf *~ diskdir/ibuf/[0-9][0-9][0-9]
+	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
 	${MAKE} -C examples clean
 	${MAKE} -C besmdisk clean
+
+distclean-local:
+	-rm -rf diskdir/2099 autom4te.cache
 
 diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
 	${MAKE} besm6

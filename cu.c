@@ -477,7 +477,8 @@ mtj:
 		reg[016] = ADDR(addr + reg[ui.i_reg]);
 		reg[TRAPNREG] = ui.i_opcode - 050;
 		stopwatch();
-		if (trace) {
+		if (trace && ui.i_opcode != 075) {
+			/* Do not trace e75, it's too verbose. */
 			LOAD(enreg, reg[016] | (supmode & sup_mmap));
 			fprintf(stderr, "%05o:%03o.%05o(%08lo%08lo) %08lo%08lo\n",
 				abpc, ui.i_opcode, reg[016], (ulong)enreg.l, (ulong)enreg.r,

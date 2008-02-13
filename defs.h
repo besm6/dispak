@@ -366,6 +366,7 @@ EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
 EXTERN int		quitflg;	/* "quit" command flag */
 EXTERN int              trace;          /* trace flag */
+EXTERN int              trace_e64;	/* trace extracode 064 */
 EXTERN int              stats;          /* gather statistics flag */
 EXTERN char             *lineptr;
 EXTERN char		*punchfile;	/* card puncher file */

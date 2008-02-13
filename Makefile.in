@@ -514,7 +514,7 @@ distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-hdr distclean-tags
+	distclean-hdr distclean-local distclean-tags
 
 dvi: dvi-am
 
@@ -561,9 +561,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-info-am
 	clean clean-binPROGRAMS clean-generic clean-local ctags dist \
 	dist-all dist-bzip2 dist-gzip dist-shar dist-tarZ dist-zip \
 	distcheck distclean distclean-compile distclean-generic \
-	distclean-hdr distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
+	distclean-hdr distclean-local distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-binPROGRAMS install-data \
 	install-data-am install-exec install-exec-am install-info \
 	install-info-am install-man install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
@@ -576,9 +576,12 @@ all-local: diskdir/2099
 	${MAKE} -C besmdisk all
 
 clean-local:
-	-rm -rf *~ diskdir/ibuf/[0-9][0-9][0-9]
+	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
 	${MAKE} -C examples clean
 	${MAKE} -C besmdisk clean
+
+distclean-local:
+	-rm -rf diskdir/2099 autom4te.cache
 
 diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
 	${MAKE} besm6
