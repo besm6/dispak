@@ -275,9 +275,7 @@ main(int argc, char **argv)
 
 	i = strtol(ifile, &endptr, 8);
 	if (*endptr == 0) {
-		/* Input buf number. */
-		fprintf (stderr, "%s: incorrect queue number %03o\n", myname, i);
-		exit (1);
+		/* Input buf number, use it. */
 	} else {
 		/* Task passport file. */
 		input_fd = fopen(ifile, "r");

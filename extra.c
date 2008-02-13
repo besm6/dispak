@@ -735,6 +735,8 @@ e53(void) {
 	case 012:		/* set event mask */
 		emask = acc.r & 0xffffff;
 		return E_SUCCESS;
+	case 014:		/* enable async processes */
+		return E_SUCCESS;
 	case 017: {             /* wait for events      */
 		struct itimerval        itv = {{0, 0}, {0, 0}};
 
@@ -995,8 +997,8 @@ e62(void) {
 					disk_close(disks[u].diskh);
 				disks[u].diskh = 0;
 				disks[u].diskno = 0;
-				return E_SUCCESS;
 			}
+			return E_SUCCESS;
 		}
 		return E_UNIMP;
 	}
@@ -1147,7 +1149,7 @@ ddio(void) {
 	return E_SUCCESS;
 }
 
-#define E71BUFSZ (0324*6)
+#define E71BUFSZ (324*6)
 #define PUTB(c) *dp++ = (c)
 STATIC int
 ttout(uchar flags, ushort a1, ushort a2) {

@@ -15,7 +15,7 @@
 #define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) == '\r' ? 0174 : (c) <= ' ' ? 017 : koi8[(c) - 32])
 #define KOI2ITM(c)      ((c) <= ' ' ? 040 : (c) == '\n' ? 0214 : kitm[(c) - 32])
 
-static unsigned                 lineno;
+static unsigned                 lineno, pncline, pncsym;
 static unsigned                 level, array;
 static unsigned                 ch;
 static unsigned                 iaddr;
@@ -36,6 +36,7 @@ static void                     inperr(char *);
 static uchar                    *passload(char *src);
 static unsigned                 nextcp(void);
 static int                      dump(uchar tag, unsigned long long w);
+static int                      prettycard(unsigned char * s, unsigned long long w[]);
 static inline unsigned          parity(unsigned byte);
 extern unsigned long long       nextw(void);
 
@@ -422,13 +423,20 @@ a1done:
 						return i;
 					SKIP_SP();
 					goto a3over;
-				    }
+				    } 
 				}
 				s[i] = 0;
 				while (ch != '\n' && ch != -1)
 				    nextc();
 				nextc();
 				raw = 0;
+				if (i == 80 && strspn((char*)s, ".ï") == 80) {
+				    if ((i = prettycard(s, w)))
+					return i;
+				    for (c = 0; c < 24; ++c)
+					if ((i = dump(W_DATA, w[c])))
+					    return i;
+				} else 
                                 if (s[0] == '`') {
                                     FILE *f = fopen((char*) s+1, "r");
                                     uchar p[120];
@@ -499,6 +507,44 @@ wrap:
 	}
 }
 
+static int chad(unsigned long long w[], int bit, char val) {
+    int index = bit / 40;
+    switch (val) {
+	case 'ï':
+	    w[index] <<= 1;
+	    w[index] |= 1;
+	    return 0;	
+	case '.':
+	    w[index] <<= 1;
+	    return 0;
+	default:
+		pncline = bit / 80 + 1;
+		pncsym = (bit % 80) / 8 + 1;
+		inperr("úáíñôéå");
+		pncline = pncsym = 0;
+		return -1;
+    }
+}
+
+/* The first line already in s, will need to read the other 11 */
+static int
+prettycard(unsigned char * s, unsigned long long w[]) {
+    int bit;
+    for (bit = 0; bit < 80; bit++) {
+	/* The first line is good, no need to check */
+	chad(w, bit, s[bit]);
+    }
+    for (bit = 80; bit < 12*80; bit++) {
+	if (chad(w, bit, ch))
+	    return -1;
+	nextc();
+	if (bit % 80 == 79)
+		nextc();
+    }
+    nextc(); /* there is an empty line after a card */
+    return 0;
+}
+
 static unsigned
 nextc(void) {
 
@@ -563,7 +609,7 @@ inperr(char *s) {
 	sprintf(buf, "   á÷÷ä   îðë    îó   îóô   óéí ûéæò %06u%06u\n\
   %05o%6d%6d%6d   %03o %s\n",
 			user_hi, user_lo,
-			iaddr, lineno, 0,   0,    KOI2UPP(ch), s);
+			iaddr, lineno, pncline,   pncsym,    KOI2UPP(ch), s);
 	diagftn(buf);
 }
 
