@@ -8,7 +8,8 @@ FGIJLNQRSUVWZ^<>V&??:=%$|-_!";
 void dump (unsigned, unsigned, unsigned);
 
 int
-main(int argc, char **argv) {
+main(int argc, char **argv)
+{
 	void      *diskh;
 	unsigned  diskno, zs, ze, addr = 0, l, r, b = 0;
 	unsigned char   buf[6144], *cp;
@@ -69,7 +70,8 @@ main(int argc, char **argv) {
 }
 
 void
-dump(unsigned addr, unsigned l, unsigned r) {
+dump(unsigned addr, unsigned l, unsigned r)
+{
 
 	printf("%05o:\t", addr);
 	PRINT_I(l);
@@ -87,26 +89,3 @@ dump(unsigned addr, unsigned l, unsigned r) {
 	PRINT_U(r & 0377);
 	putchar('\n');
 }
-
-/*
- *      $Log: zdump.c,v $
- *      Revision 1.3  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.2.1.2  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.2.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.3  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.2  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

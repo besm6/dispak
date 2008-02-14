@@ -1,3 +1,15 @@
+/*
+ * Reading task passport and image from input queue.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -12,7 +24,8 @@ static ushort           iaddr;
 static ulong            enda3;
 
 int
-input(unsigned ibufno) {
+input(unsigned ibufno)
+{
 	int             i;
 	char            *dd;
 	struct stat     stbuf;
@@ -85,7 +98,8 @@ ibr:
 }
 
 int
-e60(void) {
+e60(void)
+{
 	struct ibword   ibw[24];
 	int             i;
 	ulong           pos;
@@ -125,31 +139,9 @@ e60(void) {
 }
 
 void
-ib_cleanup(void) {
+ib_cleanup(void)
+{
 	fclose(ibuf);
 	if (!psp.keep)
 		unlink(ibufname);
 }
-
-/*
- *      $Log: input.c,v $
- *      Revision 1.4  2001/02/24 03:35:12  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.3  2001/02/17 03:46:43  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.2.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.3  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.2  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

@@ -1,10 +1,22 @@
+/*
+ * BESM-6 stylized error messages.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
 #else
 #define	GCC_SPECIFIC(x)
 #endif	/* __GNUC__ */
 
-char   *errtxt[] = {
+char *errtxt[] = {
 	" Ó≈…⁄◊≈”‘Œ¡— œ€.",     /*  0 */
 	" ÎÔÓÂ„ ˙·‰·˛È",        /*  1 */
 	" ˜Œ’‘“.œ€.‹Õ’Ã",       /*  2 */
@@ -88,21 +100,3 @@ char   *errtxt[] = {
 	" Err 80",              /* 80 */
 	" Ô˚. ı˛ÂÙ·",           /* 81 */
 };
-
-/*
- *      $Log: errtxt.c,v $
- *      Revision 1.2  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.1.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.2  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.1  1999/01/22 18:35:24  mike
- *      Initial revision
- *
- */

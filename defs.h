@@ -1,5 +1,3 @@
-/*      $Id: defs.h,v 1.9 2008/01/26 20:40:57 leob Exp $    */
-
 #ifndef defs_h
 #define defs_h                          /* to avoid multiple inclusions */
 
@@ -344,7 +342,6 @@ EXTERN char		*punchfile;	/* card puncher file */
 EXTERN uchar		punch_binary;	/* punch in binary format */
 EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
-EXTERN char             *myname;        /* program name                 */
 EXTERN ddisk_t          disks[NDISKS];  /* disks & drums        */
 EXTERN void             *drumh;         /* our drums            */
 EXTERN unsigned         lpbufh;         /* lpr buffer handle    */
@@ -456,55 +453,3 @@ extern uchar text_to_koi8[];
 #endif	/* __GNUC__ */
 
 #endif  /* defs_h */
-
-/*
- *      $Log: defs.h,v $
- *      Revision 1.9  2008/01/26 20:40:57  leob
- *      Added punching
- *
- *      Revision 1.8  2001/02/24 04:21:18  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.7  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.5.1.4  2001/02/05 05:44:28  dvv
- *      добавлена поддержка ia64, Linux
- *
- *      Revision 1.5.1.3  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.5.1.2  2001/02/01 07:39:17  root
- *      dual output mode
- *
- *      Revision 1.5.1.1  2001/02/01 03:47:26  root
- *      *** empty log message ***
- *
- *      Revision 1.7  2001/02/01 00:14:28  dvv
- *      more -Wall fixes
- *
- *      Revision 1.6  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.6  2001/02/15 04:53:01  mike
- *      - stats.
- *      - to_2_10()
- *
- *      Revision 1.5  1999/02/09 01:23:14  mike
- *      jmp history now only stores user mode addresses.
- *
- *      Revision 1.4  1999/01/27 01:56:12  mike
- *      bugfix in the optimized LOAD.
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1998/12/30 03:23:26  mike
- *      Got rid of SMALL_ARRAYS option. Hope I don't have to run
- *      it on a 16-bit CPU any more...
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

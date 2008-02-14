@@ -1,16 +1,28 @@
+/*
+ * BESM-6 processor control unit.
+ * Main loop of CPU emulator.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <stdio.h>
 #define EXTERN                          /* to allocate common data      */
 #include "defs.h"
 #include "optab.h"
 
-long    aumodes[] = {
+long aumodes[] = {
 	0,
 	1,              /* LG */
 	0x0100,         /* MG */
 	0x010000,       /* AG */
 };
 
-extern void     ib_cleanup(void);
 extern ulong icnt;
 
 void
@@ -808,43 +820,3 @@ int
 priv() {
 	return E_PRIV;
 }
-
-/*
- *      $Log: cu.c,v $
- *      Revision 1.8  2008/01/26 20:42:06  leob
- *      e54 = arcsin
- *
- *      Revision 1.7  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.4.1.2  2001/02/06 07:32:31  dvv
- *      добавлены несколько экстракодов для ФОРТРАН-ДУБНА
- *
- *      Revision 1.4.1.1  2001/02/01 03:47:26  root
- *      e50 fix
- *
- *      Revision 1.5  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.6  2001/02/15 03:44:01  mike
- *      Stats gathering.
- *      emu_call() from *74.
- *
- *      Revision 1.5  2000/01/18 02:22:58  mike
- *      On dvv's request access implemented to some unix sys calls.
- *
- *      Revision 1.4  1999/02/02 03:26:27  mike
- *      Allowed 002 (mod) op in supervisor mode.
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1998/12/30 03:23:26  mike
- *      Got rid of SMALL_ARRAYS option. Hope I don't have to run
- *      it on a 16-bit CPU any more...
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

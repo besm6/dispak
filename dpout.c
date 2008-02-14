@@ -1,3 +1,15 @@
+/*
+ * Decoding output buffer of native extracode e64.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -193,15 +205,3 @@ pout_decode_file (char *inname, char *outname)
 	if (fout != stdout)
 		fclose (fout);
 }
-/*
- *      $Log: dpout.c,v $
- *      Revision 1.5  2008/01/26 20:45:16  leob
- *      Distinctive decimal exponent
- *
- *      Revision 1.4  2001/02/24 03:31:03  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.3  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- */

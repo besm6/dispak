@@ -2,7 +2,8 @@
 #include "disk.h"
 
 int
-main(int argc, char **argv) {
+main(int argc, char **argv)
+{
 	unsigned        diskno = 0;
 	void            *hdisk;
 	int             fd, i;
@@ -34,23 +35,3 @@ main(int argc, char **argv) {
 	disk_close(hdisk);
 	exit(0);
 }
-
-/*
- *      $Log: imgtodisk.c,v $
- *      Revision 1.2  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.1.1.2  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.1.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.2  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

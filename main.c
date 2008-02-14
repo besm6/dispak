@@ -69,18 +69,20 @@ static struct   {
 	{0,      0,      0,      0,		},
 };
 
-static char     *pout_raw = NULL;
 char		*punchfile = NULL;
+ulong           icnt;
+char		*path;
+
+static char     *pout_raw = NULL;
+static FILE	*input_fd;
+
 extern int      input(unsigned);
 void            catchsig(int sig);
 ulong           run();
 extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            pout_dump(char *filename);
-static FILE	*input_fd;
 void            stat_out(void);
-
-ulong           icnt;
 
 enum {
 	OPT_CYRILLIC,
@@ -170,7 +172,7 @@ main(int argc, char **argv)
 	char 		*endptr;
 	int		decode_output = 0;
 
-	myname = argv[0];
+	path = getenv ("BESM6_PATH");
 
 	for (;;) {
 		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);
@@ -252,7 +254,7 @@ main(int argc, char **argv)
 		usage ();
 
 	if (optind < argc-1) {
-		fprintf (stderr, "%s: too many files\n", myname);
+		fprintf (stderr, "%s: too many files\n", PACKAGE_NAME);
 		exit (1);
 	}
 	ifile = argv[optind];
@@ -350,12 +352,14 @@ catchsig (int sig)
 static struct timeval   stopped;
 
 void
-stopwatch(void) {
+stopwatch(void)
+{
 	gettimeofday(&stopped, NULL);
 }
 
 void
-startwatch(void) {
+startwatch(void)
+{
 	struct timeval  curr;
 
 	gettimeofday(&curr, NULL);
@@ -363,7 +367,8 @@ startwatch(void) {
 }
 
 static int
-sv_load() {
+sv_load()
+{
 	void            *dh;
 	ushort          z;
 	reg_t           cp;
@@ -405,12 +410,14 @@ pout_dump(char *filename)
 }
 
 int
-opcomp(const void *o1, const void *o2) {
+opcomp(const void *o1, const void *o2)
+{
 	return ((optab_t *) o1)->o_count - ((optab_t *) o2)->o_count;
 }
 
 void
-stat_out(void) {
+stat_out(void)
+{
 	int     i;
 	int     total = 0;
 
@@ -426,46 +433,3 @@ stat_out(void) {
 				100.0 * optab[i].o_count / total,
 				optab[i].o_ticks / optab[i].o_count);
 }
-
-/*
- *      $Log: main.c,v $
- *      Revision 1.8  2008/01/26 20:46:34  leob
- *      Added punching
- *
- *      Revision 1.7  2001/02/24 04:22:19  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.6  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.4.1.3  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.4.1.2  2001/02/01 07:40:07  root
- *      dual output mode
- *
- *      Revision 1.4.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.5  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.5  2001/02/15 03:35:05  mike
- *      Things to gather statistics.
- *
- *      Revision 1.4  1999/02/02 03:30:30  mike
- *      Added e66.
- *      Got 2053 open on NOMML1.
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1998/12/30 03:26:41  mike
- *      Minor cleanup.
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *
- */

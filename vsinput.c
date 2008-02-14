@@ -1,3 +1,15 @@
+/*
+ * Processing input task file and writing it to input queue.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,7 +49,6 @@ static uchar                    *passload(char *src);
 static unsigned                 nextcp(void);
 static int                      dump(uchar tag, unsigned long long w);
 static int                      prettycard(unsigned char * s, unsigned long long w[]);
-static inline unsigned          parity(unsigned byte);
 extern unsigned long long       nextw(void);
 
 static unsigned
@@ -49,7 +60,8 @@ NEXT_NS()
 }
 
 int
-vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit) {
+vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit)
+{
 	int     r;
 
 	lineno = 1;
@@ -84,8 +96,18 @@ vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit) {
 	return ibufno;
 }
 
+static inline unsigned
+parity(unsigned byte)
+{
+	byte = (byte ^ (byte >> 4)) & 0xf;
+	byte = (byte ^ (byte >> 2)) & 0x3;
+	byte = (byte ^ (byte >> 1)) & 0x1;
+	return ! byte;
+}
+
 static int
-scan(int edit) {
+scan(int edit)
+{
 	int             i;
 
 	if (level == 0) {
@@ -456,7 +478,8 @@ wrap:
 	}
 }
 
-static int chad(unsigned long long w[], int bit, char val) {
+static int chad(unsigned long long w[], int bit, char val)
+{
     int index = bit / 40;
     switch (val) {
 	case 'О':
@@ -477,7 +500,8 @@ static int chad(unsigned long long w[], int bit, char val) {
 
 /* The first line already in s, will need to read the other 11 */
 static int
-prettycard(unsigned char * s, unsigned long long w[]) {
+prettycard(unsigned char * s, unsigned long long w[])
+{
     int bit;
     for (bit = 0; bit < 80; bit++) {
 	/* The first line is good, no need to check */
@@ -496,8 +520,8 @@ prettycard(unsigned char * s, unsigned long long w[]) {
 }
 
 static unsigned
-nextc(void) {
-
+nextc(void)
+{
 	ch = _nextc[level]();
 	if (ch == '\n') {
 		++lineno;
@@ -553,18 +577,20 @@ nextc(void) {
 }
 
 static void
-inperr(char *s) {
+inperr(char *s)
+{
 	char    buf[160];
 
-	sprintf(buf, "   АВВД   НПК    НС   НСТ   СИМ ШИФР %06u%06u\n\
-  %05o%6d%6d%6d   %03o %s\n",
-			user_hi, user_lo,
-			iaddr, lineno, pncline,   pncsym,    KOI2UPP(ch), s);
+	sprintf(buf, "   АВВД   НПК    НС   НСТ   СИМ ШИФР %06u%06u\n"
+		     "  %05o%6d%6d%6d   %03o %s\n",
+		user_hi, user_lo,
+		iaddr, lineno, pncline, pncsym, KOI2UPP(ch), s);
 	diagftn(buf);
 }
 
-static uchar
-*passload(char *src) {
+static uchar *
+passload(char *src)
+{
 	void    *dh;
 	ulong   sz;
 	uchar   *buf, *cp;
@@ -592,7 +618,8 @@ found:
 }
 
 static unsigned
-nextcp(void) {
+nextcp(void)
+{
 	unsigned        c = *stpsp++;
 
 	switch (c) {
@@ -607,7 +634,8 @@ nextcp(void) {
 }
 
 static int
-dump(uchar tag, unsigned long long w) {
+dump(uchar tag, unsigned long long w)
+{
 	int             i, fd, l;
 	struct ibword   ibw;
 
@@ -652,51 +680,3 @@ ioberr:
 	++iaddr;
 	return 0;
 }
-
-static inline unsigned
-parity(unsigned byte) {
-	byte = (byte ^ (byte >> 4)) & 0xf;
-	byte = (byte ^ (byte >> 2)) & 0x3;
-	byte = (byte ^ (byte >> 1)) & 0x1;
-	return !byte;
-}
-
-/*
- *      $Log: vsinput.c,v $
- *      Revision 1.8  2008/01/26 20:39:30  leob
- *      Raw card image, ITM encoding
- *
- *      Revision 1.7  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.5.1.2  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.5.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.6  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.6  2001/02/16 04:21:31  mike
- *      В заказе сегментов МД может быть как латинская, так и русская 'C'.
- *
- *      Revision 1.5  1999/02/20 04:59:40  mike
- *      e50 '7701' (exform) A3 style. Many fixes.
- *
- *      Revision 1.4  1999/02/09 01:33:37  mike
- *      Design flaw fix: it was not possible to change
- *      the input address (in binary input mode (no TKH)).
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1999/01/05 02:13:47  mike
- *      Encoding bugfix in A1 style input.
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *
- */

@@ -1,3 +1,15 @@
+/*
+ * Implementation of BESM-6 extracodes.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
@@ -13,8 +25,7 @@
 static void     exform(void);
 
 uchar
-getbyte(bp)
-	ptr     *bp;
+getbyte(ptr *bp)
 {
 	uchar   c;
 
@@ -29,8 +40,7 @@ getbyte(bp)
 }
 
 unsigned long long
-getword(bp)
-	ptr     *bp;
+getword(ptr *bp)
 {
 	unsigned long long      w = 0;
 	int                     i;
@@ -48,7 +58,8 @@ getword(bp)
 }
 
 void
-cwadj(uinstr_t *ip) {
+cwadj(uinstr_t *ip)
+{
 	if (ip->i_opcode >= 0100) {
 		ip->i_opcode = (ip->i_opcode - 060) << 3;
 		ip->i_opcode |= ip->i_addr >> 12;
@@ -60,7 +71,8 @@ cwadj(uinstr_t *ip) {
 }
 
 void
-terminate(void) {
+terminate(void)
+{
 	unsigned        u;
 
 	for (u = 030; u < 070; ++u)
@@ -69,7 +81,8 @@ terminate(void) {
 }
 
 static int
-lflush(uchar *line) {
+lflush(uchar *line)
+{
 	int     i;
 
 	for (i = 127; i >= 0; --i)
@@ -675,7 +688,8 @@ again:
 }
 
 int
-e53(void) {
+e53(void)
+{
 	switch (reg[016]) {
 	case 010: {	/* get time since midnight */
 		struct tm       *d;
@@ -741,12 +755,14 @@ e53(void) {
 }
 
 int
-e51(void) {
+e51(void)
+{
 	return elfun(reg[016] ? EF_COS : EF_SIN);
 }
 
 int
-e50(void) {
+e50(void)
+{
 	switch (reg[016]) {
 	case 0:
 		return elfun(EF_SQRT);
@@ -916,7 +932,8 @@ e50(void) {
 }
 
 int
-eexit(void) {
+eexit(void)
+{
 	if (exitaddr) {
 		JMP(exitaddr);
 		return E_SUCCESS;
@@ -925,7 +942,8 @@ eexit(void) {
 }
 
 int
-e62(void) {
+e62(void)
+{
 	unsigned        u;
 	alureg_t        r;
 	int             e;
@@ -973,7 +991,8 @@ e62(void) {
 }
 
 int
-e63(void) {
+e63(void)
+{
 	struct timeval  ct;
 
 	switch (reg[016]) {
@@ -1007,7 +1026,9 @@ e63(void) {
 			return E_UNIMP;
 	}
 }
-int parity(int byte) {
+
+int parity(int byte)
+{
 	byte = (byte ^ (byte >> 4)) & 0xf;
 	byte = (byte ^ (byte >> 2)) & 0x3;
 	byte = (byte ^ (byte >> 1)) & 0x1;
@@ -1016,7 +1037,8 @@ int parity(int byte) {
 
 /* get front panel switches */
 int
-e61(void) {
+e61(void)
+{
 	int             i;
 	ushort          addr;
 
@@ -1026,7 +1048,8 @@ e61(void) {
 }
 
 int
-deb(void) {
+deb(void)
+{
 	alureg_t        r;
 
 	LOAD(r, reg[016]);
@@ -1035,7 +1058,8 @@ deb(void) {
 }
 
 int
-ddio(void) {
+ddio(void)
+{
 	ushort          addr = reg[016], u, zone;
 	ushort          sector = 0;
 	uinstr_t        uil, uir;
@@ -1124,8 +1148,10 @@ ddio(void) {
 
 #define E71BUFSZ (324*6)
 #define PUTB(c) *dp++ = (c)
+
 int
-ttout(uchar flags, ushort a1, ushort a2) {
+ttout(uchar flags, ushort a1, ushort a2)
+{
 	uchar   *sp, *start;
 	start = sp = core[a1].w_b;
 	if (flags == 0220) {
@@ -1189,7 +1215,8 @@ done:
 }
 
 int
-ttin(uchar flags, ushort a1, ushort a2) {
+ttin(uchar flags, ushort a1, ushort a2)
+{
 	uchar   buf[0324 * 6], *sp, *dp;
 
 	if (flags & 4)          /* non-standard prompt */
@@ -1222,7 +1249,8 @@ done:
 	return E_SUCCESS;
 }
 
-int punch(ushort a1, ushort a2) {
+int punch(ushort a1, ushort a2)
+{
 	static FILE * fd = 0;
 	unsigned char * sp;
 	int bytecnt = 0, max;
@@ -1281,7 +1309,8 @@ int punch(ushort a1, ushort a2) {
 }
 
 int
-term(void) {
+term(void)
+{
 	ushort          addr = reg[016];
 	alureg_t        r;
 	uinstr_t        uil, uir;
@@ -1343,8 +1372,10 @@ oporos:
 }
 
 #define IPZ     062121
+
 int
-physaddr(void) {
+physaddr(void)
+{
 	ushort          addr = reg[016];
 
 	switch (addr) {                 /* GUS  */
@@ -1400,7 +1431,8 @@ physaddr(void) {
 }
 
 int
-resources(void) {
+resources(void)
+{
 	ushort          addr = reg[016];
 	alureg_t        r;
 	uchar           arg[8];
@@ -1498,13 +1530,15 @@ resources(void) {
 }
 
 extern uchar
-eraise(ulong newev) {
+eraise(ulong newev)
+{
 	events |= newev & 0xffffff;
 	return goahead |= ehandler && eenab && (events & emask);
 }
 
 void
-alrm_handler(int sig) {
+alrm_handler(int sig)
+{
 	(void) signal(SIGALRM, alrm_handler);
 	(void) eraise(1);
 }
@@ -1512,7 +1546,8 @@ alrm_handler(int sig) {
 static ptr      txt;
 
 static unsigned
-uget(void) {
+uget(void)
+{
 	uchar   c;
 rpt:
 	c = getbyte(&txt);
@@ -1530,14 +1565,16 @@ rpt:
 }
 
 unsigned long long
-nextw(void) {
+nextw(void)
+{
 	return getword(&txt);
 }
 
 static ushort   diagaddr;
 
 static void
-diag(char *s) {
+diag(char *s)
+{
 	uchar    *cp, *dp;
 
 	if (diagaddr) {
@@ -1554,7 +1591,8 @@ diag(char *s) {
 }
 
 static void
-exform(void) {
+exform(void)
+{
 	unsigned long long      w;
 	int                     r;
 
@@ -1577,7 +1615,8 @@ exform(void) {
 }
 
 int
-emu_call(void) {
+emu_call(void)
+{
 	switch (reg[016] ^ 040000) {
 	case 0: {               /* phys i/o */
 		unsigned        u;
@@ -1629,7 +1668,8 @@ emu_call(void) {
 			(core[a].w_b[4] << 8) | core[a].w_b[5])
 
 int
-usyscall(void) {
+usyscall(void)
+{
 	ushort  ap = reg[016];
 	int     r;
 	ulong   ftn, a0, a1, a2;
@@ -1665,7 +1705,8 @@ usyscall(void) {
 }
 
 ulong
-to_2_10(ulong src) {
+to_2_10(ulong src)
+{
 	ulong   dst = 0;
 	int     i;
 
@@ -1677,79 +1718,3 @@ to_2_10(ulong src) {
 	}
 	return dst;
 }
-
-/*
- *      $Log: extra.c,v $
- *      Revision 1.12  2008/01/26 20:45:59  leob
- *      More e-codes, portable errno
- *
- *      Revision 1.11  2001/02/24 04:14:29  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.10  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.6.1.6  2001/02/06 07:37:35  dvv
- *      Лёнины правки Э70
- *
- *      Revision 1.3.2.2  2001/02/06 07:34:53  dvv
- *      Лёнины правки Э70
- *
- *      Revision 1.6.1.5  2001/02/05 05:44:28  dvv
- *      добавлена поддержка ia64, Linux
- *
- *      Revision 1.6.1.4  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.6.1.3  2001/02/02 14:45:17  root
- *      0242 -> пробел
- *
- *      Revision 1.6.1.2  2001/02/01 07:38:18  root
- *      dual output mode
- *
- *      Revision 1.6.1.1  2001/02/01 03:48:39  root
- *      e50 and -Wall fixes
- *
- *      Revision 1.7  2001/01/31 22:58:43  dvv
- *      fixes to for whetstone and -Wall
- *
- *      Revision 1.9  2001/02/15 03:57:36  mike
- *      - added some elem funcs.
- *      - emu_call to set emulator flags
- *      - fixed э50 '105' to return vol id in bcd.
- *
- *      Revision 1.8  2000/01/18 02:39:03  mike
- *      Forgot the return value for usyscall()
- *      /
- *
- *      Revision 1.7  2000/01/18 02:22:58  mike
- *      On dvv's request access implemented to some unix sys calls.
- *
- *      Revision 1.6  1999/02/20 04:59:40  mike
- *      e50 '7701' (exform) A3 style. Many fixes.
- *
- *      Revision 1.5  1999/02/09 01:29:55  mike
- *      - fixed e50 '131' (BUSY ret code)
- *      - added
- *      	e50 '103'
- *      	e50 '135'
- *      	e50 '200'
- *      	e71 to operator's console
- *      	e65 '1' - '7' (CPU console switches)
- *
- *      Revision 1.4  1999/02/02 03:37:33  mike
- *      e72 ='20xxxxxxxx77' should not be checking for the
- *          presence of a volume. And it doesn't any more.
- *      Allowed reading of IPZ(071) (общтом).
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1998/12/30 03:23:26  mike
- *      Got rid of SMALL_ARRAYS option. Hope I don't have to run
- *      it on a 16-bit CPU any more...
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *
- */

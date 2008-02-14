@@ -1,3 +1,16 @@
+/*
+ * Instruction-level interactive debugger.
+ * Resembles DIAPAK debugger.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 %{
 #include <stdio.h>
 #include <signal.h>
@@ -10,7 +23,6 @@
 #define PROMPT "- "
 
 static alureg_t wd;
-extern void     ib_cleanup(void);
 static void pfloat();
 
 void yyerror (char*);
@@ -409,17 +421,25 @@ okno (int trace)
 	printf ("\n");
 }
 
-static void pfloat(unsigned long l, unsigned long r) {
-	int e = (l >> 17) - 64;
-	int manh = l & 0xffff;
-	int manl = r;
-	double d = (double) manh + (double) manl / (1u<<24);
-	d /= (1u<<16);
-	if (l & 0x10000) d -= 1.0;
-	while (e) { d *= e > 0 ? 2.0 : 0.5; e = e > 0 ? e-1 : e+1; }
-	printf("%25.15g\n", d);
-}
+static void
+pfloat (unsigned long l, unsigned long r)
+{
+	int e, manh, manl;
+	double d;
 
+	e = (l >> 17) - 64;
+	manh = l & 0xffff;
+	manl = r;
+	d = (double) manh + (double) manl / ((long) 1 << 24);
+	d /= (long) (1 << 16);
+	if (l & 0x10000)
+		d -= 1.0;
+	while (e) {
+		d *= (e > 0) ? 2.0 : 0.5;
+		e = (e > 0) ? e-1 : e+1;
+	}
+	printf ("%25.15g\n", d);
+}
 
 /*
  *      $Log: debug.y,v $

@@ -1,9 +1,21 @@
+/*
+ * BESM-6 arithmetic instructions.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You can redistribute this program and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your discretion) any later version.
+ * See the accompanying file "COPYING" for more details.
+ */
 #include <math.h>
 #include "defs.h"
 
-typedef union   {
-		double                  d;
-		struct  {
+typedef union {
+		double d;
+		struct {
 #ifdef M_WORDSWAP
 			unsigned _lol;
 			unsigned _hil;
@@ -11,8 +23,8 @@ typedef union   {
 			unsigned _hil;
 			unsigned _lol;
 #endif
-		}       l;
-	}       math_t;
+		} l;
+	} math_t;
 #define lol     l._lol
 #define hil     l._hil
 #define TO_NAT(from,to) {\
@@ -22,7 +34,8 @@ typedef union   {
 }
 
 int
-add() {
+add()
+{
 	alureg_t        a1, a2;
 	int             diff, neg;
 
@@ -97,8 +110,8 @@ add() {
 }
 
 int
-aax() {
-
+aax()
+{
 	acc.l &= enreg.l;
 	acc.r &= enreg.r;
 	accex = zeroword;
@@ -106,8 +119,8 @@ aax() {
 }
 
 int
-aex() {
-
+aex()
+{
 	accex = acc;
 	acc.l ^= enreg.l;
 	acc.r ^= enreg.r;
@@ -115,7 +128,8 @@ aex() {
 }
 
 int
-arx() {
+arx()
+{
 	ulong           i;
 
 	acc.r = (i = acc.r + enreg.r) & 0xffffff;
@@ -131,52 +145,63 @@ arx() {
 }
 
 int
-avx() {
+avx()
+{
 	if (NEGATIVE(enreg))
 		NEGATE(acc);
 	return E_SUCCESS;
 }
 
 int
-aox() {
-
+aox()
+{
 	acc.l |= enreg.l;
 	acc.r |= enreg.r;
 	accex = zeroword;
 	return E_SUCCESS;
 }
 
-// non-restoring division
+/*
+ * non-restoring division
+ */
+double
+nrdiv (double n, double d)
+{
+	int ne, de, re;
+	double nn, dd, res, eps;
 
-double nrdiv (double n, double d) {
+	nn = frexp(n, &ne);
+	dd = frexp(d, &de);
 
-int ne, de, re;
-double nn, dd;
+	res = 0, q = 0.5;
+	eps = ldexp(q, -40);		/* run for 40 bits of precision */
 
-nn = frexp(n, &ne);
-dd = frexp(d, &de);
+	if (fabs(nn) >= fabs(dd))
+		nn/=2, ne++;
 
-double res = 0, q = 0.5;
-double eps = ldexp(q, -40); // run for 40 bits of precision
+	while (q > eps) {
+		if (nn == 0.0)
+			break;
 
-if ( fabs(nn) >= fabs(dd)) nn/=2, ne++;
+		if (fabs(nn) < 0.25)
+			nn *= 2;	/* magic shortcut */
+		else if ((nn > 0) ^ (dd > 0)) {
+			res -= q;
+			nn = 2*nn+dd;
+		} else {
+			res += q;
+			nn = 2*nn-dd;
+		}
+		q /= 2;
+	}
+	res = frexp(res, &re);
 
-while (q > eps) {
-       if (nn == 0.0) break;
-       if (fabs(nn) < 0.25) { nn *= 2; } // magic shortcut
-       else if ((nn > 0) ^ (dd > 0)) { res -= q; nn = 2*nn+dd;}
-       else { res += q; nn = 2*nn-dd; }
-       q /= 2;
-}
-
-res = frexp(res, &re);
-
-return ldexp(res, re+ne-de);
-
+	return ldexp(res, re+ne-de);
 }
 
 int
-b6div() {
+b6div()
+{
 #ifdef DIV_NATIVE
 	int             neg, o;
 	unsigned long   i, c, bias = 0;
@@ -214,8 +239,8 @@ qzero:
 	dividend.hil -= bias << 20;
 	TO_NAT(enreg, divisor);
 
-       // quotient.d = dividend.d / divisor.d;
-       quotient.d = nrdiv(dividend.d, divisor.d);
+	/* quotient.d = dividend.d / divisor.d; */
+	quotient.d = nrdiv(dividend.d, divisor.d);
 
 	o = quotient.hil >> 20;
 	o = o - 1022 + 64;
@@ -305,14 +330,13 @@ qzero:
 	}
 	if (neg)
 		NEGNORM(acc);
-
 #endif
-
 	return E_SUCCESS;
 }
 
 int
-elfun(int fun) {
+elfun(int fun)
+{
 #ifdef DIV_NATIVE
 	int             neg = 0, o;
 	unsigned long   i, c;
@@ -404,7 +428,8 @@ qzero:
 }
 
 int
-mul() {
+mul()
+{
 	uchar           neg = 0;
 	alureg_t        a, b;
 	ushort          a1, a2, a3, b1, b2, b3;
@@ -473,9 +498,8 @@ mul() {
 }
 
 int
-apx() {
-
-
+apx()
+{
 	for (accex.l = accex.r = 0; enreg.r; enreg.r >>= 1, acc.r >>= 1)
 		if (enreg.r & 1) {
 			accex.r = ((accex.r >> 1) | (accex.l << 23)) & HALFW;
@@ -496,7 +520,8 @@ apx() {
 }
 
 int
-aux() {
+aux()
+{
 	int     i;
 
 	accex.l = accex.r = 0;
@@ -526,7 +551,8 @@ aux() {
 }
 
 int
-acx() {
+acx()
+{
 	int     c = 0;
 	ulong   i;
 
@@ -538,7 +564,8 @@ acx() {
 }
 
 int
-anx() {
+anx()
+{
 	ulong   c;
 	ulong   i;
 	uchar   b;
@@ -583,19 +610,22 @@ anx() {
 }
 
 int
-epx() {
+epx()
+{
 	acc.o += enreg.o - 64;
 	return E_SUCCESS;
 }
 
 int
-emx() {
+emx()
+{
 	acc.o += 64 - enreg.o;
 	return E_SUCCESS;
 }
 
 int
-asx() {
+asx()
+{
 	int     i, j;
 
 	accex.l = accex.r = 0;
@@ -655,7 +685,8 @@ asx() {
 }
 
 int
-yta() {
+yta()
+{
 	if (G_LOG) {
 		acc = accex;
 		return E_SUCCESS;
@@ -690,33 +721,3 @@ fetch_real (int addr)
 	TO_NAT(word, real);
 	return negative ? -real.d : real.d;
 }
-
-/*
- *      $Log: arith.c,v $
- *      Revision 1.5  2006/03/19 08:41:56  leob
- *      Implemented correct non-restoring division. TAU goes past division.
- *
- *      Revision 1.4  2001/02/24 03:33:43  mike
- *      Cleaning up warnings.
- *
- *      Revision 1.3  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.1.1.3  2001/02/05 05:44:28  dvv
- *      добавлена поддержка ia64, Linux
- *
- *      Revision 1.1.1.2  2001/02/05 03:52:14  root
- *      правки под альфу, Tru64 cc
- *
- *      Revision 1.1.1.1  2001/02/01 03:47:26  root
- *      e50 fix
- *
- *      Revision 1.2  2001/01/31 22:58:43  dvv
- *      fixes to for whetstone and -Wall
- *
- *      Revision 1.2  2001/02/15 04:19:30  mike
- *      Fixed incorrect handling of negative args in elfun().
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */

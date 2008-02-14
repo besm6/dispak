@@ -1,9 +1,6 @@
-/*      $Id: optab.h,v 1.5 2001/02/17 03:41:28 mike Exp $    */
-
 /*
  *      instructions table entry
  */
-
 typedef struct  {
 	char    *o_name;
 	int     (*o_impl)();
@@ -18,7 +15,6 @@ extern optab_t  optab[];
 /*
  *      inline implementation labels
  */
-
 #define I_ATX   1
 #define I_STX   2
 #define I_XTS   3
@@ -55,7 +51,6 @@ extern optab_t  optab[];
 /*
  *      instruction flags
  */
-
 #define F_LG            1
 #define F_MG            2
 #define F_AG            3
@@ -70,21 +65,3 @@ extern optab_t  optab[];
 #define F_TRAP          0x200
 #define F_STACK         0x400
 #define F_AROP          0x800
-
-/*
- *      $Log: optab.h,v $
- *      Revision 1.5  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.4  2001/02/15 05:19:05  mike
- *      stats gathering.
- *
- *      Revision 1.3  1999/02/02 03:26:27  mike
- *      Allowed 002 (mod) op in supervisor mode.
- *
- *      Revision 1.2  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *   */
