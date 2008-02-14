@@ -168,7 +168,7 @@ double
 nrdiv (double n, double d)
 {
 	int ne, de, re;
-	double nn, dd, res, eps;
+	double nn, dd, res, q, eps;
 
 	nn = frexp(n, &ne);
 	dd = frexp(d, &de);

@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r34 | vak | 2008-02-14 20:17:34 +0300 (Чтв, 14 Фев 2008) | 3 lines
+
+Code cleanup and prettyprinting.
+
+
+------------------------------------------------------------------------
+r33 | vak | 2008-02-14 19:22:49 +0300 (Чтв, 14 Фев 2008) | 11 lines
+
+All encoding tables moved no new file encoding.c.
+Implemented itm-to-koi8-cyrillic table. Now we can use diff to compare
+output with and without -x option.
+
+Disabled printing ^L to the display. It causes screen erase,
+which is very inconvenient.
+
+Added sources of getopt, for portability.
+Added file ChangeLog, just to be closer to GNU standards.
+
+
+------------------------------------------------------------------------
 r32 | vak | 2008-02-14 01:57:00 +0300 (Чтв, 14 Фев 2008) | 3 lines
 
 Fixed e64.
