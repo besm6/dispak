@@ -531,7 +531,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-data-local
 
 install-exec-am: install-binPROGRAMS
 
@@ -569,21 +569,35 @@ uninstall-am: uninstall-binPROGRAMS uninstall-info-am
 	distclean-hdr distclean-local distclean-tags distcleancheck \
 	distdir distuninstallcheck dvi dvi-am html html-am info \
 	info-am install install-am install-binPROGRAMS install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-info-am
+	install-data-am install-data-local install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-info-am
 
 
 all-local: diskdir/2099
 	${MAKE} -C besmdisk all
 
+install-data-local: ${datadir}/share/besm6/2048 ${datadir}/share/besm6/2053 \
+	${datadir}/share/besm6/2099
+	${MAKE} -C examples install
+
+${datadir}/share/besm6/2048: diskdir/2048
+	${install_sh_DATA} $< $@
+
+${datadir}/share/besm6/2053: diskdir/2053
+	${install_sh_DATA} $< $@
+
+${datadir}/share/besm6/2099: diskdir/2099
+	${install_sh_DATA} $< $@
+
 clean-local:
 	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
-	${MAKE} -C examples clean
 	${MAKE} -C besmdisk clean
+	${MAKE} -C examples clean
 
 distclean-local:
 	-rm -rf diskdir/2099 autom4te.cache
@@ -600,6 +614,7 @@ diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b
 	./besm6 -q --bootstrap make2099.b6
 
 log:	.svn
+	svn update
 	svn log > ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -27,12 +27,13 @@ int
 input(unsigned ibufno)
 {
 	int             i;
-	char            *dd;
 	struct stat     stbuf;
 
-	if (!(dd = getenv("DISKDIR")))
-	    dd = "diskdir";
-	sprintf(ibufname, "%s/ibuf/%03o", dd, ibufno);
+	disk_local_path (ibufname);
+	strcat(ibufname, "/input_queue");
+	mkdir(ibufname, 0755);
+	sprintf(ibufname + strlen(ibufname), "/%03o", ibufno);
+
 	ibuf = fopen(ibufname, "r");
 	if (!ibuf) {
 		perror(ibufname);

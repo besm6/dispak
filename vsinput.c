@@ -10,6 +10,7 @@
  * either version 2 of the License, or (at your discretion) any later version.
  * See the accompanying file "COPYING" for more details.
  */
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -639,34 +640,34 @@ dump(uchar tag, unsigned long long w)
 	int             i, fd, l;
 	struct ibword   ibw;
 
-	if (!iaddr) {
+	if (! iaddr) {
 		diagftn(" îåô á÷÷ä\n");
 		return -1;
 	}
-	if (!ibuf) {
-		if (getenv("DISKDIR"))
-		    strcpy(ibufname, getenv("DISKDIR"));
-		else
-		    strcpy(ibufname, "diskdir");
-		strcat(ibufname, "/ibuf/");
+	if (! ibuf) {
+		disk_local_path (ibufname);
+		strcat(ibufname, "/input_queue");
+		mkdir(ibufname, 0755);
+		strcat(ibufname, "/");
+
 		l = strlen(ibufname);
 		for (i = 1; i < 0200; ++i) {
-		    sprintf(ibufname + l, "%03o", i);
-		    fd = open(ibufname, O_CREAT | O_EXCL | O_RDWR, 0666);
-		    if (fd < 0)
-			continue;
-		    ibuf = fdopen(fd, "w");
-		    if (!ibuf) {
+			sprintf(ibufname + l, "%03o", i);
+			fd = open(ibufname, O_CREAT | O_EXCL | O_RDWR, 0666);
+			if (fd < 0)
+				continue;
+			ibuf = fdopen(fd, "w");
+			if (!ibuf) {
 ioberr:
-			diagftn(" ïû âõæ ÷÷ä\n");
-			return -1;
-		    }
-		    ibufno = i;
-		    break;
+				diagftn(" ïû âõæ ÷÷ä\n");
+				return -1;
+			}
+			ibufno = i;
+			break;
 		}
 		if (!ibuf) {
-		    diagftn(" âõæ ðåòåð\n");
-		    return -1;
+			diagftn(" âõæ ðåòåð\n");
+			return -1;
 		}
 		fseek(ibuf, (long) sizeof(struct passport), SEEK_SET);
 	}

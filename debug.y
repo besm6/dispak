@@ -440,37 +440,3 @@ pfloat (unsigned long l, unsigned long r)
 	}
 	printf ("%25.15g\n", d);
 }
-
-/*
- *      $Log: debug.y,v $
- *      Revision 1.7  2008/01/26 20:47:35  leob
- *      ITM encoding, floating point
- *
- *      Revision 1.6  2001/02/17 03:41:28  mike
- *      Merge with dvv (who sometimes poses as root) and leob.
- *
- *      Revision 1.5.1.1  2001/02/01 03:47:26  root
- *      *** empty log message ***
- *
- *      Revision 1.6  2001/01/31 22:59:46  dvv
- *      fixes for Whetstone FORTRAN test;
- *      fixes to shut -Wall up and (more importantly) make scanf (and printf
- *      	args to match the formats
- *
- *      Revision 1.5  1999/02/20 04:59:40  mike
- *      'octal' b	now prints octal bytes.
- *
- *      Revision 1.4  1999/02/09 01:21:50  mike
- *      Allowed patching memory at arbitrary addresses.
- *
- *      Revision 1.3  1999/01/27 00:24:50  mike
- *      e64 and e62 '41' implemented in supervisor.
- *
- *      Revision 1.2  1998/12/30 03:23:26  mike
- *      Got rid of SMALL_ARRAYS option. Hope I don't have to run
- *      it on a 16-bit CPU any more...
- *
- *      Revision 1.1  1998/12/30 02:51:02  mike
- *      Initial revision
- *
- */

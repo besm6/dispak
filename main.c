@@ -58,6 +58,8 @@
 #include "optab.h"
 #include "disk.h"
 
+#define PATH_DEFAULT "/.besm6:/usr/local/lib/besm6"
+
 static struct   {
 	int     dsk;
 	ushort  zone;
@@ -71,12 +73,10 @@ static struct   {
 
 char		*punchfile = NULL;
 ulong           icnt;
-char		*path;
 
 static char     *pout_raw = NULL;
 static FILE	*input_fd;
 
-extern int      input(unsigned);
 void            catchsig(int sig);
 ulong           run();
 extern void     ib_cleanup(void);
@@ -172,7 +172,7 @@ main(int argc, char **argv)
 	char 		*endptr;
 	int		decode_output = 0;
 
-	path = getenv ("BESM6_PATH");
+	disk_path = getenv ("BESM6_PATH");
 
 	for (;;) {
 		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);

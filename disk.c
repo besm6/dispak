@@ -10,7 +10,13 @@
  * either version 2 of the License, or (at your discretion) any later version.
  * See the accompanying file "COPYING" for more details.
  */
+#include <sys/stat.h>
+#include "defs.h"
 #include "diski.h"
+
+#define PATH_DEFAULT "/.besm6:/usr/local/lib/besm6"
+
+char *disk_path;
 
 static int disk_positioni(disk_t *, u_int);
 static int disk_makezonei(disk_t *, u_int);
@@ -26,6 +32,60 @@ static int disk_formcodei(char *);
 #define disk_writedescr(a,b)    DISK_IO_OK
 
 #endif
+
+void
+disk_local_path (char *buf)
+{
+	char *home;
+
+	home = getenv("HOME");
+	if (! home)
+		home = "/tmp";
+	strcpy(buf, home);
+	strcat(buf, "/.besm6");
+	mkdir(buf, 0755);	/* ignore errors */
+}
+
+void
+disk_find_path (char *fname, u_int diskno)
+{
+	char *p, *q;
+
+	if (! disk_path) {
+		char *home;
+
+		home = getenv ("HOME");
+		if (! home)
+			home = "";
+		disk_path = malloc (strlen(home) + sizeof(PATH_DEFAULT) + 1);
+		if (! disk_path) {
+			fprintf (stderr, "%s: out of memory\n", PACKAGE_NAME);
+			exit (1);
+		}
+		strcpy (disk_path, home);
+		strcat (disk_path, PATH_DEFAULT);
+	}
+	p = disk_path;
+	while (p) {
+		/* Copy first element of p to fname.
+		 * Advance p to the next element. */
+		q = strchr (p, ':');
+		if (q) {
+			if (q > p)
+				memcpy (fname, p, q-p);
+			fname [q-p] = 0;
+			p = q+1;
+		} else {
+			strcpy (fname, p);
+			p = 0;
+		}
+
+		/* Check for disk image here. */
+		sprintf(fname + strlen(fname), "/%d", diskno);
+		if (access(fname, R_OK) >= 0)
+			return;
+	}
+}
 
 /* opens $DISKDIR/{diskno}, or ./{diskno}, if $DISKDIR is not set   */
 /* to create a new file, do "cat > {diskno}^JDISK^D^D"              */
@@ -48,17 +108,12 @@ disk_open(u_int diskno, u_int mode)
 		return 0;
 	}
 
-	fname[0] = 0;
-	if (getenv("DISKDIR"))
-		strcpy(fname, getenv("DISKDIR"));
-	else
-		strcpy(fname, "diskdir");
-
-	if (diskno)
-		sprintf(fname + strlen(fname), "/%d", diskno);
-	else
+	if (diskno) {
+		disk_find_path (fname, diskno);
+	} else {
+		disk_local_path (fname);
 		sprintf(fname + strlen(fname), "/drum%d", (int) getpid());
-
+	}
 	if (!(mode & DISK_TEMP)) {
 		if (-1 == access(fname, R_OK)) {
 			perror(fname);

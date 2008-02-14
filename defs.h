@@ -436,6 +436,9 @@ void unpack (ushort);
 void pout_decode (char *fout);
 void pout_decode_file (char *inname, char *outname);
 
+/* input.c */
+int input (unsigned);
+
 /* vsinput.c */
 int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
 

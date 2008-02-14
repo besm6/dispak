@@ -6,10 +6,23 @@ AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 all-local: diskdir/2099
 	${MAKE} -C besmdisk all
 
+install-data-local: ${datadir}/share/besm6/2048 ${datadir}/share/besm6/2053 \
+	${datadir}/share/besm6/2099
+	${MAKE} -C examples install
+
+${datadir}/share/besm6/2048: diskdir/2048
+	${install_sh_DATA} $< $@
+
+${datadir}/share/besm6/2053: diskdir/2053
+	${install_sh_DATA} $< $@
+
+${datadir}/share/besm6/2099: diskdir/2099
+	${install_sh_DATA} $< $@
+
 clean-local:
 	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
-	${MAKE} -C examples clean
 	${MAKE} -C besmdisk clean
+	${MAKE} -C examples clean
 
 distclean-local:
 	-rm -rf diskdir/2099 autom4te.cache
@@ -26,4 +39,5 @@ diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b
 	./besm6 -q --bootstrap make2099.b6
 
 log:	.svn
+	svn update
 	svn log > ChangeLog

@@ -109,4 +109,5 @@ The character sequence FINISH
 
 The program 'besm6' reads the file which name is given in the command line
 and, if successful, forms an input queue entry, loads and runs the task
-from the input queue.
+from the input queue. Run 'besm6' without arguments to get a list of all
+available options.

@@ -5,13 +5,14 @@ http://www.gnu.org/prep/maintain/maintain.html#Recording-Contributors
 
 Serge Vakulenko:
 	An early version of emulator, including embedded
-	debugger (debug.y). Extracode 64 (printing).
+	debugger (debug.y). Extracode 64 (printing), some examples.
+	Configuration via autoconf and automake.
 
 Michael Yaroslavtsev:
 	Disks, input and output queues, most extracodes and supervisor.
 
 Leonid Broukhis:
-	Correct arithmetics, punching, some extracodes.
+	Correct arithmetics, punching, extracodes, examples.
 
 Dmitry Volodin:
 	Porting to Linux and ia64.
