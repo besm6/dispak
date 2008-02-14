@@ -55,7 +55,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_besm6_OBJECTS = main.$(OBJEXT) cu.$(OBJEXT) optab.$(OBJEXT) \
 	arith.$(OBJEXT) debug.$(OBJEXT) input.$(OBJEXT) \
 	extra.$(OBJEXT) disk.$(OBJEXT) errtxt.$(OBJEXT) \
-	vsinput.$(OBJEXT) dpout.$(OBJEXT)
+	vsinput.$(OBJEXT) dpout.$(OBJEXT) encoding.$(OBJEXT) \
+	getopt.$(OBJEXT)
 besm6_OBJECTS = $(am_besm6_OBJECTS)
 besm6_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -161,7 +162,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c disk.c errtxt.c vsinput.c dpout.c
+besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c \
+	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
+
 AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -256,8 +259,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/disk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encoding.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/errtxt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extra.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/optab.Po@am__quote@

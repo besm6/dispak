@@ -9,11 +9,8 @@
 
 #define PROMPT "- "
 
-static char     rcsid[] GCC_SPECIFIC (__attribute__ ((unused))) = "$Id: debug.y,v 1.7 2008/01/26 20:47:35 leob Exp $";
-
 static alureg_t wd;
 extern void     ib_cleanup(void);
-extern uchar itm2koi[];
 static void pfloat();
 
 void yyerror (char*);
@@ -108,9 +105,9 @@ command:        /* void */
 			for (j = 0; j < 8; ++j) {
 				LOAD(wd, $1);
 				for (i = 0; i < 4; ++i)
-					putchar(ctext[(wd.l >> (18 - i * 6)) & 63]);
+					putchar(text_to_koi8[(wd.l >> (18 - i * 6)) & 63]);
 				for (i = 0; i < 4; ++i)
-					putchar(ctext[(wd.r >> (18 - i * 6)) & 63]);
+					putchar(text_to_koi8[(wd.r >> (18 - i * 6)) & 63]);
 				putchar('\n');
 			$1 += 1;
 			}
@@ -130,7 +127,7 @@ command:        /* void */
 				int     i, j;
 				for (j = 0; j < 8; ++j) {
 					for (i = 0; i < 6; ++i)
-						putchar(upp[core[$1].w_b[i]]);
+						putchar(gost_to_koi8[core[$1].w_b[i]]);
 					putchar('\n');
 					$1 += 1;
 				}
@@ -140,7 +137,7 @@ command:        /* void */
 				int     i, j;
 				for (j = 0; j < 8; ++j) {
 					for (i = 0; i < 6; ++i)
-						putchar(itm2koi[core[$1].w_b[i]]);
+						putchar(itm_to_koi8[core[$1].w_b[i]]);
 					putchar('\n');
 					$1 += 1;
 				}

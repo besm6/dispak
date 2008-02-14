@@ -184,10 +184,12 @@ main(int argc, char **argv)
 			printf ("Version: %s\n", PACKAGE_VERSION);
 			return 0;
 		case 'l':		/* use Latin letters for output */
-			upp = uppl;
+			gost_to_koi8 = gost_to_koi8_lat;
+			itm_to_koi8 = itm_to_koi8_lat;
 			break;
 		case OPT_CYRILLIC:	/* use Cyrillic letters for output */
-			upp = uppr;
+			gost_to_koi8 = gost_to_koi8_cyr;
+			itm_to_koi8 = itm_to_koi8_cyr;
 			break;
 		case 'b':		/* break on first cmd */
 			breakflg = 1;

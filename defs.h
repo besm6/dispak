@@ -362,7 +362,6 @@ EXTERN ushort           exitaddr;
 EXTERN alureg_t         user;           /* job id               */
 EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
-extern uchar            koi8[], uppl[], uppr[], *upp;
 EXTERN ushort           phdrum;
 EXTERN ulong            jhbuf[JHBSZ];
 EXTERN int              jhbi;
@@ -442,6 +441,13 @@ void pout_decode_file (char *inname, char *outname);
 
 /* vsinput.c */
 int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
+
+/* encoding.c */
+extern uchar gost_to_koi8_cyr[], gost_to_koi8_lat[], *gost_to_koi8;
+extern uchar koi8_to_gost[];
+extern uchar itm_to_koi8_cyr[], itm_to_koi8_lat[], *itm_to_koi8;
+extern uchar koi8_to_itm[];
+extern uchar text_to_koi8[];
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x

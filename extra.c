@@ -8,51 +8,7 @@
 #include "iobuf.h"
 
 #define ETX     003
-#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8[(c) - 32])
-
-uchar   uppr[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
-áâ÷çäåöúéêëìíîïðòóôõæèãþûýùøüàñD\
-FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"ÿ`'";
-
-uchar   uppl[] = "0123456789+-/,. E@()x=;[]*`'#<>:\
-AâBçäEöúéêKìMHOðPCTYæXãþûýùøüàñD\
-FGIJLNQRSUVWZ^<>v&?~:=%$|-_!\"ÿ`'";
-
-uchar  *upp = uppr;
-
-uchar   koi8[] = {
-	0017,   0133,   0134,   0034,   0127,   0126,   0121,   0033,
-	0022,   0023,   0031,   0012,   0015,   0013,   0016,   0014,
-	0000,   0001,   0002,   0003,   0004,   0005,   0006,   0007,
-	0010,   0011,   0037,   0026,   0035,   0025,   0036,   0136,
-	0021,   0040,   0042,   0061,   0077,   0045,   0100,   0101,
-	0055,   0102,   0103,   0052,   0104,   0054,   0105,   0056,
-	0060,   0106,   0107,   0110,   0062,   0111,   0112,   0113,
-	0065,   0063,   0114,   0027,   0123,   0030,   0115,   0132,
-	0032,   0040,   0042,   0061,   0077,   0045,   0100,   0101,
-	0055,   0102,   0103,   0052,   0104,   0054,   0105,   0056,
-	0060,   0106,   0107,   0110,   0062,   0111,   0112,   0113,
-	0065,   0063,   0114,   0027,   0130,   0030,   0123,   0376,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0,      0,      0,      0,      0,      0,      0,      0,
-	0075,   0040,   0041,   0066,   0044,   0045,   0064,   0043,
-	0065,   0050,   0051,   0052,   0053,   0054,   0055,   0056,
-	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
-	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
-	0075,   0040,   0041,   0066,   0044,   0045,   0064,   0043,
-	0065,   0050,   0051,   0052,   0053,   0054,   0055,   0056,
-	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
-	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
-};
-
-uchar   ctext[] = " .âãäæçé()*êìñö/0123456789ø,ð-+ùúABCDEFGHIJKLMNOPQRSTUVWXYZûüýþà";
-extern uchar itm2koi[];
+#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8_to_gost[(c) - 32])
 
 static void     exform(void);
 
@@ -250,7 +206,8 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 				lflush(line);
 				pos = 0;
 			}
-			putchar('\f');
+			if (! isatty (1))
+				putchar('\f');
 			line[pos++] = ' ';
 			break;
 		case 0175:
@@ -274,7 +231,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			ch = ' ';
 			goto addchar;
 		default:
-			ch = (c < sizeof uppr) ? upp[c] : '$';
+			ch = gost_to_koi8[c];
 addchar:
 			if (pos == 128) {
 				/* No space left on line. */
@@ -355,7 +312,7 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 					line[pos++] = lastc;
 			break;
 		default:
-			line[pos++] = itm2koi[c];
+			line[pos++] = itm_to_koi8[c];
 			break;
 		}
 	}
@@ -573,7 +530,7 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 			line[pos++] = '0' + digit;
 			value -= digit;
 		}
-		line[pos++] = 'e';
+		line[pos++] = 'E';
 		if (exponent >= 0)
 			line[pos++] = '+';
 		else {
@@ -900,17 +857,17 @@ e50(void) {
 			acc.r = 077777;
 		return E_SUCCESS;
 	case 0165:      /* BESM owner + version + sys. disk info */
-		acc.l = koi8[(uchar)'B' - 32] << 8 |
-			koi8[(uchar)'ì' - 32];
-		acc.r = koi8[(uchar)'á' - 32] << 16 |
-			koi8[(uchar)'ä' - 32] << 8 |
-			koi8[(uchar)'E' - 32];
-		accex.l = koi8[(uchar)'ì' - 32] << 16 |
-			koi8[(uchar)'å' - 32] << 8 |
-			koi8[(uchar)'ã' - 32];
-		accex.r = koi8[(uchar)'ü' - 32] << 16 |
-			koi8[(uchar)'÷' - 32] << 8 |
-			koi8[(uchar)'í' - 32];
+		acc.l = koi8_to_gost[(uchar)'B' - 32] << 8 |
+			koi8_to_gost[(uchar)'ì' - 32];
+		acc.r = koi8_to_gost[(uchar)'á' - 32] << 16 |
+			koi8_to_gost[(uchar)'ä' - 32] << 8 |
+			koi8_to_gost[(uchar)'E' - 32];
+		accex.l = koi8_to_gost[(uchar)'ì' - 32] << 16 |
+			koi8_to_gost[(uchar)'å' - 32] << 8 |
+			koi8_to_gost[(uchar)'ã' - 32];
+		accex.r = koi8_to_gost[(uchar)'ü' - 32] << 16 |
+			koi8_to_gost[(uchar)'÷' - 32] << 8 |
+			koi8_to_gost[(uchar)'í' - 32];
 		reg[016] = 0x222;
 		reg[015] = 2053;
 		return E_SUCCESS;
@@ -929,7 +886,7 @@ e50(void) {
 				acc.r = 0;
 			for (sp = errtxt[acc.r], di = 0; di < 18; ++di)
 				core[reg[015]].w_b[di] = *sp ?
-					koi8[*sp++ - 32] : 017;
+					koi8_to_gost[*sp++ - 32] : 017;
 		}
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
@@ -1215,7 +1172,7 @@ ttout(uchar flags, ushort a1, ushort a2) {
 			/* fall thru */
 		default:
 			if (*sp <= 0134)
-				putchar(upp[*sp]);
+				putchar(gost_to_koi8[*sp]);
 			else {
 				printf("[%03o]", *sp);
 			}
@@ -1253,7 +1210,7 @@ ttin(uchar flags, ushort a1, ushort a2) {
 			goto done;
 		default:
 			if (*sp >= 040)
-				PUTB(koi8[*sp - 040]);
+				PUTB(koi8_to_gost[*sp - 040]);
 			break;
 		}
 		++sp;
@@ -1569,7 +1526,7 @@ rpt:
 	case 0342:
 		return '`';
 	}
-	return upp[c];
+	return gost_to_koi8[c];
 }
 
 unsigned long long

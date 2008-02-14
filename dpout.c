@@ -15,11 +15,9 @@
 	if (pos > maxp) \
 		maxp = pos; \
 	if (line[pos] == ' ') \
-		line[pos] = upp[(c)]; \
+		line[pos] = gost_to_koi8[(c)]; \
 	++pos; \
 }
-
-extern unsigned char *upp;
 
 static unsigned char	para[PARASZ];
 static char		line[129];

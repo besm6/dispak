@@ -1,5 +1,6 @@
 bin_PROGRAMS = besm6
-besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c disk.c errtxt.c vsinput.c dpout.c
+besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c \
+	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
 AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 
 all-local: diskdir/2099
