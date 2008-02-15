@@ -6,17 +6,17 @@ AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 all-local: diskdir/2099
 	${MAKE} -C besmdisk all
 
-install-data-local: ${datadir}/share/besm6/2048 ${datadir}/share/besm6/2053 \
-	${datadir}/share/besm6/2099
+install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2053 \
+	${datadir}/besm6/2099
 	${MAKE} -C examples install
 
-${datadir}/share/besm6/2048: diskdir/2048
+${datadir}/besm6/2048: diskdir/2048
 	${install_sh_DATA} $< $@
 
-${datadir}/share/besm6/2053: diskdir/2053
+${datadir}/besm6/2053: diskdir/2053
 	${install_sh_DATA} $< $@
 
-${datadir}/share/besm6/2099: diskdir/2099
+${datadir}/besm6/2099: diskdir/2099
 	${install_sh_DATA} $< $@
 
 clean-local:
@@ -30,13 +30,13 @@ distclean-local:
 diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
 	${MAKE} besm6
 	echo -n DISK > diskdir/2099
-	./besm6 -q --bootstrap macros.b6
-	./besm6 -q --bootstrap disp99.b6
-	./besm6 -q --bootstrap e64.b6
-	./besm6 -q --bootstrap ekdisp.b6
-	./besm6 -q --bootstrap sostav.b6
-	./besm6 -q --bootstrap spe66.b6
-	./besm6 -q --bootstrap make2099.b6
+	./besm6 -q --bootstrap --path=diskdir macros.b6
+	./besm6 -q --bootstrap --path=diskdir disp99.b6
+	./besm6 -q --bootstrap --path=diskdir e64.b6
+	./besm6 -q --bootstrap --path=diskdir ekdisp.b6
+	./besm6 -q --bootstrap --path=diskdir sostav.b6
+	./besm6 -q --bootstrap --path=diskdir spe66.b6
+	./besm6 -q --bootstrap --path=diskdir make2099.b6
 
 log:	.svn
 	svn update

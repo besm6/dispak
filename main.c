@@ -28,6 +28,8 @@
  *		trace extracode 064
  *	-s, --stats
  *		show statistics for machine instructions
+ *	--path=dir1:dir2...
+ *		specify search path for disk images
  *	-p, --output-enable
  *		display printing output on stdout (default for batch tasks)
  *	-q, --output-disable
@@ -57,8 +59,6 @@
 #include "defs.h"
 #include "optab.h"
 #include "disk.h"
-
-#define PATH_DEFAULT "/.besm6:/usr/local/lib/besm6"
 
 static struct   {
 	int     dsk;
@@ -91,6 +91,7 @@ enum {
 	OPT_PUNCH_BINARY,
 	OPT_BOOTSTRAP,
 	OPT_TRACE_E64,
+	OPT_PATH,
 };
 
 /* Table of options. */
@@ -114,6 +115,7 @@ static struct option longopts[] = {
 	{ "punch",		1,	0,	'c'		},
 	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
 	{ "bootstrap",		0,	0,	OPT_BOOTSTRAP	},
+	{ "path",		1,	0,	OPT_PATH	},
 	{ 0,			0,	0,	0		},
 };
 
@@ -136,11 +138,12 @@ usage ()
 	fprintf (stderr, "  -t, --trace            trace all extracodes\n");
 	fprintf (stderr, "  --trace-e64            trace extracode 064\n");
 	fprintf (stderr, "  -s, --stats            show statistics for machine instructions\n");
+	fprintf (stderr, "  --path=dir1:dir2...    specify search path for disk images\n");
 	fprintf (stderr, "  -p, --output-enable    display printing output (default for batch tasks)\n");
 	fprintf (stderr, "  -q, --output-disable   no printing output (default for TELE tasks)\n");
 	fprintf (stderr, "  -o file, --output=file redirect printing output to file\n");
 	fprintf (stderr, "  --output-raw=file      dump raw output to file\n");
-	fprintf (stderr, "  --decode-output <file> decode raw output file to text\n");
+	fprintf (stderr, "  --decode-output file   decode raw output file to text\n");
 	fprintf (stderr, "  -l, --output-latin     use Latin letters for output\n");
 	fprintf (stderr, "  --output-cyrillic      use Cyrillic letters for output (default)\n");
 	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
@@ -236,6 +239,9 @@ main(int argc, char **argv)
 			break;
 		case OPT_TRACE_E64:	/* trace extracode 064 */
 			trace_e64 = 1;
+			break;
+		case OPT_PATH:		/* set disk search path */
+			disk_path = optarg;
 			break;
 		}
 	}

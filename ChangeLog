@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r37 | leobru | 2008-02-15 12:02:59 +0300 (Птн, 15 Фев 2008) | 2 lines
+
+ALGOL-specific symbols can now be entered and are printed uniquely.
+
+------------------------------------------------------------------------
+r36 | vak | 2008-02-14 22:16:31 +0300 (Чтв, 14 Фев 2008) | 7 lines
+
+Implemented disk search path: BESM6_PATH.
+Default is "$HOME/.besm6:/usr/local/share/besm6".
+Task input queue is placed in $HOME/.besm6/input_queue.
+Run "make install" to install binaries and disk images to /usr/local.
+Some code cleanup.
+
+
+------------------------------------------------------------------------
 r35 | vak | 2008-02-14 20:23:02 +0300 (Чтв, 14 Фев 2008) | 3 lines
 
 Fixed compilation bug caused by previous commit.

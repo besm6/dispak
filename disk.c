@@ -14,7 +14,7 @@
 #include "defs.h"
 #include "diski.h"
 
-#define PATH_DEFAULT "/.besm6:/usr/local/lib/besm6"
+#define PATH_DEFAULT "/.besm6:/usr/local/share/besm6"
 
 char *disk_path;
 
