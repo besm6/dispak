@@ -717,8 +717,7 @@ fetch_real (int addr)
 	long long mantissa;
 
 	LOAD(word, addr);
-	mantissa = ((long long) word.l << 24 | word.r) <<
-		(64 - 48 + 7);
+	mantissa = ((long long) word.l << 24 | word.r) << (64 - 48 + 7);
 
 	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
 	exponent.u.right32 = 0;

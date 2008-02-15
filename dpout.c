@@ -92,9 +92,6 @@ dump(FILE *fout, unsigned sz)
 static void
 decode (FILE *fout, char *data)
 {
-	unsigned        bytes_total = 0;
-	unsigned        bytes_tail = 0;
-
 	if (done)
 		return;
 	memcpy (para, data, PARASZ);

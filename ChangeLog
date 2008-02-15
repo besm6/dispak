@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r39 | vak | 2008-02-15 21:58:54 +0300 (ğÔÎ, 15 æÅ× 2008) | 4 lines
+
+E64: fixed printing of real numbers, and multiline output
+of commands, octal, and real numbers.
+
+
+------------------------------------------------------------------------
 r38 | vak | 2008-02-15 18:14:11 +0300 (ğÔÎ, 15 æÅ× 2008) | 4 lines
 
 Implemented option "--path=". Recompilation of 2099 now works fine.
