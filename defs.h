@@ -81,7 +81,7 @@ typedef struct  {
 	ulong   r;
 	ushort  o;
 	ulong   ml;
-/*      ulong   mr;     */
+/*	ulong   mr;*/
 #define mr      r
 }       alureg_t;                       /* ALU register type            */
 
@@ -279,12 +279,12 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 #define UNPCK(R)        { \
 	(R).o = ((R).l >> 17) & 0x7f; \
 	(R).ml = (R).l & 0x1ffff; \
-/*      (R).mr = (R).r; */ \
+/*	(R).mr = (R).r; */ \
 	(R).ml |= ((R).ml & 0x10000) << 1; \
 }
 #define PACK(R) { \
 	(R).l = (long) ((R).o << 17) | (R).ml; \
-/*      (R).r = (R).mr; */ \
+/*	(R).r = (R).mr; */ \
 }
 
 #define NEGATE(R) { \

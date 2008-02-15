@@ -331,6 +331,17 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 	}
 }
 
+static void
+print_char (uchar *line, int *pos, int sym)
+{
+	if (*pos == 128) {
+		lflush (line);
+		putchar ('\n');
+	}
+	line [(*pos) & 127] = sym;
+	++(*pos);
+}
+
 /*
  * Print word(s) in octal format.
  * Return next data address.
@@ -353,10 +364,10 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 			return addr0;
 
 		/* No space left on line. */
-		if (pos + digits > 128) {
+		if (pos >= 128) {
 			if (! addr1)
 				return 0;
-			return addr1 + 1;
+			return addr0;
 		}
 		w = (unsigned long long) core[addr0].w_b[0] << 40 |
 			(unsigned long long) core[addr0].w_b[1] << 32 |
@@ -367,7 +378,7 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 
 		w <<= 64 - digits * 3;
 		for (i=0; i<digits; ++i) {
-			line[pos++] = ((int) (w >> 61) & 7) | '0';
+			print_char (line, &pos, ((int) (w >> 61) & 7) | '0');
 			w <<= 3;
 		}
 
@@ -377,6 +388,31 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 		if (width)
 			pos += width - digits;
 	}
+}
+
+static void
+print_command1 (uchar *line, int *pos, unsigned long cmd)
+{
+	print_char (line, pos, (cmd >> 23 & 1) | '0');
+	print_char (line, pos, (cmd >> 20 & 7) | '0');
+	print_char (line, pos, ' ');
+	if (cmd & 02000000) {
+		/* long address command */
+		print_char (line, pos, (cmd >> 18 & 3) | '0');
+		print_char (line, pos, (cmd >> 15 & 7) | '0');
+		print_char (line, pos, ' ');
+		print_char (line, pos, (cmd >> 12 & 7) | '0');
+	} else {
+		/* short address command */
+		print_char (line, pos, (cmd >> 18 & 1) | '0');
+		print_char (line, pos, (cmd >> 15 & 7) | '0');
+		print_char (line, pos, (cmd >> 12 & 7) | '0');
+		print_char (line, pos, ' ');
+	}
+	print_char (line, pos, (cmd >> 9 & 7) | '0');
+	print_char (line, pos, (cmd >> 6 & 7) | '0');
+	print_char (line, pos, (cmd >> 3 & 7) | '0');
+	print_char (line, pos, (cmd & 7) | '0');
 }
 
 /*
@@ -398,10 +434,10 @@ print_command(ushort addr0, ushort addr1, uchar *line, int pos,
 			return addr0;
 
 		/* No space left on line. */
-		if (pos + 23 > 128) {
+		if (pos >= 128) {
 			if (! addr1)
 				return 0;
-			return addr1 + 1;
+			return addr0;
 		}
 		a = (unsigned long) core[addr0].w_b[0] << 16 |
 			core[addr0].w_b[1] << 8 | core[addr0].w_b[2];
@@ -409,49 +445,9 @@ print_command(ushort addr0, ushort addr1, uchar *line, int pos,
 			core[addr0].w_b[4] << 8 | core[addr0].w_b[5];
 		++addr0;
 
-		line[pos++] = (a >> 23 & 1) | '0';
-		line[pos++] = (a >> 20 & 7) | '0';
-		line[pos++] = ' ';
-		if (a & 02000000) {
-			/* long address command */
-			line[pos++] = (a >> 18 & 3) | '0';
-			line[pos++] = (a >> 15 & 7) | '0';
-			line[pos++] = ' ';
-			line[pos++] = (a >> 12 & 7) | '0';
-		} else {
-			/* short address command */
-			line[pos++] = (a >> 18 & 1) | '0';
-			line[pos++] = (a >> 15 & 7) | '0';
-			line[pos++] = (a >> 12 & 7) | '0';
-			line[pos++] = ' ';
-		}
-		line[pos++] = (a >> 9 & 7) | '0';
-		line[pos++] = (a >> 6 & 7) | '0';
-		line[pos++] = (a >> 3 & 7) | '0';
-		line[pos++] = (a & 7) | '0';
-
-		line[pos++] = ' ';
-
-		line[pos++] = (b >> 23 & 1) | '0';
-		line[pos++] = (b >> 20 & 7) | '0';
-		line[pos++] = ' ';
-		if (b & 02000000) {
-			/* long address command */
-			line[pos++] = (b >> 18 & 3) | '0';
-			line[pos++] = (b >> 15 & 7) | '0';
-			line[pos++] = ' ';
-			line[pos++] = (b >> 12 & 7) | '0';
-		} else {
-			/* short address command */
-			line[pos++] = (b >> 18 & 1) | '0';
-			line[pos++] = (b >> 15 & 7) | '0';
-			line[pos++] = (b >> 12 & 7) | '0';
-			line[pos++] = ' ';
-		}
-		line[pos++] = (b >> 9 & 7) | '0';
-		line[pos++] = (b >> 6 & 7) | '0';
-		line[pos++] = (b >> 3 & 7) | '0';
-		line[pos++] = (b & 7) | '0';
+		print_command1 (line, &pos, a);
+		print_char (line, &pos, ' ');
+		print_command1 (line, &pos, b);
 
 		if (! repeat)
 			return addr0;
@@ -514,10 +510,10 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 			return addr0;
 
 		/* No space left on line. */
-		if (pos + digits + 2 > 128) {
+		if (pos >= 128) {
 			if (! addr1)
 				return 0;
-			return addr1 + 1;
+			return addr0;
 		}
 
 		negative = (core[addr0].w_b[0] & 1);
@@ -535,23 +531,23 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 		}
 		++addr0;
 
-		line[pos++] = ' ';
-		line[pos++] = negative ? '-' : '+';
+		print_char (line, &pos, ' ');
+		print_char (line, &pos, negative ? '-' : '+');
 		for (i=0; i<digits-4; ++i) {
 			value = value * 10;
 			digit = (int) value;
-			line[pos++] = '0' + digit;
+			print_char (line, &pos, '0' + digit);
 			value -= digit;
 		}
-		line[pos++] = 'E';
+		print_char (line, &pos, 'e');
 		if (exponent >= 0)
-			line[pos++] = '+';
+			print_char (line, &pos, '+');
 		else {
-			line[pos++] = '-';
+			print_char (line, &pos, '-');
 			exponent = -exponent;
 		}
-		line[pos++] = '0' + exponent / 10;
-		line[pos++] = '0' + exponent % 10;
+		print_char (line, &pos, '0' + exponent / 10);
+		print_char (line, &pos, '0' + exponent % 10);
 
 		if (! repeat)
 			return addr0;

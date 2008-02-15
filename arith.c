@@ -13,24 +13,28 @@
 #include <math.h>
 #include "defs.h"
 
+/*
+ * 64-bit floating-point value in format of standard IEEE 754.
+ */
 typedef union {
-		double d;
-		struct {
+	double d;
+	struct {
 #ifdef M_WORDSWAP
-			unsigned _lol;
-			unsigned _hil;
+		unsigned right32, left32;
 #else
-			unsigned _hil;
-			unsigned _lol;
+		unsigned left32, right32;
 #endif
-		} l;
-	} math_t;
-#define lol     l._lol
-#define hil     l._hil
-#define TO_NAT(from,to) {\
-	to.hil = ((from.o - 64 + 1022) << 20) | ((from.ml << 5) & 0xfffff) |\
+	} u;
+} math_t;
+
+/*
+ * Convert floating-point value from BESM-6 format to IEEE 754.
+ */
+#define BESM_TO_IEEE(from,to) {\
+	to.u.left32 = ((from.o - 64 + 1022) << 20) |\
+			((from.ml << 5) & 0xfffff) |\
 			(from.mr >> 19);\
-	to.lol = (from.mr & 0x7ffff) << 13;\
+	to.u.right32 = (from.mr & 0x7ffff) << 13;\
 }
 
 int
@@ -235,21 +239,21 @@ qzero:
 		acc.mr = (acc.mr << c) & 0xffffff;
 	}
 
-	TO_NAT(acc, dividend);
-	dividend.hil -= bias << 20;
-	TO_NAT(enreg, divisor);
+	BESM_TO_IEEE(acc, dividend);
+	dividend.u.left32 -= bias << 20;
+	BESM_TO_IEEE(enreg, divisor);
 
 	/* quotient.d = dividend.d / divisor.d; */
 	quotient.d = nrdiv(dividend.d, divisor.d);
 
-	o = quotient.hil >> 20;
+	o = quotient.u.left32 >> 20;
 	o = o - 1022 + 64;
 	if (o < 0)
 		goto qzero;
 	acc.o = o & 0x7f;
-	acc.ml = ((quotient.hil & 0xfffff) | 0x100000) >> 5;
-	acc.mr = ((quotient.hil & 0x1f) << 19) |
-			(quotient.lol >> 13);
+	acc.ml = ((quotient.u.left32 & 0xfffff) | 0x100000) >> 5;
+	acc.mr = ((quotient.u.left32 & 0x1f) << 19) |
+			(quotient.u.right32 >> 13);
 	if (neg)
 		NEGATE(acc);
 	if ((o > 0x7f) && !dis_exc)
@@ -368,7 +372,7 @@ qzero:
 		acc.mr = (acc.mr << c) & 0xffffff;
 	}
 
-	TO_NAT(acc, arg);
+	BESM_TO_IEEE(acc, arg);
 
 	if (neg) {
 		arg.d = -arg.d;
@@ -407,14 +411,14 @@ qzero:
 	if ((neg = arg.d < 0.0))
 		arg.d *= -1.0;
 
-	o = arg.hil >> 20;
+	o = arg.u.left32 >> 20;
 	o = o - 1022 + 64;
 	if (o < 0)
 		goto qzero;
 	acc.o = o & 0x7f;
-	acc.ml = ((arg.hil & 0xfffff) | 0x100000) >> 5;
-	acc.mr = ((arg.hil & 0x1f) << 19) |
-			(arg.lol >> 13);
+	acc.ml = ((arg.u.left32 & 0xfffff) | 0x100000) >> 5;
+	acc.mr = ((arg.u.left32 & 0x1f) << 19) |
+			(arg.u.right32 >> 13);
 	if (neg)
 		NEGATE(acc);
 	if ((o > 0x7f) && !dis_exc)
@@ -709,15 +713,15 @@ double
 fetch_real (int addr)
 {
 	alureg_t word;
-	math_t real;
-	int negative = 0;
+	math_t exponent;
+	long long mantissa;
 
 	LOAD(word, addr);
-	UNPCK(word);
-	if (NEGATIVE(word)) {
-		NEGATE(word);
-		negative = 1;
-	}
-	TO_NAT(word, real);
-	return negative ? -real.d : real.d;
+	mantissa = ((long long) word.l << 24 | word.r) <<
+		(64 - 48 + 7);
+
+	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
+	exponent.u.right32 = 0;
+
+	return mantissa * exponent.d;
 }

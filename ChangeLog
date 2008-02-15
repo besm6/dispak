@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r38 | vak | 2008-02-15 18:14:11 +0300 (Птн, 15 Фев 2008) | 4 lines
+
+Implemented option "--path=". Recompilation of 2099 now works fine.
+Fixed bugs in "make install". Added file ansidecl.h.
+
+
+------------------------------------------------------------------------
 r37 | leobru | 2008-02-15 12:02:59 +0300 (Птн, 15 Фев 2008) | 2 lines
 
 ALGOL-specific symbols can now be entered and are printed uniquely.
