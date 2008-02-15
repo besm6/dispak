@@ -387,6 +387,16 @@ a1done:
 				    if (ch == -1)
 					goto noend;
 				    s[i] = ch;
+				    if (ch == '\\') {
+					nextc();
+				    	switch (ch) {
+						case '*': s[i] = '\236'; break;
+						case '<': s[i] = '\230'; break;
+						case '>': s[i] = '\231'; break;
+						case ':': s[i] = '\237'; break;
+						case '@': s[i] = '\234'; break;	
+					}
+				    }
 				    nextc();
 				    if (i == 5 && !strncmp((char*) s, "``````", 6)) {
 					raw = 0;
