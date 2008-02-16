@@ -170,7 +170,7 @@ FOREVER
 	if (!(cf & C_UNPACKED) && !right)
 		unpack(pcm);
 
-	if (!pcm || cf & C_NUMBER)
+	if (!pcm || (!no_insn_check && (cf & C_NUMBER)))
 		ABORT(E_CHECK);
 
 	ui = uicore[pcm][right];

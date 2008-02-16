@@ -50,6 +50,8 @@
  *		punch in binary format (default dots and holes)
  *	--bootstrap
  *		run in user mode only to build 2099 (no E66, cannot use -x)
+ *	--no-insn-check
+ *		the only non-insn word is at addr 0
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,6 +94,7 @@ enum {
 	OPT_BOOTSTRAP,
 	OPT_TRACE_E64,
 	OPT_PATH,
+	OPT_NO_INSN_CHECK,
 };
 
 /* Table of options. */
@@ -116,6 +119,7 @@ static struct option longopts[] = {
 	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
 	{ "bootstrap",		0,	0,	OPT_BOOTSTRAP	},
 	{ "path",		1,	0,	OPT_PATH	},
+	{ "no-insn-check",	0,	0,	OPT_NO_INSN_CHECK },
 	{ 0,			0,	0,	0		},
 };
 
@@ -149,6 +153,7 @@ usage ()
 	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
 	fprintf (stderr, "  --punch-binary         punch in binary format (default dots and holes)\n");
 	fprintf (stderr, "  --bootstrap            used to generate contents of the system disk\n");
+	fprintf (stderr, "  --no-insn-check        all words but at addr 0 are treated as insns\n");
 
 	fprintf (stderr, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 	exit (1);
@@ -242,6 +247,9 @@ main(int argc, char **argv)
 			break;
 		case OPT_PATH:		/* set disk search path */
 			disk_path = optarg;
+			break;
+		case OPT_NO_INSN_CHECK:
+			no_insn_check = 1;
 			break;
 		}
 	}

@@ -333,6 +333,7 @@ EXTERN int              visual;         /* print registers before entering co */
 EXTERN int              breakflg;       /* break on next command */
 EXTERN int              notty;
 EXTERN int		spec, spec_saved; /* store insns store executable words */
+EXTERN int		no_insn_check;	/* ignore number mode except addr 0 */
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
 EXTERN int		quitflg;	/* "quit" command flag */
