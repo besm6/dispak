@@ -46,6 +46,8 @@ ibr:
 	}
 
 	user = psp.user;
+	spec_saved = psp.spec;
+	spec = 1;
 	acc = user;
 	reg[1] = 0141;
 	accex.r = psp.lprlim;
@@ -129,6 +131,9 @@ e60(void)
 		if (ibw[i].tag != W_DATA)
 			return E_INT;
 		core[reg[016] + i] = ibw[i].w;
+		cflags[reg[016] + i] &= ~C_UNPACKED;
+		if (!psp.spec)
+			cflags[reg[016] + i] |= C_NUMBER;
 	}
 
 	if (pos == enda3) {

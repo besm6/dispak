@@ -197,6 +197,8 @@ mpar:
 			psp.lprlim = 0200000 - psp.lprlim * 236;
 		} else if (!strncmp((char*)art, "פול", 3)) {
 			psp.tele = 1;
+		} else if (!strncmp((char*)art, "ףנו", 3)) {
+			psp.spec = 1;
 		} else if (!strncmp((char*)art, "זית", 3)) {
 			if (!cp)
 				goto mpar;

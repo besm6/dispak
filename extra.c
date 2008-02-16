@@ -1135,10 +1135,10 @@ ddio(void)
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		for (u = addr + (uil.i_addr & 3) * 256;
 		     u < addr + (uil.i_addr & 3) * 256 + 256; ++u)
-			cflags[u] &= ~C_UNPACKED;
+			cflags[u] &= ~(C_UNPACKED|C_NUMBER);
 	} else if (uil.i_opcode & 010)
 		for (u = addr; u < addr + 1024; ++u)
-			cflags[u] &= ~C_UNPACKED;
+			cflags[u] &= ~(C_UNPACKED|C_NUMBER);
 	return E_SUCCESS;
 }
 
@@ -1515,8 +1515,9 @@ resources(void)
 			memcpy(&core[USRC * 02000], &core[UDST * 02000], 6144);
 			memcpy(&core[UDST * 02000], tmp, 6144);
 			for (j = 0; j < 02000; j++) {
-				cflags[j + USRC * 02000] &= ~C_UNPACKED;
-				cflags[j + UDST * 02000] &= ~C_UNPACKED;
+				/* a little too generous */
+				cflags[j + USRC * 02000] &= ~(C_UNPACKED|C_NUMBER);
+				cflags[j + UDST * 02000] &= ~(C_UNPACKED|C_NUMBER);
 			}
 		}
 		return E_SUCCESS;

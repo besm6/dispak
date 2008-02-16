@@ -196,7 +196,7 @@ command:        /* void */
 	|       'i' octal '=' octal
 			{ if ($2 &= 017) reg[$2] = ADDR($4); }
 	|       octal '=' word
-			{ STORE(wd, $1); }
+			{ STORE(wd, $1);  cflags[$1] &= ~C_NUMBER; }
 	|       jhb
 			{
 				int     i;

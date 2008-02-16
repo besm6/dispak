@@ -188,7 +188,7 @@ EXTERN uchar    cflags[CORESZ * 2];     /* core flags                   */
 #define C_BPT           2               /* breakpoint here              */
 #define C_BPW           4               /* break on write               */
 #define C_STOPPED       8               /* stopped on op33              */
-
+#define C_NUMBER	16		/* noexec flag			*/
 /*
  *      "hardware" objects
  */
@@ -274,6 +274,7 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 		_cp[4] = _l >> 8; \
 		_cp[5] = _l; \
 		cflags[addr] &= ~C_UNPACKED; \
+		if (spec) cflags[addr] &= ~C_NUMBER; else cflags[addr] |= C_NUMBER; \
 	} else
 
 #define UNPCK(R)        { \
@@ -331,6 +332,7 @@ EXTERN alureg_t         zeroword;
 EXTERN int              visual;         /* print registers before entering co */
 EXTERN int              breakflg;       /* break on next command */
 EXTERN int              notty;
+EXTERN int		spec, spec_saved; /* store insns store executable words */
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
 EXTERN int		quitflg;	/* "quit" command flag */
@@ -388,6 +390,7 @@ extern ulong    to_2_10(ulong src);
 #define E_ZERODIV       14              /* division by zero             */
 #define E_OVFL          15              /* overflow                     */
 #define E_CWERR         34              /* illegal ecode cw             */
+#define E_CHECK		20		/* instruction check		*/
 #define E_DISKERR       42              /* self xplntry */
 #define E_RESOP         46              /* err in e72 cw */
 #define E_TERM          1               /* normal termination   */

@@ -19,7 +19,7 @@ struct ibword   {
 struct passport {
 	alureg_t                user;
 	ulong                   entry;
-	uchar                   tele, keep;
+	uchar                   tele, keep, spec;
 	ushort                  nvol;
 	ushort                  lprlim;
 	ulong                   phys;

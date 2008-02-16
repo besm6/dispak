@@ -170,6 +170,9 @@ FOREVER
 	if (!(cf & C_UNPACKED) && !right)
 		unpack(pcm);
 
+	if (!pcm || cf & C_NUMBER)
+		ABORT(E_CHECK);
+
 	ui = uicore[pcm][right];
 	op = optab[ui.i_opcode];
 
@@ -465,6 +468,7 @@ mtj:
 		abpc = pc;
 		abright = right;
 		pcm = pc | supmode;
+		spec = spec_saved | supmode;
 		err = reg[TRAPNREG];
 		reg[TRAPNREG] = 0;
 		if (err)
@@ -483,7 +487,7 @@ mtj:
 		reg[016] = ADDR(addr + reg[ui.i_reg]);
 		reg[TRAPNREG] = ui.i_opcode - 050;
 		stopwatch();
-		if (trace && ui.i_opcode != 075) {
+		if (trace && (ui.i_opcode != 075 || reg[016] < 2)) {
 			/* Do not trace e75, it's too verbose. */
 			LOAD(enreg, reg[016] | (supmode & sup_mmap));
 			fprintf(stderr, "%05o:%03o.%05o(%08lo%08lo) %08lo%08lo\n",
@@ -566,18 +570,27 @@ mtj:
 			goto errchk;
 		case 075:
 			STORE(acc, reg[016]);
+			cflags[reg[016]] &= ~C_NUMBER;
+			switch (reg[016]) {
+			/* undocumented trick (чтенеооп жйтупч) */
+			case 0: spec = 1; break;
+			case 1: spec = 0; break;
+			}
 			break;
 		default:
 			err = E_UNIMP;
 errchk:
 			if (err == E_UNIMP) {
 				/* try the supervisor then */
+				spec_saved = spec;
 				reg[PSSREG] = reg[PSREG] & 02003;
 				if (supmode)
 					reg[PSSREG] |= 014;
 				supmode = 0100000;
 				sup_mmap = 0100000;
 				reg[PSREG] = 02007;
+ 				/* words formed by the kernel in user memory can be instructions */
+				spec = 1;
 				JMP(XCODE_ENTRYPT);
 			} else if (err) {
 				startwatch();
