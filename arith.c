@@ -441,6 +441,15 @@ mul()
 
 	a = acc;
 	b = enreg;
+
+	if ((!a.l && !a.r) || (!b.l && !b.r)) {
+		/* multiplication by zero is zero */
+		acc.l = acc.r = acc.o = acc.ml =
+		accex.l = accex.r = accex.o = accex.ml = 0;
+		rnd_rq = 0;
+		return E_SUCCESS;
+	}
+
 	if (NEGATIVE(a)) {
 		neg = 1;
 		NEGATE(a);
