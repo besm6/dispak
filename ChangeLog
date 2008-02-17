@@ -1,24 +1,47 @@
 ------------------------------------------------------------------------
-r39 | vak | 2008-02-15 21:58:54 +0300 (ğÔÎ, 15 æÅ× 2008) | 4 lines
+r43 | leobru | 2008-02-17 06:36:33 +0300 (Ğ²Ñ, 17 Ñ„ĞµĞ² 2008) | 3 lines
+
+Finally the AU test works completely - loops forever.
+A multiplication by 0 must always return 0.
+
+------------------------------------------------------------------------
+r42 | leobru | 2008-02-16 22:55:31 +0300 (ÑĞ±, 16 Ñ„ĞµĞ² 2008) | 2 lines
+
+Skipping insn check is now allowed; added M-20 format to the punchcard test.
+
+------------------------------------------------------------------------
+r41 | leobru | 2008-02-16 10:54:01 +0300 (ÑĞ±, 16 Ñ„ĞµĞ² 2008) | 3 lines
+
+Implemented the insn/data check. Undocumented *75 0/1 switches the store mode.
+The kernel always works in the insn store mode for the sake of *66.
+
+------------------------------------------------------------------------
+r40 | vak | 2008-02-15 22:24:09 +0300 (Ğ¿Ñ‚, 15 Ñ„ĞµĞ² 2008) | 3 lines
+
+Fixed bug in dpout: tail of output was lost sometimes.
+
+
+------------------------------------------------------------------------
+r39 | vak | 2008-02-15 21:58:54 +0300 (Ğ¿Ñ‚, 15 Ñ„ĞµĞ² 2008) | 4 lines
 
 E64: fixed printing of real numbers, and multiline output
 of commands, octal, and real numbers.
 
 
 ------------------------------------------------------------------------
-r38 | vak | 2008-02-15 18:14:11 +0300 (ğÔÎ, 15 æÅ× 2008) | 4 lines
+r38 | vak | 2008-02-15 18:14:11 +0300 (Ğ¿Ñ‚, 15 Ñ„ĞµĞ² 2008) | 4 lines
 
 Implemented option "--path=". Recompilation of 2099 now works fine.
 Fixed bugs in "make install". Added file ansidecl.h.
 
 
 ------------------------------------------------------------------------
-r37 | leobru | 2008-02-15 12:02:59 +0300 (ğÔÎ, 15 æÅ× 2008) | 2 lines
+r37 | leobru | 2008-02-15 12:02:59 +0300 (Ğ¿Ñ‚, 15 Ñ„ĞµĞ² 2008) | 2 lines
 
 ALGOL-specific symbols can now be entered and are printed uniquely.
 
 ------------------------------------------------------------------------
-r36 | vak | 2008-02-14 22:16:31 +0300 (şÔ×, 14 æÅ× 2008) | 7 lines
+r36 | vak | 2008-02-14 22:16:31 +0300 (Ñ‡Ñ‚, 14 Ñ„ĞµĞ² 2008) | 7 lines
 
 Implemented disk search path: BESM6_PATH.
 Default is "$HOME/.besm6:/usr/local/share/besm6".
@@ -28,19 +51,19 @@ Some code cleanup.
 
 
 ------------------------------------------------------------------------
-r35 | vak | 2008-02-14 20:23:02 +0300 (şÔ×, 14 æÅ× 2008) | 3 lines
+r35 | vak | 2008-02-14 20:23:02 +0300 (Ñ‡Ñ‚, 14 Ñ„ĞµĞ² 2008) | 3 lines
 
 Fixed compilation bug caused by previous commit.
 
 
 ------------------------------------------------------------------------
-r34 | vak | 2008-02-14 20:17:34 +0300 (şÔ×, 14 æÅ× 2008) | 3 lines
+r34 | vak | 2008-02-14 20:17:34 +0300 (Ñ‡Ñ‚, 14 Ñ„ĞµĞ² 2008) | 3 lines
 
 Code cleanup and prettyprinting.
 
 
 ------------------------------------------------------------------------
-r33 | vak | 2008-02-14 19:22:49 +0300 (şÔ×, 14 æÅ× 2008) | 11 lines
+r33 | vak | 2008-02-14 19:22:49 +0300 (Ñ‡Ñ‚, 14 Ñ„ĞµĞ² 2008) | 11 lines
 
 All encoding tables moved no new file encoding.c.
 Implemented itm-to-koi8-cyrillic table. Now we can use diff to compare
@@ -54,24 +77,24 @@ Added file ChangeLog, just to be closer to GNU standards.
 
 
 ------------------------------------------------------------------------
-r32 | vak | 2008-02-14 01:57:00 +0300 (şÔ×, 14 æÅ× 2008) | 3 lines
+r32 | vak | 2008-02-14 01:57:00 +0300 (Ñ‡Ñ‚, 14 Ñ„ĞµĞ² 2008) | 3 lines
 
 Fixed e64.
 
 
 ------------------------------------------------------------------------
-r31 | leobru | 2008-02-13 23:34:32 +0300 (óÒÄ, 13 æÅ× 2008) | 2 lines
+r31 | leobru | 2008-02-13 23:34:32 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 2 lines
 
 Punchcard demonstration.
 
 ------------------------------------------------------------------------
-r30 | leobru | 2008-02-13 22:49:39 +0300 (óÒÄ, 13 æÅ× 2008) | 3 lines
+r30 | leobru | 2008-02-13 22:49:39 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 3 lines
 
 Removed DEBUG and obsolete assembly optimizations,
 fixed punching for BEMSH (partial cards).
 
 ------------------------------------------------------------------------
-r29 | vak | 2008-02-13 22:44:46 +0300 (óÒÄ, 13 æÅ× 2008) | 8 lines
+r29 | vak | 2008-02-13 22:44:46 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 8 lines
 
 Fixed bug in e64, now Bemsh runs (almost) fine.
 Added new option --trace-e64 for debugging print extracode.
@@ -82,13 +105,13 @@ Added two examples: bemsh-auto.b6 and monitor80.b6.
 
 
 ------------------------------------------------------------------------
-r28 | vak | 2008-02-13 18:28:27 +0300 (óÒÄ, 13 æÅ× 2008) | 3 lines
+r28 | vak | 2008-02-13 18:28:27 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 3 lines
 
 Configure: added checking for math library.
 
 
 ------------------------------------------------------------------------
-r27 | vak | 2008-02-13 14:54:08 +0300 (óÒÄ, 13 æÅ× 2008) | 7 lines
+r27 | vak | 2008-02-13 14:54:08 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 7 lines
 
 Using configure script for target configuration.
 When you need to change something in Makefile, you should edit
@@ -98,50 +121,50 @@ Disk image 2099 removed from repository. It is compiled on "make all".
 
 
 ------------------------------------------------------------------------
-r26 | vak | 2008-02-13 13:23:05 +0300 (óÒÄ, 13 æÅ× 2008) | 3 lines
+r26 | vak | 2008-02-13 13:23:05 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 3 lines
 
 New option -q equivalent to --output-disable. Disk image 2099 updated.
 Run make log to create ChangeLog.
 
 ------------------------------------------------------------------------
-r25 | leobru | 2008-02-13 13:10:54 +0300 (óÒÄ, 13 æÅ× 2008) | 2 lines
+r25 | leobru | 2008-02-13 13:10:54 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 2 lines
 
 Implemented parsing of visible punchcards, fixed bugs.
 
 ------------------------------------------------------------------------
-r24 | leobru | 2008-02-13 10:04:55 +0300 (óÒÄ, 13 æÅ× 2008) | 1 line
+r24 | leobru | 2008-02-13 10:04:55 +0300 (ÑÑ€, 13 Ñ„ĞµĞ² 2008) | 1 line
 
 Implemented bootstrapping of volume 2099
 ------------------------------------------------------------------------
-r23 | vak | 2008-02-12 19:41:03 +0300 (÷ÔÏ, 12 æÅ× 2008) | 4 lines
+r23 | vak | 2008-02-12 19:41:03 +0300 (Ğ²Ñ‚, 12 Ñ„ĞµĞ² 2008) | 4 lines
 
 Reading input task passport implemented inside main program.
 Utility vsinput is not needed anymore. Vsix renamed to besm6.
 
 
 ------------------------------------------------------------------------
-r22 | vak | 2008-02-12 19:06:54 +0300 (÷ÔÏ, 12 æÅ× 2008) | 4 lines
+r22 | vak | 2008-02-12 19:06:54 +0300 (Ğ²Ñ‚, 12 Ñ„ĞµĞ² 2008) | 4 lines
 
 Implemented punching in dots-and-holes format (default).
 Use --punch-binary option for old behaviour.
 
 
 ------------------------------------------------------------------------
-r21 | vak | 2008-02-12 18:41:54 +0300 (÷ÔÏ, 12 æÅ× 2008) | 4 lines
+r21 | vak | 2008-02-12 18:41:54 +0300 (Ğ²Ñ‚, 12 Ñ„ĞµĞ² 2008) | 4 lines
 
 Utility dpout is built into the emulator.
 Old behaviour could be reached using --output-disable
 and --decode-output options. Some gcc warnings fixed.
 
 ------------------------------------------------------------------------
-r20 | vak | 2008-02-11 21:27:31 +0300 (ğÎÄ, 11 æÅ× 2008) | 4 lines
+r20 | vak | 2008-02-11 21:27:31 +0300 (Ğ¿Ğ½, 11 Ñ„ĞµĞ² 2008) | 4 lines
 
 Options parsed using getopt_long(). Added files AUTHORS and COPYING.
 Batch tasks have output enabled by default.
 
 
 ------------------------------------------------------------------------
-r19 | vak | 2008-02-11 17:58:46 +0300 (ğÎÄ, 11 æÅ× 2008) | 6 lines
+r19 | vak | 2008-02-11 17:58:46 +0300 (Ğ¿Ğ½, 11 Ñ„ĞµĞ² 2008) | 6 lines
 
 Files imgtodisk.c and zdump.c moved to besmdisk/ directory.
 Make clean changed to remove binary programs, to be compatible
@@ -150,13 +173,13 @@ Fixed some compilation warnings.
 
 
 ------------------------------------------------------------------------
-r18 | leobru | 2008-02-11 02:12:24 +0300 (ğÎÄ, 11 æÅ× 2008) | 3 lines
+r18 | leobru | 2008-02-11 02:12:24 +0300 (Ğ¿Ğ½, 11 Ñ„ĞµĞ² 2008) | 3 lines
 
 Added comments to e-codes and a few ignored actions,
 fixed e71 (output of bad codes could cause crash).
 
 ------------------------------------------------------------------------
-r17 | vak | 2008-02-10 22:45:12 +0300 (÷ÓË, 10 æÅ× 2008) | 6 lines
+r17 | vak | 2008-02-10 22:45:12 +0300 (Ğ²Ñ, 10 Ñ„ĞµĞ² 2008) | 6 lines
 
 Extracode 64: fixed is almost compatible with native version.
 Algol-BESM and ITM autocode produce identical output.
@@ -165,20 +188,20 @@ the number of empty lines is different.
 
 
 ------------------------------------------------------------------------
-r16 | vak | 2008-02-10 19:08:00 +0300 (÷ÓË, 10 æÅ× 2008) | 3 lines
+r16 | vak | 2008-02-10 19:08:00 +0300 (Ğ²Ñ, 10 Ñ„ĞµĞ² 2008) | 3 lines
 
 Extracode 64: implemented printing real numbers. Multiple print tasks allowed.
 
 
 ------------------------------------------------------------------------
-r15 | leobru | 2008-02-09 21:29:43 +0300 (óÕÂ, 09 æÅ× 2008) | 4 lines
+r15 | leobru | 2008-02-09 21:29:43 +0300 (ÑĞ±, 09 Ñ„ĞµĞ² 2008) | 4 lines
 
 Implemented disk offset in the passport (for Algol-BESM6). Combining an
 offset with the -RW mode is not allowed (I don't remember the syntax)
 
 
 ------------------------------------------------------------------------
-r14 | vak | 2008-02-09 02:16:37 +0300 (óÕÂ, 09 æÅ× 2008) | 5 lines
+r14 | vak | 2008-02-09 02:16:37 +0300 (ÑĞ±, 09 Ñ„ĞµĞ² 2008) | 5 lines
 
 Implemented extracode 64 according to specification:
 GOST text, ITM text, octal numbers, CPU instructions.
@@ -186,78 +209,78 @@ Printing real numbers not implmented yet.
 
 
 ------------------------------------------------------------------------
-r13 | leobru | 2008-02-08 21:41:15 +0300 (ğÔÎ, 08 æÅ× 2008) | 2 lines
+r13 | leobru | 2008-02-08 21:41:15 +0300 (Ğ¿Ñ‚, 08 Ñ„ĞµĞ² 2008) | 2 lines
 
 The first step of implementing overstrike printing (FORTRAN + specifier)
 
 ------------------------------------------------------------------------
-r12 | vak | 2008-02-08 18:41:11 +0300 (ğÔÎ, 08 æÅ× 2008) | 3 lines
+r12 | vak | 2008-02-08 18:41:11 +0300 (Ğ¿Ñ‚, 08 Ñ„ĞµĞ² 2008) | 3 lines
 
 Automated rebuilding of disk 2099. Some files renamed.
 
 
 ------------------------------------------------------------------------
-r11 | vak | 2008-02-08 01:41:26 +0300 (ğÔÎ, 08 æÅ× 2008) | 3 lines
+r11 | vak | 2008-02-08 01:41:26 +0300 (Ğ¿Ñ‚, 08 Ñ„ĞµĞ² 2008) | 3 lines
 
 Examples for Bemsh and Madlen: using e64 for printing.
 
 
 ------------------------------------------------------------------------
-r10 | vak | 2008-02-07 21:38:39 +0300 (şÔ×, 07 æÅ× 2008) | 4 lines
+r10 | vak | 2008-02-07 21:38:39 +0300 (Ñ‡Ñ‚, 07 Ñ„ĞµĞ² 2008) | 4 lines
 
 Added example for autocode ITM. Fixed e64, so autocode outpute
 now looks more clear.
 
 
 ------------------------------------------------------------------------
-r9 | leobru | 2008-02-07 08:37:37 +0300 (şÔ×, 07 æÅ× 2008) | 1 line
+r9 | leobru | 2008-02-07 08:37:37 +0300 (Ñ‡Ñ‚, 07 Ñ„ĞµĞ² 2008) | 1 line
 
 
 ------------------------------------------------------------------------
-r8 | vak | 2008-02-06 00:50:20 +0300 (óÒÄ, 06 æÅ× 2008) | 3 lines
+r8 | vak | 2008-02-06 00:50:20 +0300 (ÑÑ€, 06 Ñ„ĞµĞ² 2008) | 3 lines
 
 Added examples/*.b6.
 
 
 ------------------------------------------------------------------------
-r7 | leobru | 2008-02-04 11:25:01 +0300 (ğÎÄ, 04 æÅ× 2008) | 3 lines
+r7 | leobru | 2008-02-04 11:25:01 +0300 (Ğ¿Ğ½, 04 Ñ„ĞµĞ² 2008) | 3 lines
 
 Added punching, more extracodes, ITM encoding.
 
 
 ------------------------------------------------------------------------
-r6 | leobru | 2008-02-04 11:21:24 +0300 (ğÎÄ, 04 æÅ× 2008) | 3 lines
+r6 | leobru | 2008-02-04 11:21:24 +0300 (Ğ¿Ğ½, 04 Ñ„ĞµĞ² 2008) | 3 lines
 
 A description of the input data format for the emulator.
 
 
 ------------------------------------------------------------------------
-r5 | vak | 2008-02-03 18:32:55 +0300 (÷ÓË, 03 æÅ× 2008) | 3 lines
+r5 | vak | 2008-02-03 18:32:55 +0300 (Ğ²Ñ, 03 Ñ„ĞµĞ² 2008) | 3 lines
 
 Added disk images: 2099, 2053, 2048.
 
 
 ------------------------------------------------------------------------
-r4 | vak | 2008-02-03 18:28:23 +0300 (÷ÓË, 03 æÅ× 2008) | 4 lines
+r4 | vak | 2008-02-03 18:28:23 +0300 (Ğ²Ñ, 03 Ñ„ĞµĞ² 2008) | 4 lines
 
 Release vsix-2.4.1 dated 2006-03-19.
 Previous release was 2.4.
 
 
 ------------------------------------------------------------------------
-r3 | vak | 2008-02-03 18:25:31 +0300 (÷ÓË, 03 æÅ× 2008) | 3 lines
+r3 | vak | 2008-02-03 18:25:31 +0300 (Ğ²Ñ, 03 Ñ„ĞµĞ² 2008) | 3 lines
 
 Release vsix-2.3 dated 2001-02-24.
 
 
 ------------------------------------------------------------------------
-r2 | vak | 2008-02-03 18:21:06 +0300 (÷ÓË, 03 æÅ× 2008) | 3 lines
+r2 | vak | 2008-02-03 18:21:06 +0300 (Ğ²Ñ, 03 Ñ„ĞµĞ² 2008) | 3 lines
 
 Release vsix-2.3 dated 2001-02-08.
 
 
 ------------------------------------------------------------------------
-r1 | vak | 2008-02-01 22:47:09 +0300 (ğÔÎ, 01 æÅ× 2008) | 3 lines
+r1 | vak | 2008-02-01 22:47:09 +0300 (Ğ¿Ñ‚, 01 Ñ„ĞµĞ² 2008) | 3 lines
 
 Release vsix-2.0 dated 1999-01-28.
 

@@ -25,8 +25,6 @@
 #define NEXT_ART()      {while (ch != '^') nextc(); nextc(); SKIP_SP();}
 #define ASSERT_CH(c)    {if (ch != c) goto fs;}
 #define EAT_CH(c)       {ASSERT_CH(c); nextc();}
-#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) == '\r' ? 0174 : (c) <= ' ' ? 017 : koi8_to_gost[(c) - 32])
-#define KOI2ITM(c)      ((c) <= ' ' ? 040 : (c) == '\n' ? 0214 : koi8_to_itm[(c) - 32])
 
 static unsigned                 lineno, pncline, pncsym;
 static unsigned                 level, array;
@@ -153,9 +151,9 @@ d_6_12:
 			uchar   *spass, pname[2];
 
 			nextc();
-			pname[0] = KOI2UPP(ch);
+			pname[0] = koi8_to_gost [ch];
 			nextc();
-			pname[1] = KOI2UPP(ch);
+			pname[1] = koi8_to_gost [ch];
 			spass = stpsp = passload((char*) pname);
 			if (!spass) {
 				inperr("îåô óôðáóð");
@@ -340,7 +338,7 @@ noend:
 						w = w << 8 | 017;
 					break;
 				}
-				w = w << 8 | KOI2UPP(ch);
+				w = w << 8 | koi8_to_gost [ch];
 			}
 			nextc();
 			if ((i = dump(W_DATA, w)))
@@ -368,8 +366,10 @@ noend:
 					goto a1done;
 				    }
 				    pch = ch;
-				    w = w << 8 |
-					(itm ? KOI2ITM(ch) : KOI2UPP(ch));
+				    ch = koi8_to_gost [ch];
+				    if (itm)
+					ch = gost_to_itm [ch];
+				    w = w << 8 | ch;
 				}
 				if ((i = dump(W_DATA, w)))
 					return i;
@@ -396,7 +396,7 @@ a1done:
 						case '<': s[i] = '\230'; break;
 						case '>': s[i] = '\231'; break;
 						case ':': s[i] = '\237'; break;
-						case '@': s[i] = '\234'; break;	
+						case '@': s[i] = '\234'; break;
 					}
 				    }
 				    nextc();
@@ -441,7 +441,7 @@ a1done:
                                     fclose(f);
                                 } else {
                                     for (i = 0; s[i]; ++i) {
-                                        c = KOI2UPP(s[i]);
+                                        c = koi8_to_gost [s[i]];
                                         w[i / 5] <<= 8;
                                         w[i / 5] |= c | parity(c) << 7;
                                     }
@@ -597,7 +597,7 @@ inperr(char *s)
 	sprintf(buf, "   á÷÷ä   îðë    îó   îóô   óéí ûéæò %06u%06u\n"
 		     "  %05o%6d%6d%6d   %03o %s\n",
 		user_hi, user_lo,
-		iaddr, lineno, pncline, pncsym, KOI2UPP(ch), s);
+		iaddr, lineno, pncline, pncsym, koi8_to_gost [ch], s);
 	diagftn(buf);
 }
 

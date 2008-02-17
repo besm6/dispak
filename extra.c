@@ -18,9 +18,9 @@
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
+#include "gost10859.h"
 
 #define ETX     003
-#define KOI2UPP(c)      ((c) == '\n' ? 0214 : (c) <= ' ' ? 017 : koi8_to_gost[(c) - 32])
 
 static void     exform(void);
 
@@ -325,7 +325,7 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 					line[pos++] = lastc;
 			break;
 		default:
-			line[pos++] = itm_to_koi8[c];
+			line[pos++] = gost_to_koi8 [itm_to_gost [c]];
 			break;
 		}
 	}
@@ -869,17 +869,10 @@ e50(void)
 			acc.r = 077777;
 		return E_SUCCESS;
 	case 0165:      /* BESM owner + version + sys. disk info */
-		acc.l = koi8_to_gost[(uchar)'B' - 32] << 8 |
-			koi8_to_gost[(uchar)'ì' - 32];
-		acc.r = koi8_to_gost[(uchar)'á' - 32] << 16 |
-			koi8_to_gost[(uchar)'ä' - 32] << 8 |
-			koi8_to_gost[(uchar)'E' - 32];
-		accex.l = koi8_to_gost[(uchar)'ì' - 32] << 16 |
-			koi8_to_gost[(uchar)'å' - 32] << 8 |
-			koi8_to_gost[(uchar)'ã' - 32];
-		accex.r = koi8_to_gost[(uchar)'ü' - 32] << 16 |
-			koi8_to_gost[(uchar)'÷' - 32] << 8 |
-			koi8_to_gost[(uchar)'í' - 32];
+		acc.l = GOST_B << 8 | GOST_EL;
+		acc.r = GOST_A << 16 | GOST_DE << 8 | GOST_E;
+		accex.l = GOST_EL << 16 | GOST_E << 8 | GOST_TSE;
+		accex.r = GOST_REVERSE_E << 16 | GOST_B << 8 | GOST_M;
 		reg[016] = 0x222;
 		reg[015] = 2053;
 		return E_SUCCESS;
@@ -898,7 +891,7 @@ e50(void)
 				acc.r = 0;
 			for (sp = errtxt[acc.r], di = 0; di < 18; ++di)
 				core[reg[015]].w_b[di] = *sp ?
-					koi8_to_gost[*sp++ - 32] : 017;
+					koi8_to_gost[*sp++] : 017;
 		}
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
@@ -1233,7 +1226,7 @@ ttin(uchar flags, ushort a1, ushort a2)
 			goto done;
 		default:
 			if (*sp >= 040)
-				PUTB(koi8_to_gost[*sp - 040]);
+				PUTB(koi8_to_gost[*sp]);
 			break;
 		}
 		++sp;
@@ -1577,7 +1570,7 @@ diag(char *s)
 	if (diagaddr) {
 		dp = (uchar*) (core + diagaddr + 1);
 		for (cp=(uchar*)s; *cp; ++cp)
-			*dp++ = KOI2UPP(*cp);
+			*dp++ = koi8_to_gost [*cp];
 		*dp = 0172;
 		enreg.l = 0;
 		enreg.r = strlen(s) / 6 + 1;

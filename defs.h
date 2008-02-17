@@ -448,10 +448,9 @@ int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
 
 /* encoding.c */
 extern uchar gost_to_koi8_cyr[], gost_to_koi8_lat[], *gost_to_koi8;
-extern uchar koi8_to_gost[];
-extern uchar itm_to_koi8_cyr[], itm_to_koi8_lat[], *itm_to_koi8;
-extern uchar koi8_to_itm[];
-extern uchar text_to_koi8[];
+extern const uchar koi8_to_gost[];
+extern const uchar itm_to_gost[], gost_to_itm[];
+extern const uchar text_to_gost[];
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
