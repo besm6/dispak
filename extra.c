@@ -1545,13 +1545,15 @@ rpt:
 	case 0175:
 	case 0214:
 	case 0341:
-		return '\n';
+		c = GOST_NEWLINE;
+		break;
 	case 0143:
 		goto rpt;
 	case 0342:
-		return '`';
+		c = GOST_LEFT_QUOTATION;
+		break;
 	}
-	return gost_to_koi8[c];
+	return c;
 }
 
 unsigned long long

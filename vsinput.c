@@ -15,20 +15,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
+#include "gost10859.h"
 
-#define SKIP_SP()       {while (isspace(ch)) nextc();}
-#define PAST_SP()       {while (!isspace(ch)) nextc(); SKIP_SP();}
-#define NEXT_ART()      {while (ch != '^') nextc(); nextc(); SKIP_SP();}
+#define SKIP_SP()       {while (ch == GOST_SPACE || ch == GOST_NEWLINE) nextc();}
+#define PAST_SP()       {while (ch != (uchar) -1 && ch != GOST_SPACE && ch != GOST_NEWLINE) nextc(); SKIP_SP();}
+#define NEXT_ART()      {while (ch != (uchar) -1 && ch != GOST_OVERLINE) nextc(); nextc(); SKIP_SP();}
 #define ASSERT_CH(c)    {if (ch != c) goto fs;}
 #define EAT_CH(c)       {ASSERT_CH(c); nextc();}
 
 static unsigned                 lineno, pncline, pncsym;
 static unsigned                 level, array;
-static unsigned                 ch;
+static uchar			ch;
 static unsigned                 iaddr;
 static unsigned                 user_hi, user_lo;
 static unsigned                 (*_nextc[2])(void);
@@ -40,7 +40,6 @@ static int                      ibufno;
 static char                     ibufname[MAXPATHLEN];
 static ushort                   chunk;
 
-static int			raw = 0;
 static unsigned                 nextc(void);
 static int                      scan(int edit);
 static void                     inperr(char *);
@@ -105,55 +104,86 @@ parity(unsigned byte)
 }
 
 static int
+is_prettycard (uchar *s)
+{
+	int i;
+
+	for (i=0; i<80; ++i)
+		if (s[i] != GOST_STOP && s[i] != GOST_O)
+			return 0;
+	return 1;
+}
+
+static unsigned long
+get_decimal (uchar *cp)
+{
+	unsigned long val = 0;
+
+	while (*cp <= GOST_9)
+		val = val * 10 + *cp++;
+	return val;
+}
+
+static unsigned long
+get_octal (uchar *cp)
+{
+	unsigned long val = 0;
+
+	while (*cp <= GOST_7)
+		val = val << 3 | *cp++;
+	return val;
+}
+
+static int
 scan(int edit)
 {
 	int             i;
 
 	if (level == 0) {
-		if (ch == U('ϋ')) {
-			if (nextc() != U('ι') || nextc() != U('ζ')) {
+		if (ch == GOST_SHA) {
+			if (nextc() != GOST_CYRILLIC_I || nextc() != GOST_EF) {
 fw:
 				inperr("ώυφοε σμοχο");
 				return -1;
 			}
-		} else if (ch == 'U') {
-			if (nextc() != 'S' || nextc() != U('ε')) {
+		} else if (ch == GOST_U) {
+			if (nextc() != GOST_S || nextc() != GOST_E) {
 				goto fw;
 			}
 		} else
 			goto fw;
 		PAST_SP();
-		if (!isdigit(ch)) {
+		if (ch > GOST_9) {
 fs:
 			inperr("ώυφοκ σινχομ");
 			return -1;
 		}
 		for (i = 0; i < 6; ++i) {
-			if (!isdigit(ch)) {
+			if (ch > GOST_9) {
 d_6_12:
 				inperr("γιζς # 6 Ι # 12");
 				return -1;
 			}
-			psp.user.l = (psp.user.l << 4) | (ch - '0');
-			user_hi = user_hi * 10 + ch - '0';
+			psp.user.l = (psp.user.l << 4) | ch;
+			user_hi = user_hi * 10 + ch;
 			nextc();
 		}
-		if (isdigit(ch))
+		if (ch <= GOST_9)
 			for (i = 0; i < 6; ++i) {
-				if (!isdigit(ch))
+				if (ch > GOST_9)
 					goto d_6_12;
-				psp.user.r = (psp.user.r << 4) | (ch - '0');
-				user_lo = user_lo * 10 + ch - '0';
+				psp.user.r = (psp.user.r << 4) | ch;
+				user_lo = user_lo * 10 + ch;
 				nextc();
 			}
 		SKIP_SP();
-		if (edit && ch == U('ϊ')) {
+		if (edit && ch == GOST_ZE) {
 			uchar   *spass, pname[2];
 
 			nextc();
-			pname[0] = koi8_to_gost [ch];
+			pname[0] = ch;
 			nextc();
-			pname[1] = koi8_to_gost [ch];
+			pname[1] = ch;
 			spass = stpsp = passload((char*) pname);
 			if (!spass) {
 				inperr("ξετ στπασπ");
@@ -171,86 +201,112 @@ d_6_12:
 		NEXT_ART();
 	}
 
-	while (ch != U('ε')) {
+	while (ch != (uchar) -1 && ch != GOST_E) {
 		uchar   art[80], *cp;
 
-		for (cp = art; ch != '^'; nextc())
+		/* Get a passport line, ended by ^.*/
+		for (cp = art; ch != (uchar) -1 &&
+		    ch != GOST_OVERLINE; nextc())
 			*cp++ = ch;
-		*cp = 0;
-		if ((cp = (uchar*) strchr((char*)art, ' ')))
+		*cp = GOST_OVERLINE;
+
+		/* Find a parameter, separated by space. */
+		for (cp = art; *cp != GOST_OVERLINE; ++cp)
+			if (*cp == GOST_SPACE)
+				break;
+		if (*cp == GOST_SPACE)
 			++cp;
-		if (!strncmp((char*)art, "χθο", 3)) {
-			if (!*cp) {
-mpar:
-				inperr("ξετ παςαν");
+		else
+			cp = 0;
+
+		if (art[0] == GOST_B && art[1] == GOST_X && art[2] == GOST_O) {
+			/* χθο <octal> */
+			if (! cp) {
+mpar:				inperr("ξετ παςαν");
 				return -1;
 			}
-			sscanf((char*)cp, "%lo", &psp.entry);
-		} else if (!strncmp((char*)art, "αγπ", 3)) {
-			if (!*cp)
+			psp.entry = get_octal (cp);
+
+		} else if (art[0] == GOST_A && art[1] == GOST_TSE &&
+		    art[2] == GOST_PE) {
+			/* αγπ <decimal> */
+			if (! cp)
 				goto mpar;
-			sscanf((char*)cp, "%hu", &psp.lprlim);
+			psp.lprlim = get_decimal (cp);
 			if (psp.lprlim == 0 || psp.lprlim > 128)
 				psp.lprlim = 128;
 			psp.lprlim = 0200000 - psp.lprlim * 236;
-		} else if (!strncmp((char*)art, "τεμ", 3)) {
+
+		} else if (art[0] == GOST_T && art[1] == GOST_E &&
+		    art[2] == GOST_EL) {
+			/* τεμ */
 			psp.tele = 1;
-		} else if (!strncmp((char*)art, "σπε", 3)) {
+
+		} else if (art[0] == GOST_C && art[1] == GOST_PE &&
+		    art[2] == GOST_E) {
+			/* σπε */
 			psp.spec = 1;
-		} else if (!strncmp((char*)art, "ζιϊ", 3)) {
-			if (!cp)
+
+		} else if (art[0] == GOST_EF && art[1] == GOST_CYRILLIC_I &&
+		    art[2] == GOST_ZE) {
+			/* ζιϊ <octal> */
+			if (! cp)
 				goto mpar;
-			while (*cp && !isdigit(*cp))
+			while (*cp && *cp != GOST_OVERLINE && *cp > GOST_9)
 				++cp;
-			sscanf ((char*)cp, "%lo", &psp.phys);
-			if (!psp.phys ||
-					((psp.phys >= 030) && (psp.phys < 070)) ||
-					(psp.phys >= 0100))
+			psp.phys = get_octal (cp);
+			if (! psp.phys || (psp.phys >= 030 && psp.phys < 070) ||
+    			    psp.phys >= 0100)
 				goto mpar;
-		} else if (!strncmp((char*)art, "μεξ", 3) ||
-		    !strncmp((char*)art, "TAP", 3)) {
-			if (!cp)
+
+		} else if ((art[0] == GOST_EL && art[1] == GOST_E &&
+		    art[2] == GOST_H) || (art[0] == GOST_T &&
+		    art[1] == GOST_A && art[2] == GOST_P)) {
+			/* μεξ <octal> ( <decimal> [ C | -ϊπ | - <octal> ] )
+			 * TAP ... */
+			if (! cp)
 				goto mpar;
-			while (*cp) {
-				ulong   u;
+			while (*cp != GOST_OVERLINE) {
+				ulong u;
 				int off;
+
 				if (psp.nvol >= 12) {
 					inperr("μεξτ >= 12");
 					return -1;
 				}
-				u = 0;
-				sscanf((char*) cp, "%lo", &u);
-				if (cp[2] != '(' || u < 030 || u >= 070)
+				u = get_octal (cp);
+				if (cp[2] != GOST_LEFT_PARENTHESIS ||
+				    u < 030 || u >= 070)
 					goto fs;
 				psp.vol[psp.nvol].u = u;
 				psp.vol[psp.nvol].offset = 0;
 				u = 0;
 				cp += 3;
-				sscanf((char*) cp, "%ld", &u);
-				if (!u || u >= 4096) {
+				u = get_decimal (cp);
+				if (! u || u >= 4096) {
 					inperr("πμοθ τον");
 					return -1;
 				}
-				while (isdigit(*cp))
+				while (*cp <= GOST_9)
 					++cp;
-				if (*cp == (uchar) 'σ' || *cp == 'C' ||
-				    *cp == (uchar) 'Σ' || *cp == 'c') {
+				if (*cp == GOST_C) {
 					i = chunk;
 					chunk += u * 040;
 					u = i;
 					psp.vol[psp.nvol].wr = 2;
 					++cp;
-				} else if (!strncmp((char*)cp, "-ϊπ", 3)) {
+				} else if (cp[0] == GOST_MINUS &&
+				    cp[1] == GOST_ZE && cp[2] == GOST_PE) {
 					psp.vol[psp.nvol].wr = 1;
 					cp += 3;
-				} else if (*cp == '-' &&
-				    sscanf((char*) ++cp, "%o", &off) > 0) {
+				} else if (cp[0] == GOST_MINUS &&
+				    (off = get_octal (++cp)) > 0) {
 					psp.vol[psp.nvol].offset = off;
-					while(isdigit(*cp))
+					while (*cp <= GOST_9)
 						++cp;
 				}
 				psp.vol[psp.nvol].volno = u;
-				if (*cp++ != ')')
+				if (*cp++ != GOST_RIGHT_PARENTHESIS)
 					goto fs;
 				++psp.nvol;
 			}
@@ -258,9 +314,8 @@ mpar:
 		NEXT_ART();
 	}
 
-	if (!edit) {
+	if (! edit) {
 		unsigned long long      w = 0;
-
 newaddr:
 		w = nextw();
 		if (w == EKONEC)
@@ -283,25 +338,25 @@ newaddr:
 		unsigned long long      w = 0;
 
 		switch (ch) {
-		case ' ':
-		case '\n':
+		case GOST_SPACE:
+		case GOST_NEWLINE:
 			nextc();
 			break;
-		case U('χ'):
-			while (NEXT_NS() >= '0' && ch <= '7')
-				w = (w << 3) | (ch - '0');
+		case GOST_B:
+			while (NEXT_NS() <= GOST_7)
+				w = (w << 3) | ch;
 			iaddr = w & 077777;
 			if ((i = dump(W_IADDR, w & 077777)))
 				return i;
 			break;
-		case U('σ'):
-			while (NEXT_NS() >= '0' && ch <= '7')
-				w = (w << 3) | (ch - '0');
+		case GOST_C:
+			while (NEXT_NS() <= GOST_7)
+				w = (w << 3) | ch;
 			if ((i = dump(W_DATA, w)))
 				return i;
 			break;
-		case U('λ'):
-			for (i = 0; NEXT_NS() >= '0' && ch <= '7'; ++i) {
+		case GOST_K:
+			for (i = 0; NEXT_NS() <= GOST_7; ++i) {
 				int     s;
 				switch (i) {
 				case 0: case 9:
@@ -314,7 +369,6 @@ newaddr:
 					s = 3;
 					break;
 				}
-				ch -= '0';
 				if (ch >> s)
 					goto fs;
 				w = w << s | ch;
@@ -326,38 +380,39 @@ newaddr:
 			if ((i = dump(W_CODE, w)))
 				return i;
 			break;
-		case U('β'):
+		case GOST_BE:
 			for (i = 0; i < 6; ++i) {
-				if (nextc() == -1) {
+				if (nextc() == (uchar) -1) {
 noend:
 					inperr("ξετ λοξγα χχοδα");
 					return -1;
 				}
-				if (ch == '\n') {
+				if (ch == GOST_NEWLINE) {
 					for (; i < 6; ++i)
 						w = w << 8 | 017;
 					break;
 				}
-				w = w << 8 | koi8_to_gost [ch];
+				w = w << 8 | ch;
 			}
 			nextc();
 			if ((i = dump(W_DATA, w)))
 				return i;
 			break;
-		case U('α'):
+		case GOST_A:
 			nextc();
-			if (ch == '0' || ch == '1') {
-			    uchar itm = ch == '0';
+			if (ch == GOST_0 || ch == GOST_1) {
+			    uchar itm = (ch == GOST_0);
 			    unsigned pch = 0;
 			    for (;;) {
 				w = 0;
 				for (i = 0; i < 6; ++i) {
-				    do
+				    do {
 					nextc();
-				    while (ch == '\n');
-				    if (ch == -1)
+				    } while (ch == GOST_NEWLINE);
+				    if (ch == (uchar) -1)
 					goto noend;
-				    if (ch == '$' && pch == '_') {
+				    if (ch == GOST_LOZENGE &&
+					pch == GOST_LOW_LINE) {
 					if (i) {
 					    w <<= (6 - i) * 8;
 					    if ((i = dump(W_DATA, w)))
@@ -366,42 +421,36 @@ noend:
 					goto a1done;
 				    }
 				    pch = ch;
-				    ch = koi8_to_gost [ch];
-				    if (itm)
-					ch = gost_to_itm [ch];
-				    w = w << 8 | ch;
+				    w = w << 8 | (itm ?
+					gost_to_itm [ch] : ch);
 				}
 				if ((i = dump(W_DATA, w)))
 					return i;
 			    }
 a1done:
 			    NEXT_NS();
-			} else if (ch == '3' || ch == '5') {
+			} else if (ch == GOST_3 || ch == GOST_5) {
 			    unsigned long long  w[24];
 			    unsigned char       s[121], c;
 
 			    NEXT_NS();
-			    for (;;) {
+			    while (ch != (uchar) -1) {
 				/* ` in 1st pos is special */
-				raw = ch == '`';
 				memset((char *) w, 0, sizeof(w));
-				for (i = 0; i < 120 && ch != '\n'; ++i) {
-				    if (ch == -1)
+				for (i = 0; i < 120 && ch != (uchar) -1 &&
+				    ch != GOST_NEWLINE; ++i)
+				{
+				    if (ch == (uchar) -1)
 					goto noend;
 				    s[i] = ch;
-				    if (ch == '\\') {
-					nextc();
-				    	switch (ch) {
-						case '*': s[i] = '\236'; break;
-						case '<': s[i] = '\230'; break;
-						case '>': s[i] = '\231'; break;
-						case ':': s[i] = '\237'; break;
-						case '@': s[i] = '\234'; break;
-					}
-				    }
 				    nextc();
-				    if (i == 5 && !strncmp((char*) s, "``````", 6)) {
-					raw = 0;
+				    if (i == 5 && s[0] == GOST_LEFT_QUOTATION &&
+					s[1] == GOST_LEFT_QUOTATION &&
+					s[2] == GOST_LEFT_QUOTATION &&
+					s[3] == GOST_LEFT_QUOTATION &&
+					s[4] == GOST_LEFT_QUOTATION &&
+					s[5] == GOST_LEFT_QUOTATION)
+				    {
 					for (c = 0; c < 24; ++c)
 					    if ((i = dump(W_DATA, 1ull)))
 						return i;
@@ -409,19 +458,20 @@ a1done:
 					goto a3over;
 				    }
 				}
-				s[i] = 0;
-				while (ch != '\n' && ch != -1)
+				s[i] = GOST_NEWLINE;
+				while (ch != GOST_NEWLINE &&
+				    ch != (uchar) -1)
 				    nextc();
 				nextc();
-				raw = 0;
-				if (i == 80 && strspn((char*)s, ".ο") == 80) {
+				if (i == 80 && is_prettycard(s)) {
 				    if ((i = prettycard(s, w)))
 					return i;
 				    for (c = 0; c < 24; ++c)
 					if ((i = dump(W_DATA, w[c])))
 					    return i;
-				} else
-                                if (s[0] == '`') {
+#if 0
+/* broken by vak */
+				} else if (s[0] == GOST_LEFT_QUOTATION) {
                                     FILE *f = fopen((char*) s+1, "r");
                                     uchar p[120];
                                     if (!f) {
@@ -439,9 +489,10 @@ a1done:
                                                 return i;
                                     }
                                     fclose(f);
+#endif
                                 } else {
-                                    for (i = 0; s[i]; ++i) {
-                                        c = koi8_to_gost [s[i]];
+                                    for (i = 0; s[i] != GOST_NEWLINE; ++i) {
+                                        c = s[i];
                                         w[i / 5] <<= 8;
                                         w[i / 5] |= c | parity(c) << 7;
                                     }
@@ -456,32 +507,31 @@ a3over:;
 			} else
 				goto fs;
 			break;
-		case -1:
+		case (uchar) -1:
 			if (level == 1)
 				return 0;
 			else
 				goto noend;
-		case U('ε'):
+		case GOST_E:
 			if (array) {
 				nextc();
 wrap:
-				EAT_CH(U('λ'));
-				EAT_CH(U('ο'));
-				EAT_CH(U('ξ'));
-				EAT_CH(U('ε'));
-				EAT_CH(U('γ'));
+				EAT_CH(GOST_K);
+				EAT_CH(GOST_O);
+				EAT_CH(GOST_H);
+				EAT_CH(GOST_E);
+				EAT_CH(GOST_TSE);
 				return 0;
 			} else {
 				array = 1;
 				iaddr = 0;
-				if (!ibuf ||
-					(psp.arr_end = ftell(ibuf)) == sizeof(psp)) {
-
+				if (! ibuf || (psp.arr_end = ftell(ibuf)) ==
+				    sizeof(psp)) {
 					inperr("νασσιχ πυστ");
 					return -1;
 				}
 				NEXT_NS();
-				if (ch == U('λ'))
+				if (ch == GOST_K)
 					goto wrap;
 			}
 			break;
@@ -493,15 +543,16 @@ wrap:
 
 static int chad(unsigned long long w[], int bit, char val)
 {
-    int index = bit / 40;
-    switch (val) {
-	case 'ο':
-	    w[index] <<= 1;
-	    w[index] |= 1;
-	    return 0;
-	case '.':
-	    w[index] <<= 1;
-	    return 0;
+	int index = bit / 40;
+
+	switch (val) {
+	case GOST_O:
+		w[index] <<= 1;
+		w[index] |= 1;
+		return 0;
+	case GOST_STOP:
+		w[index] <<= 1;
+		return 0;
 	default:
 		pncline = bit / 80 + 1;
 		pncsym = (bit % 80) / 8 + 1;
@@ -513,79 +564,36 @@ static int chad(unsigned long long w[], int bit, char val)
 
 /* The first line already in s, will need to read the other 11 */
 static int
-prettycard(unsigned char * s, unsigned long long w[])
+prettycard(unsigned char *s, unsigned long long w[])
 {
-    int bit;
-    for (bit = 0; bit < 80; bit++) {
-	/* The first line is good, no need to check */
-	chad(w, bit, s[bit]);
-    }
-    for (bit = 80; bit < 12*80; bit++) {
-	if (chad(w, bit, ch))
-	    return -1;
-	nextc();
-	if (bit % 80 == 79)
-		nextc(); /* skip linefeed between punchlines */
-    }
-    if (ch == '\n')
-	nextc(); /* there may be an empty line after a card */
-    return 0;
+	int bit;
+
+	for (bit = 0; bit < 80; bit++) {
+		/* The first line is good, no need to check */
+		chad(w, bit, s[bit]);
+	}
+	for (bit = 80; bit < 12*80; bit++) {
+		if (chad(w, bit, ch))
+			return -1;
+		nextc();
+		if (bit % 80 == 79)
+			nextc();	/* skip linefeed between punchlines */
+	}
+	if (ch == GOST_NEWLINE)
+		nextc();	/* there may be an empty line after a card */
+	return 0;
 }
 
 static unsigned
 nextc(void)
 {
 	ch = _nextc[level]();
-	if (ch == '\n') {
+	if (ch == GOST_NEWLINE) {
 		++lineno;
+/*fprintf (stderr, "//");*/
 		return ch;
 	}
-	if (raw)
-		return ch;
-	if (ch >= 0300 && ch <= 0337)
-		return ch += 040;
-	if (isalpha (ch)) {
-		ch = toupper(ch);
-	}
-	switch (ch) {
-	case 'A':
-		ch = U('α');
-		break;
-	case 'B':
-		ch = U('χ');
-		break;
-	case 'C':
-		ch = U('σ');
-		break;
-	case 'E':
-		ch = U('ε');
-		break;
-	case 'H':
-		ch = U('ξ');
-		break;
-	case 'K':
-		ch = U('λ');
-		break;
-	case 'M':
-		ch = U('ν');
-		break;
-	case 'O':
-		ch = U('ο');
-		break;
-	case 'P':
-		ch = U('ς');
-		break;
-	case 'T':
-		ch = U('τ');
-		break;
-	case 'X':
-		ch = U('θ');
-		break;
-	case 'Y':
-		ch = U('υ');
-		break;
-	}
-
+/*fprintf (stderr, "{%c}", gost_to_koi8[ch]); fflush (stderr);*/
 	return ch;
 }
 
@@ -597,7 +605,7 @@ inperr(char *s)
 	sprintf(buf, "   αχχδ   ξπλ    ξσ   ξστ   σιν ϋιζς %06u%06u\n"
 		     "  %05o%6d%6d%6d   %03o %s\n",
 		user_hi, user_lo,
-		iaddr, lineno, pncline, pncsym, koi8_to_gost [ch], s);
+		iaddr, lineno, pncline, pncsym, ch, s);
 	diagftn(buf);
 }
 
@@ -633,17 +641,19 @@ found:
 static unsigned
 nextcp(void)
 {
-	unsigned        c = *stpsp++;
+	uchar c = *stpsp++;
 
 	switch (c) {
-		case 0377:
-			return -1;
-		case 0214:
-		case 0175:
-			return '\n';
-		default:
-			return gost_to_koi8[c];
+	case 0377:
+		c = -1;
+		break;
+	case 0214:
+	case 0175:
+		c = GOST_NEWLINE;
+		break;
 	}
+/*fprintf (stderr, "<%c>", gost_to_koi8[c]); fflush (stderr);*/
+	return c;
 }
 
 static int

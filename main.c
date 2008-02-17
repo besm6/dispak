@@ -162,7 +162,25 @@ usage ()
 static unsigned
 cget(void)
 {
-	return getc(input_fd);
+	int c;
+
+	c = getc(input_fd);
+	if (c < 0)
+		return (uchar) -1;
+	if (c == '\\') {
+		c = getc(input_fd);
+		if (c < 0)
+			return (uchar) -1;
+		switch (c) {
+		case '*': c = (uchar) '\236'; break;
+		case '<': c = (uchar) '\230'; break;
+		case '>': c = (uchar) '\231'; break;
+		case ':': c = (uchar) '\237'; break;
+		case '@': c = (uchar) '\234'; break;
+		}
+	}
+	c = koi8_to_gost [c];
+	return c;
 }
 
 static void
