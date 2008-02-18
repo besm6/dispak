@@ -887,7 +887,8 @@ e50(void)
 
 			if (acc.r > E_MAX)
 				acc.r = 0;
-			for (sp = errtxt[acc.r], di = 0; di < 18; ++di)
+			sp = (uchar*) errtxt[acc.r];
+			for (di = 0; di < 18; ++di)
 				core[reg[015]].w_b[di] = *sp ?
 					utf8_to_gost(&sp) : GOST_SPACE;
 		}

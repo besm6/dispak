@@ -49,7 +49,8 @@ _abort(err) {
 		pc = abpc;
 		right = abright;
 /*              fprintf(stderr, "Error %d\n", err);     */
-		fprintf(stderr, "%s\n", errtxt[err]);
+		utf8_puts(errtxt[err], stderr);
+		putc('\n', stderr);
 		visual = 1;
 		where();
 		JMP(intercept);
@@ -821,7 +822,8 @@ ENDFOREVER
 	pc = abpc;
 	right = abright;
 /*      printf("Error %d\n", err);     */
-	printf("%s\n", errtxt[err]);
+	utf8_puts(errtxt[err], stdout);
+	putc('\n', stdout);
 	pcm_dbg = pcm;
 	where();
 

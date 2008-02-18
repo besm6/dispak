@@ -395,7 +395,7 @@ extern uint     to_2_10(uint src);
 #define E_TERM          1               /* normal termination   */
 #define E_MAX           81
 
-extern unsigned char    *errtxt[];
+extern char *errtxt[];
 
 void command (void);
 void where (void);
