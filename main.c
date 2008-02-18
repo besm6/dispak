@@ -165,11 +165,11 @@ cget(void)
 {
 	int c;
 
-	c = getc(input_fd);
+	c = unicode_getc (input_fd);
 	if (c < 0)
 		return GOST_EOF;
 	if (c == '\\') {
-		c = getc(input_fd);
+		c = unicode_getc (input_fd);
 		if (c < 0)
 			return GOST_EOF;
 		switch (c) {
@@ -180,14 +180,14 @@ cget(void)
 		case '@': return GOST_LOWER_TEN;
 		}
 	}
-	c = koi8_to_gost [c];
+	c = unicode_to_gost (c);
 	return c;
 }
 
 static void
 diag(char *s)
 {
-	fputs(s, stderr);
+	utf8_puts (s, stderr);
 }
 
 int
@@ -213,10 +213,10 @@ main(int argc, char **argv)
 			printf ("Version: %s\n", PACKAGE_VERSION);
 			return 0;
 		case 'l':		/* use Latin letters for output */
-			gost_to_koi8 = gost_to_koi8_lat;
+			pout_latin = 1;
 			break;
 		case OPT_CYRILLIC:	/* use Cyrillic letters for output */
-			gost_to_koi8 = gost_to_koi8_cyr;
+			pout_latin = 0;
 			break;
 		case 'b':		/* break on first cmd */
 			breakflg = 1;
@@ -315,7 +315,8 @@ main(int argc, char **argv)
 		exit(1);
 	k = input(i);
 	if (k < 0) {
-		fprintf(stderr, " ïû ÷÷ä %03o\n", i);
+		utf8_puts (" ĞĞ¨ Ğ’Ğ’Ğ” ", stderr);
+		fprintf(stderr, "%03o\n", i);
 		exit(1);
 	}
 	if (notty) {

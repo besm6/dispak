@@ -69,7 +69,7 @@ add()
 	} else if (diff <= 40) {
 		diff -= 16;
 		rnd_rq = (accex.mr = (a1.mr << (24 - diff)) & 0xffffff) != 0;
-/* было                rnd_rq |= (accex.ml = (((a1.mr & 0xff0000) >> diff) |   */
+/* п╠я▀п╩п╬                rnd_rq |= (accex.ml = (((a1.mr & 0xff0000) >> diff) |   */
 		rnd_rq |= (accex.ml = ((a1.mr >> diff) |
 			(a1.ml << (24 - diff))) & 0xffff) != 0;
 		a1.mr = ((((a1.mr >> 16) | (a1.ml << 8)) >> diff) |

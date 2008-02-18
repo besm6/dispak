@@ -889,7 +889,7 @@ e50(void)
 				acc.r = 0;
 			for (sp = errtxt[acc.r], di = 0; di < 18; ++di)
 				core[reg[015]].w_b[di] = *sp ?
-					koi8_to_gost[*sp++] : GOST_SPACE;
+					utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
@@ -983,7 +983,7 @@ e63(void)
 	struct timeval  ct;
 
 	switch (reg[016]) {
-	case 0: /* время до конца решения задачи в виде float */
+	case 0: /* п╡я─п╣п╪я▐ п╢п╬ п╨п╬п╫я├п╟ я─п╣я┬п╣п╫п╦я▐ п╥п╟п╢п╟я┤п╦ п╡ п╡п╦п╢п╣ float */
 		acc.l = 0xd00000;
 		acc.r = 3600;
 		return E_SUCCESS;
@@ -994,7 +994,7 @@ e63(void)
 				/* TODO */
 			} else {
 				/* TODO: to pout_file */
-				/* printf ("ВРЕМЯ СЧЕТА: %2f\n",
+				/* printf ("п▓п═п∙п°п╞ п║п╖п∙п╒п░: %2f\n",
 					TIMEDIFF(start_time, ct) - excuse); */
 			}
 		}
@@ -1065,7 +1065,7 @@ ddio(void)
 		zone = uir.i_addr & 037;
 	else
 		zone = uir.i_addr & 07777;
-	if (uil.i_opcode & 4) {         /* физобмен */
+	if (uil.i_opcode & 4) {         /* я└п╦п╥п╬п╠п╪п╣п╫ */
 		zone += (u - (phdrum & 077)) * 040;
 		u = phdrum >> 8;
 	}
@@ -1079,8 +1079,8 @@ ddio(void)
 	}
 
 	if (uil.i_reg & 8) {
-       /* согласно ВЗУ и ХЛАМу, 36-й разряд означает, что номер "зоны"
-        * есть не номер тракта, а номер сектора (обмен по КУС).
+       /* я│п╬пЁп╩п╟я│п╫п╬ п▓п≈пё п╦ п╔п⌡п░п°я┐, 36-п╧ я─п╟п╥я─я▐п╢ п╬п╥п╫п╟я┤п╟п╣я┌, я┤я┌п╬ п╫п╬п╪п╣я─ "п╥п╬п╫я▀"
+        * п╣я│я┌я▄ п╫п╣ п╫п╬п╪п╣я─ я┌я─п╟п╨я┌п╟, п╟ п╫п╬п╪п╣я─ я│п╣п╨я┌п╬я─п╟ (п╬п╠п╪п╣п╫ п©п╬ п пёп║).
         */
                if (uil.i_addr & 04000) {
                  zone = uir.i_addr & 0177;
@@ -1216,20 +1216,18 @@ ttin(uchar flags, ushort a1, ushort a2)
 	sp = buf;
 	while (dp - core[a1].w_b < (a2 - a1 + 1) * 6) {
 		if (flags & 1) {
+			/* Raw input. */
 			PUTB(*sp == '\n' ? 0 : *sp);
-		} else
-		switch (*sp) {
-		case '\n':
+			++sp;
+			continue;
+		}
+		if (*sp == '\n') {
+			/* End of line. */
 			PUTB(GOST_EOF);
-			goto done;
-		default:
-			if (*sp >= 040)
-				PUTB(koi8_to_gost[*sp]);
 			break;
 		}
-		++sp;
+		PUTB (utf8_to_gost (&sp));
 	}
-done:
 	while ((dp - core[a1].w_b) % 6)
 		PUTB(0);
 	eraise(4);
@@ -1386,7 +1384,7 @@ physaddr(void)
 		acc.l = 0;
 		acc.r = 077;
 		break;
-	case IPZ + 071:                 /* общтом */
+	case IPZ + 071:                 /* п╬п╠я┴я┌п╬п╪ */
 		acc.l = 0;
 		acc.r = 0;
 		break;
@@ -1399,14 +1397,14 @@ physaddr(void)
 		acc.r = 0;
 		break;
 	case 0476:
-		acc.l = 0; acc.r = 077740000; /* МОНИТ */
+		acc.l = 0; acc.r = 077740000; /* п°п·п²п≤п╒ */
 		break;
-	case 0500: /* для МС ДУБНА */
+	case 0500: /* п╢п╩я▐ п°п║ п■пёп▒п²п░ */
 	case 01026:
 		acc.l = acc.r = 0;
 		break;
 	case 0522:
-		acc.l = 0777; acc.r = 0; /* E33П25 */
+		acc.l = 0777; acc.r = 0; /* E33п÷25 */
 		break;
 	case 02100:                     /* ? (try also 0100000) */
 		acc.l = acc.r = 0;
@@ -1568,8 +1566,8 @@ diag(char *s)
 
 	if (diagaddr) {
 		dp = (uchar*) (core + diagaddr + 1);
-		for (cp=(uchar*)s; *cp; ++cp)
-			*dp++ = koi8_to_gost [*cp];
+		for (cp=(uchar*)s; *cp; )
+			*dp++ = utf8_to_gost (&cp);
 		*dp = GOST_END_OF_INFORMATION;
 		enreg.l = 0;
 		enreg.r = strlen(s) / 6 + 1;

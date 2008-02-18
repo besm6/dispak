@@ -572,7 +572,7 @@ mtj:
 			STORE(acc, reg[016]);
 			cflags[reg[016]] &= ~C_NUMBER;
 			switch (reg[016]) {
-			/* undocumented trick (χςενεξξο ζιςσοχ) */
+			/* undocumented trick (Π’Π Π•ΠΠ•ΠΠΠ Π¤ΠΠ Π΅ΠΠ’) */
 			case 0: spec = 1; break;
 			case 1: spec = 0; break;
 			}

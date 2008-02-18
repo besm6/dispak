@@ -349,6 +349,7 @@ EXTERN ushort           abpc;
 EXTERN uchar            abright;
 EXTERN uchar            pout_enable;	/* e64 printing allowed */
 EXTERN uchar            pout_disable;	/* e64 printing suppressed */
+EXTERN uchar            pout_latin;	/* use latin letters for output */
 EXTERN char		*pout_file;	/* e64 output file name */
 EXTERN uchar            xnative;        /* native xcodes */
 EXTERN uchar		bootstrap;	/* run without disk 2099 */
@@ -444,12 +445,15 @@ int input (unsigned);
 int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
 
 /* encoding.c */
-extern uchar gost_to_koi8_cyr[], gost_to_koi8_lat[], *gost_to_koi8;
 extern const uchar koi8_to_gost[];
 extern const uchar itm_to_gost[], gost_to_itm[];
 extern const uchar text_to_gost[];
-void gost_putc (int, FILE*);
+void gost_putc (uchar, FILE*);
 void gost_write (uchar*, int, FILE*);
+uchar unicode_to_gost (ushort);
+uchar utf8_to_gost (uchar**);
+void utf8_puts (char*, FILE*);
+int unicode_getc (FILE*);
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x

@@ -2,7 +2,7 @@
 #include "disk.h"
 
 static char     upp[] = "0123456789+-/,. E@()x=;[]*'\"#<>:\
-αβχηδεφϊικλμνξοπςστυζθγώϋύωψόΰρD\
+ΠΠ‘Π’Π“Π”Π•Π–Π—ΠΠ™ΠΠ›ΠΠΠΠΠ Π΅ΠΆΠ£Π¤Π¥Π¦Π§Π¨Π©Π«Π¬Π­Π®Π―D\
 FGIJLNQRSUVWZ^<>V&??:=%$|-_!";
 
 void dump (unsigned, unsigned, unsigned);

@@ -145,7 +145,7 @@ scan(int edit)
 		if (ch == GOST_SHA) {
 			if (nextc() != GOST_CYRILLIC_I || nextc() != GOST_EF) {
 fw:
-				inperr("ώυφοε σμοχο");
+				inperr("Π§Π£Π–ΠΠ• Π΅Π›ΠΠ’Π");
 				return -1;
 			}
 		} else if (ch == GOST_U) {
@@ -163,13 +163,13 @@ fw:
 
 		if (ch > GOST_9) {
 fs:
-			inperr("ώυφοκ σινχομ");
+			inperr("Π§Π£Π–ΠΠ™ Π΅ΠΠΠ’ΠΠ›");
 			return -1;
 		}
 		for (i = 0; i < 6; ++i) {
 			if (ch > GOST_9) {
 d_6_12:
-				inperr("γιζς # 6 Ι # 12");
+				inperr("Π¦ΠΠ¤Π  # 6 ΠΈ # 12");
 				return -1;
 			}
 			psp.user.l = (psp.user.l << 4) | ch;
@@ -194,7 +194,7 @@ d_6_12:
 			pname[1] = ch;
 			spass = stpsp = passload((char*) pname);
 			if (!spass) {
-				inperr("ξετ στπασπ");
+				inperr("ΠΠ•ΠΆ Π΅ΠΆΠΠΠ΅Π");
 				return -1;
 			}
 			level = 1;
@@ -232,18 +232,18 @@ d_6_12:
 			cp = 0;
 
 		if (art[0] == GOST_B && art[1] == GOST_X && art[2] == GOST_O) {
-			/* χθο <octal> */
+			/* Π’Π¥Π <octal> */
 			if (! cp) {
-mpar:				inperr("ξετ παςαν");
+mpar:				inperr("ΠΠ•ΠΆ ΠΠΠ ΠΠ");
 				return -1;
 			}
 			psp.entry = get_octal (cp);
 		} else if (art[0] == GOST_A && art[1] == GOST_B && art[2] == GOST_O) {
-			/* αχοστ [<octal>] - 020 by default */
+			/* ΠΠ’ΠΠ΅ΠΆ [<octal>] - 020 by default */
 			psp.intercept = cp ? get_octal (cp) : 020;
 		} else if (art[0] == GOST_A && art[1] == GOST_TSE &&
 		    art[2] == GOST_PE) {
-			/* αγπ <decimal> */
+			/* ΠΠ¦Π <decimal> */
 			if (! cp)
 				goto mpar;
 			psp.lprlim = get_decimal (cp);
@@ -253,17 +253,17 @@ mpar:				inperr("ξετ παςαν");
 
 		} else if (art[0] == GOST_T && art[1] == GOST_E &&
 		    art[2] == GOST_EL) {
-			/* τεμ */
+			/* ΠΆΠ•Π› */
 			psp.tele = 1;
 
 		} else if (art[0] == GOST_C && art[1] == GOST_PE &&
 		    art[2] == GOST_E) {
-			/* σπε */
+			/* Π΅ΠΠ• */
 			psp.spec = 1;
 
 		} else if (art[0] == GOST_EF && art[1] == GOST_CYRILLIC_I &&
 		    art[2] == GOST_ZE) {
-			/* ζιϊ <octal> */
+			/* Π¤ΠΠ— <octal> */
 			if (! cp)
 				goto mpar;
 			while (*cp && *cp != GOST_OVERLINE && *cp > GOST_9)
@@ -276,7 +276,7 @@ mpar:				inperr("ξετ παςαν");
 		} else if ((art[0] == GOST_EL && art[1] == GOST_E &&
 		    art[2] == GOST_H) || (art[0] == GOST_T &&
 		    art[1] == GOST_A && art[2] == GOST_P)) {
-			/* μεξ <octal> ( <decimal> [ C | -ϊπ | - <octal> ] )
+			/* Π›Π•Π <octal> ( <decimal> [ C | -Π—Π | - <octal> ] )
 			 * TAP ... */
 			if (! cp)
 				goto mpar;
@@ -285,7 +285,7 @@ mpar:				inperr("ξετ παςαν");
 				int off;
 
 				if (psp.nvol >= 12) {
-					inperr("μεξτ >= 12");
+					inperr("Π›Π•ΠΠΆ >= 12");
 					return -1;
 				}
 				u = get_octal (cp);
@@ -298,7 +298,7 @@ mpar:				inperr("ξετ παςαν");
 				cp += 3;
 				u = get_decimal (cp);
 				if (! u || u >= 4096) {
-					inperr("πμοθ τον");
+					inperr("ΠΠ›ΠΠ¥ ΠΆΠΠ");
 					return -1;
 				}
 				while (*cp <= GOST_9)
@@ -392,7 +392,7 @@ newaddr:
 				w = w << s | ch;
 			}
 			if (i != 9 && i != 18) {
-				inperr("γιζς ξε 9 ι ξε 18");
+				inperr("Π¦ΠΠ¤Π  ΠΠ• 9 Π ΠΠ• 18");
 				return -1;
 			}
 			if ((i = dump(W_CODE, w)))
@@ -402,7 +402,7 @@ newaddr:
 			for (i = 0; i < 6; ++i) {
 				if (nextc() == GOST_EOF) {
 noend:
-					inperr("ξετ λοξγα χχοδα");
+					inperr("ΠΠ•ΠΆ ΠΠΠΠ¦Π Π’Π’ΠΠ”Π");
 					return -1;
 				}
 				if (ch == GOST_NEWLINE) {
@@ -493,7 +493,7 @@ a1done:
                                     FILE *f = fopen((char*) s+1, "r");
                                     uchar p[120];
                                     if (!f) {
-                                        inperr("νασσιχ πυστ");
+                                        inperr("ΠΠΠ΅Π΅ΠΠ’ ΠΠ£Π΅ΠΆ");
                                         return -1;
                                     }
                                     while (120 == fread(p, 1, 120, f)) {
@@ -544,7 +544,7 @@ wrap:				if (ch != GOST_K) goto fs; nextc();
 				iaddr = 0;
 				if (! ibuf || (psp.arr_end = ftell(ibuf)) ==
 				    sizeof(psp)) {
-					inperr("νασσιχ πυστ");
+					inperr("ΠΠΠ΅Π΅ΠΠ’ ΠΠ£Π΅ΠΆ");
 					return -1;
 				}
 				NEXT_NS();
@@ -573,7 +573,7 @@ static int chad(unsigned long long w[], int bit, char val)
 	default:
 		pncline = bit / 80 + 1;
 		pncsym = (bit % 80) / 8 + 1;
-		inperr("ϊανρτιε");
+		inperr("Π—ΠΠΠ―ΠΆΠΠ•");
 		pncline = pncsym = 0;
 		return -1;
     }
@@ -607,10 +607,8 @@ nextc(void)
 	ch = _nextc[level]();
 	if (ch == GOST_NEWLINE) {
 		++lineno;
-/*fprintf (stderr, "//");*/
 		return ch;
 	}
-/*fprintf (stderr, "{%c}", gost_to_koi8[ch]); fflush (stderr);*/
 	return ch;
 }
 
@@ -619,7 +617,7 @@ inperr(char *s)
 {
 	char    buf[160];
 
-	sprintf(buf, "   αχχδ   ξπλ    ξσ   ξστ   σιν ϋιζς %06u%06u\n"
+	sprintf(buf, "   ΠΠ’Π’Π”   ΠΠΠ    ΠΠ΅   ΠΠ΅ΠΆ   Π΅ΠΠ Π¨ΠΠ¤Π  %06u%06u\n"
 		     "  %05o%6d%6d%6d   %03o %s\n",
 		user_hi, user_lo,
 		iaddr, lineno, pncline, pncsym, ch, s);
@@ -634,7 +632,8 @@ passload(char *src)
 	uchar   *buf, *cp;
 
 	if (!(buf = malloc(12288))) {
-		perror("στπασπ");
+		utf8_puts ("Π΅ΠΆΠΠΠ΅Π", stderr);
+		perror("");
 		return NULL;
 	}
 	dh = disk_open(2053, DISK_READ_ONLY);
@@ -665,7 +664,6 @@ nextcp(void)
 		c = GOST_NEWLINE;
 		break;
 	}
-/*fprintf (stderr, "<%c>", gost_to_koi8[c]); fflush (stderr);*/
 	return c;
 }
 
@@ -676,7 +674,7 @@ dump(uchar tag, unsigned long long w)
 	struct ibword   ibw;
 
 	if (! iaddr) {
-		diagftn(" ξετ αχχδ\n");
+		diagftn(" ΠΠ•ΠΆ ΠΠ’Π’Π”\n");
 		return -1;
 	}
 	if (! ibuf) {
@@ -694,14 +692,14 @@ dump(uchar tag, unsigned long long w)
 			ibuf = fdopen(fd, "w");
 			if (!ibuf) {
 ioberr:
-				diagftn(" οϋ βυζ χχδ\n");
+				diagftn(" ΠΠ¨ Π‘Π£Π¤ Π’Π’Π”\n");
 				return -1;
 			}
 			ibufno = i;
 			break;
 		}
 		if (!ibuf) {
-			diagftn(" βυζ πεςεπ\n");
+			diagftn(" Π‘Π£Π¤ ΠΠ•Π Π•Π\n");
 			return -1;
 		}
 		fseek(ibuf, (long) sizeof(struct passport), SEEK_SET);

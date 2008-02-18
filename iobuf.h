@@ -1,6 +1,6 @@
 #define TKH000          01442505500000000ull
 #define UNDERBANG3      02645553226655133ull    /* _!_!_! */
-#define EKONEC          01122505613222466ull    /* ελοξεγ */
+#define EKONEC          01122505613222466ull    /* Π•ΠΠΠΠ•Π¦ */
 
 #define MAXVOL  12
 #define U(c)    ((unsigned) c & 0xff)
