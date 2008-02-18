@@ -10,12 +10,6 @@
  * either version 2 of the License, or (at your discretion) any later version.
  * See the accompanying file "COPYING" for more details.
  */
-#ifdef __GNUC__
-#define	GCC_SPECIFIC(x)	x
-#else
-#define	GCC_SPECIFIC(x)
-#endif	/* __GNUC__ */
-
 char *errtxt[] = {
 	" Неизвестная ош.",     /*  0 */
 	" КОНЕЦ ЗАДАЧИ",        /*  1 */

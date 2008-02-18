@@ -38,10 +38,4 @@ extern	void	disk_local_path(char *buf);
 #define disk_read(a,b,c)    disk_readi(a,b,c,DISK_MODE_QUIET)
 #define disk_write(a,b,c)   disk_writei(a,b,c,DISK_MODE_QUIET)
 
-#ifdef __GNUC__
-#define	GCC_SPECIFIC(x)	x
-#else
-#define	GCC_SPECIFIC(x)
-#endif	/* __GNUC__ */
-
 #endif

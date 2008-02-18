@@ -20,8 +20,6 @@
 #include "iobuf.h"
 #include "gost10859.h"
 
-#define ETX     003
-
 static void     exform(void);
 
 uchar
@@ -157,8 +155,7 @@ done:			printf ("\n");
 			case GOST_NEWLINE:
 				pos = 0;
 				break;
-			case 0143:
-			case 0242: /* ignore */
+			case 0143: /* null width symbol */
 			case 0341:
 				break;
 			case GOST_SET_POSITION:
@@ -225,14 +222,17 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			break;
 		case GOST_CARRIAGE_RETURN:
 		case GOST_NEWLINE:
+			if (pos == 128) {
+				pos = 0;
+				break;
+			}
 			if (pos) {
 				lflush(line);
 				pos = 0;
 			}
 			putchar('\n');
 			break;
-		case 0143:
-		case 0242: /* ignore */
+		case 0143: /* null width symbol */
 		case 0341:
 			break;
 		case GOST_SET_POSITION:
@@ -241,26 +241,26 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			pos = c % 128;
 			break;
 		case GOST_SPACE2: /* blank */
+		case 0242: /* used as space by forex */
 			c = GOST_SPACE;
 			/* fall through... */
 		default:
 			if (pos == 128) {
-				/* No space left on line. */
-				c &= 017;
-				while (c-- > 2)
-					putchar('\n');
-				if (bp.p_b)
-					++bp.p_w;
-				return bp.p_w;
+				if (addr1)
+					pos = 0;
+				else {
+					/* No space left on line. */
+					*need_newline = 0;
+					if (bp.p_b)
+						++bp.p_w;
+					return bp.p_w;
+				}
 			}
 			line[pos++] = c;
 			if (pos == 128) {
 				/* No space left on line. */
 				lflush(line);
 				putchar('\n');
-				if (addr1) {
-					pos = 0;
-				}
 			}
 			break;
 		}

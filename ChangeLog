@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r54 | vak | 2008-02-18 22:39:26 +0300 (Mon, 18 Feb 2008) | 3 lines
+
+Madlen example prints a table of GOST encoding.
+
+
+------------------------------------------------------------------------
+r53 | vak | 2008-02-18 21:23:29 +0300 (Mon, 18 Feb 2008) | 3 lines
+
+Added missing characters in unicode conversion tables.
+
+
+------------------------------------------------------------------------
 r52 | vak | 2008-02-18 20:43:27 +0300 (Mon, 18 Feb 2008) | 4 lines
 
 Added "--input=encoding=" option. Now 2099 compiles fine independently

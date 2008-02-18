@@ -17,12 +17,6 @@
 #include "disk.h"
 #include "gost10859.h"
 
-#ifdef __GNUC__
-#define	GCC_SPECIFIC(x)	x
-#else
-#define	GCC_SPECIFIC(x)
-#endif	/* __GNUC__ */
-
 #define PARASZ  (256 * 6)
 #define PUT(c)  { \
 	if (pos > maxp) \

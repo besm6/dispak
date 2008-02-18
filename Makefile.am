@@ -40,4 +40,4 @@ diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b
 
 log:	.svn
 	svn update
-	LANG=en_US.utf8 svn log > ChangeLog
+	if [ -d /usr/share/locale/en_US.UTF-8 ]; then LC_ALL=en_US.UTF-8; else LC_ALL=en_US.utf8; fi && svn log > ChangeLog

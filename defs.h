@@ -455,10 +455,4 @@ void utf8_puts (char*, FILE*);
 int unicode_getc (FILE*);
 void set_input_encoding (char*);
 
-#ifdef __GNUC__
-#define	GCC_SPECIFIC(x)	x
-#else
-#define	GCC_SPECIFIC(x)
-#endif	/* __GNUC__ */
-
 #endif  /* defs_h */
