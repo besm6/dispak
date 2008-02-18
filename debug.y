@@ -91,11 +91,11 @@ command:        /* void */
 			       printf ("visual off\n");
 			}
 	|       'a' '-'
-			{ printf ("%08lo%08lo\n", acc.l, acc.r); }
+			{ printf ("%08o%08o\n", acc.l, acc.r); }
 	|       'a' 'd'
 			{ pfloat (acc.l, acc.r); }
 	|       'y' '-'
-			{ printf ("%08lo%08lo\n", accex.l, accex.r); }
+			{ printf ("%08o%08o\n", accex.l, accex.r); }
 	|       'i' octal '-'
 			{ printf ("%05o\n", reg[$2&037]); }
 	|       octal '-'
@@ -103,7 +103,7 @@ command:        /* void */
 				for (i = 0; i < 8; ++i) {
 					if ($1) {
 						LOAD(wd, $1);
-						printf ("%08lo%08lo\n",
+						printf ("%08o%08o\n",
 								wd.l, wd.r);
 					} else
 						printf ("0000000000000000\n");
@@ -166,21 +166,21 @@ command:        /* void */
 				for (i = 0; i < 8; ++i) {
 					LOAD(wd, $1);
 					if (wd.l & 0x80000)
-						printf ("%02lo %02lo %05lo\t",
-						(ulong)wd.l >> 20, (ulong)(wd.l >> 15) & 037,
-						(ulong)wd.l & 077777);
+						printf ("%02o %02o %05o\t",
+						(uint)wd.l >> 20, (uint)(wd.l >> 15) & 037,
+						(uint)wd.l & 077777);
 					else
-						printf ("%02lo %03lo %04lo\t",
-						(ulong)wd.l >> 20, (ulong)(wd.l >> 12) & 0177,
-						(ulong)wd.l & 07777);
+						printf ("%02o %03o %04o\t",
+						(uint)wd.l >> 20, (uint)(wd.l >> 12) & 0177,
+						(uint)wd.l & 07777);
 					if (wd.r & 0x80000)
-						printf ("%02lo %02lo %05lo\n",
-						(ulong)wd.r >> 20, (ulong)(wd.r >> 15) & 037,
-						(ulong)wd.r & 077777);
+						printf ("%02o %02o %05o\n",
+						(uint)wd.r >> 20, (uint)(wd.r >> 15) & 037,
+						(uint)wd.r & 077777);
 					else
-						printf ("%02lo %03lo %04lo\n",
-						(ulong)wd.r >> 20, (ulong)(wd.r >> 12) & 0177,
-						(ulong)wd.r & 07777);
+						printf ("%02o %03o %04o\n",
+						(uint)wd.r >> 20, (uint)(wd.r >> 12) & 0177,
+						(uint)wd.r & 07777);
 					$1 += 1;
 				}
 			}
@@ -201,9 +201,9 @@ command:        /* void */
 			{
 				int     i;
 				for (i = 0; i < JHBSZ; ++i)
-					printf("%05lo->%05lo\n",
-						(ulong)jhbuf[(jhbi + i) % JHBSZ] >> 16,
-						(ulong)jhbuf[(jhbi + i) % JHBSZ] & 077777);
+					printf("%05o->%05o\n",
+						(uint)jhbuf[(jhbi + i) % JHBSZ] >> 16,
+						(uint)jhbuf[(jhbi + i) % JHBSZ] & 077777);
 			}
 	|       execute o2 lcmd o5
 			{
@@ -398,8 +398,8 @@ okno (int trace)
 	if (trace < 2)
 		return;
 
-	printf ("  acc = %08lo%08lo", acc.l, acc.r);
-	printf (" Y = %08lo%08lo", accex.l, accex.r);
+	printf ("  acc = %08o%08o", acc.l, acc.r);
+	printf (" Y = %08o%08o", accex.l, accex.r);
 	printf (" R = %01o%01o%01o%01o%01o%01o", dis_exc, G_MUL,
 		G_ADD, G_LOG, dis_round, dis_norm);
 	if (addrmod)

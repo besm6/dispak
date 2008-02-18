@@ -20,6 +20,9 @@ AC_CHECK_LIB([m], [sin])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_CHECK_TYPES([ulong])
+AC_CHECK_TYPES([ushort])
+AC_CHECK_TYPES([uint])
+AC_C_BIGENDIAN
 
 # Checks for library functions.
 AC_CHECK_FUNCS(getopt_long)

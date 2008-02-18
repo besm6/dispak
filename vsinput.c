@@ -267,7 +267,7 @@ mpar:				inperr("מופ נבעבם");
 			if (! cp)
 				goto mpar;
 			while (*cp != GOST_OVERLINE) {
-				ulong u;
+				uint u;
 				int off;
 
 				if (psp.nvol >= 12) {
@@ -613,7 +613,7 @@ static uchar *
 passload(char *src)
 {
 	void    *dh;
-	ulong   sz;
+	uint    sz;
 	uchar   *buf, *cp;
 
 	if (!(buf = malloc(12288))) {

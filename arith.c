@@ -19,7 +19,7 @@
 typedef union {
 	double d;
 	struct {
-#ifdef M_WORDSWAP
+#ifndef WORDS_BIGENDIAN
 		unsigned right32, left32;
 #else
 		unsigned left32, right32;
@@ -134,7 +134,7 @@ aex()
 int
 arx()
 {
-	ulong           i;
+	uint            i;
 
 	acc.r = (i = acc.r + enreg.r) & 0xffffff;
 	acc.l = (i = acc.l + enreg.l + (i >> 24)) & 0xffffff;
@@ -437,7 +437,7 @@ mul()
 	uchar           neg = 0;
 	alureg_t        a, b;
 	ushort          a1, a2, a3, b1, b2, b3;
-	register ulong  l;
+	register uint   l;
 
 	a = acc;
 	b = enreg;
@@ -468,22 +468,22 @@ mul()
 	b2 = b.mr >> 12;
 	b1 = b.ml;
 
-	accex.mr = (ulong) a3 * b3;
+	accex.mr = (uint) a3 * b3;
 
-	l = (ulong) a2 * b3 + (ulong) a3 * b2;
+	l = (uint) a2 * b3 + (uint) a3 * b2;
 	accex.mr += (l << 12) & 0xfff000;
 	accex.ml = l >> 12;
 
-	l = (ulong) a1 * b3 + (ulong) a2 * b2 + (ulong) a3 * b1;
+	l = (uint) a1 * b3 + (uint) a2 * b2 + (uint) a3 * b1;
 	accex.ml += l & 0xffff;
 	acc.mr = l >> 16;
 
-	l = (ulong) a1 * b2 + (ulong) a2 * b1;
+	l = (uint) a1 * b2 + (uint) a2 * b1;
 	accex.ml += (l & 0xf) << 12;
 	acc.mr += (l >> 4) & 0xffffff;
 	acc.ml = l >> 28;
 
-	l = (ulong) a1 * b1;
+	l = (uint) a1 * b1;
 	acc.mr += (l & 0xffff) << 8;
 	acc.ml += l >> 16;
 
@@ -567,7 +567,7 @@ int
 acx()
 {
 	int     c = 0;
-	ulong   i;
+	uint    i;
 
 	for (i = acc.l; i; i &= i - 1, c++);
 	for (i = acc.r; i; i &= i - 1, c++);
@@ -579,8 +579,8 @@ acx()
 int
 anx()
 {
-	ulong   c;
-	ulong   i;
+	uint    c;
+	uint    i;
 	uchar   b;
 
 	if (acc.l) {

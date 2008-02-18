@@ -6,8 +6,8 @@ typedef struct  {
 	int     (*o_impl)();
 	char    o_inline;
 	ushort  o_flags;
-	ulong   o_count;
-	ulong   o_ticks;
+	uint    o_count;
+	uint    o_ticks;
 }       optab_t;
 
 extern optab_t  optab[];

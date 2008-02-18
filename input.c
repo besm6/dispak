@@ -21,7 +21,7 @@ static FILE             *ibuf;
 static char             ibufname[MAXPATHLEN];
 static struct passport  psp;
 static ushort           iaddr;
-static ulong            enda3;
+static size_t            enda3;
 
 int
 input(unsigned ibufno)
@@ -105,7 +105,7 @@ e60(void)
 {
 	struct ibword   ibw[24];
 	int             i;
-	ulong           pos;
+	size_t          pos;
 
 	if (reg[016] == 0)
 		return E_SUCCESS;

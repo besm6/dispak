@@ -18,16 +18,16 @@ struct ibword   {
 
 struct passport {
 	alureg_t                user;
-	ulong                   entry;
+	uint                    entry;
 	uchar                   tele, keep, spec;
 	ushort                  nvol;
 	ushort                  lprlim;
-	ulong                   phys;
+	uint                    phys;
 	struct vol      {
 		uchar                   wr;
 		uchar                   u;
 		ushort                  volno;
 		ushort			offset;
 	}                       vol[MAXVOL];
-	ulong                   arr_end;        /* offset to input array 1 end */
+	uint                    arr_end;        /* offset to input array 1 end */
 };

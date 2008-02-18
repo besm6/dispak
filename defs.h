@@ -6,17 +6,18 @@
 #ifndef HAVE_ULONG
 typedef unsigned long   ulong;
 #endif
+#ifndef HAVE_USHORT
+typedef unsigned short  ushort;
+#endif
+#ifndef HAVE_UINT
+typedef unsigned int    uint;
+#endif
 #include <sys/param.h>
 #include <sys/times.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <signal.h>
 
-#if defined (i386) || defined (__alpha) || defined (__ia64)
-#ifndef M_WORDSWAP
-#define M_WORDSWAP
-#endif
-#endif
 #define DIV_NATIVE
 
 #include <setjmp.h>
@@ -77,11 +78,10 @@ typedef union {
 }       word_t;                         /* word type                    */
 
 typedef struct  {
-	ulong   l;
-	ulong   r;
-	ushort  o;
-	ulong   ml;
-/*	ulong   mr;*/
+	uint    l;			/* left 24 bits */
+	uint    r;			/* right 24 bits */
+	ushort  o;			/* exponent (temp storage) */
+	uint    ml;			/* left part of mantissa */
 #define mr      r
 }       alureg_t;                       /* ALU register type            */
 
@@ -102,7 +102,7 @@ typedef struct  {                       /* pointer to a byte            */
 
 	/* access to instruction fields */
 
-#ifdef M_WORDSWAP
+#ifndef WORDS_BIGENDIAN
 
 /*
  *      left instruction
@@ -178,9 +178,6 @@ typedef struct  {
 }       uinstr_t;                       /* unpacked instruction         */
 
 EXTERN uinstr_t uicore[CORESZ * 2][2];
-#ifdef M_WORDSWAP
-extern void     load_(alureg_t *reg, ulong *addr);
-#endif
 
 EXTERN uchar    cflags[CORESZ * 2];     /* core flags                   */
 
@@ -201,7 +198,7 @@ EXTERN reg_t    reg[NREGS];             /* registers                    */
 
 EXTERN reg_t    pc;                     /* program counter              */
 EXTERN reg_t    pcm_dbg;                /* program counter for debugger */
-EXTERN ulong    right;                  /* right halfword instruction   */
+EXTERN uint     right;                  /* right halfword instruction   */
 EXTERN uchar    addrmod;                /* address modification needed  */
 EXTERN alureg_t acc;                    /* accumulator                  */
 EXTERN alureg_t accex;                  /* accumulator extension        */
@@ -212,14 +209,14 @@ EXTERN reg_t    sup_mmap;               /* 0100000 - supervisor mem map */
 
 EXTERN union    {
 	uchar   gc_au[1];               /* arith cond jump modes        */
-	ulong   gl_au;
+	uint    gl_au;
 }       augroup;
 
 EXTERN uchar    dis_exc;                /* disable arith exceptions     */
 EXTERN uchar    dis_round;              /* disable rounding             */
 EXTERN uchar    dis_norm;               /* disable normalization        */
 
-#ifdef M_WORDSWAP
+#ifndef WORDS_BIGENDIAN
 #define G_LOG   (augroup.gc_au[0])      /* logical jump mode            */
 #define G_MUL   (augroup.gc_au[1])      /* multiplicatory jump mode     */
 #define G_ADD   (augroup.gc_au[2])      /* additive jump mode           */
@@ -363,20 +360,20 @@ EXTERN alureg_t         user;           /* job id               */
 EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
 EXTERN ushort           phdrum;
-EXTERN ulong            jhbuf[JHBSZ];
+EXTERN uint             jhbuf[JHBSZ];
 EXTERN int              jhbi;
-EXTERN ulong            ecode_intr;
+EXTERN uint             ecode_intr;
 
 EXTERN ushort           ehandler;
-EXTERN ulong            events, emask;
+EXTERN uint             events, emask;
 EXTERN uchar            eenab, goahead;
 
 extern uchar            ctext[];
 
 extern void     stopwatch(void), startwatch(void);
-extern uchar    eraise(ulong newev);
+extern uchar    eraise(uint newev);
 extern void     alrm_handler(int sig);
-extern ulong    to_2_10(ulong src);
+extern uint     to_2_10(uint src);
 
 /*
  *      error codes

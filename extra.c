@@ -1006,7 +1006,7 @@ e63(void)
 	case 4:
 		gettimeofday(&ct, NULL);
 		acc.l = 0;
-		acc.r = (ulong) (TIMEDIFF(start_time, ct) - excuse) * 50;
+		acc.r = (uint) (TIMEDIFF(start_time, ct) - excuse) * 50;
 		return E_SUCCESS;
 	default:
 		if (reg[016] > 7)
@@ -1520,7 +1520,7 @@ resources(void)
 }
 
 extern uchar
-eraise(ulong newev)
+eraise(uint newev)
 {
 	events |= newev & 0xffffff;
 	return goahead |= ehandler && eenab && (events & emask);
@@ -1664,7 +1664,7 @@ usyscall(void)
 {
 	ushort  ap = reg[016];
 	int     r;
-	ulong   ftn, a0, a1, a2;
+	uint   ftn, a0, a1, a2;
 
 	ftn = FUWORD(ap); ap = ADDR(ap + 1);
 	a0 = FUWORD(ap); ap = ADDR(ap + 1);
@@ -1696,10 +1696,10 @@ usyscall(void)
 	return E_SUCCESS;
 }
 
-ulong
-to_2_10(ulong src)
+uint
+to_2_10(uint src)
 {
-	ulong   dst = 0;
+	uint   dst = 0;
 	int     i;
 
 	for (i = 0; i < 6; ++i) {

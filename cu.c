@@ -490,9 +490,9 @@ mtj:
 		if (trace && (ui.i_opcode != 075 || reg[016] < 2)) {
 			/* Do not trace e75, it's too verbose. */
 			LOAD(enreg, reg[016] | (supmode & sup_mmap));
-			fprintf(stderr, "%05o:%03o.%05o(%08lo%08lo) %08lo%08lo\n",
-				abpc, ui.i_opcode, reg[016], (ulong)enreg.l, (ulong)enreg.r,
-				(ulong)acc.l, (ulong)acc.r);
+			fprintf(stderr, "%05o:%03o.%05o(%08o%08o) %08o%08o\n",
+				abpc, ui.i_opcode, reg[016], (uint)enreg.l, (uint)enreg.r,
+				(uint)acc.l, (uint)acc.r);
 			fflush(stderr);
 		}
 		switch (ui.i_opcode) {
@@ -619,7 +619,7 @@ errchk:
 		augroup.gl_au = aumodes[i];
 
 	if (op.o_flags & F_AR) {
-		ulong   rr = 0;
+		uint    rr = 0;
 		switch ((acc.ml >> 16) & 3) {
 		case 2:
 		case 1:
@@ -804,10 +804,10 @@ zero:
 			acc.l = acc.r = accex.l = accex.r = 0;
 			goto done;
 		}
-		acc.l = ((ulong) (acc.o & 0x7f) << 17) | (acc.ml & 0x1ffff);
+		acc.l = ((uint) (acc.o & 0x7f) << 17) | (acc.ml & 0x1ffff);
 		acc.r = acc.mr & 0xffffff;
 
-		accex.l = ((ulong) (accex.o & 0x7f) << 17) | (accex.ml & 0x1ffff);
+		accex.l = ((uint) (accex.o & 0x7f) << 17) | (accex.ml & 0x1ffff);
 		accex.r = accex.mr & 0xffffff;
 done:
 		if (op.o_inline == I_YTA)
