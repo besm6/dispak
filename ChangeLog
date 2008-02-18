@@ -1,4 +1,39 @@
 ------------------------------------------------------------------------
+r52 | vak | 2008-02-18 20:43:27 +0300 (Mon, 18 Feb 2008) | 4 lines
+
+Added "--input=encoding=" option. Now 2099 compiles fine independently
+of local LANG settings.
+
+
+------------------------------------------------------------------------
+r51 | vak | 2008-02-18 20:20:06 +0300 (Mon, 18 Feb 2008) | 3 lines
+
+Added support for local encodings KOI8-*, CP1251 and CP866.
+
+
+------------------------------------------------------------------------
+r50 | vak | 2008-02-18 18:59:08 +0300 (Mon, 18 Feb 2008) | 3 lines
+
+Fixed end-of-lines for Algol-BESM. Fixed printing lower-ten as 'e'.
+
+
+------------------------------------------------------------------------
+r49 | vak | 2008-02-18 18:16:38 +0300 (Mon, 18 Feb 2008) | 5 lines
+
+Global transition to Unicode. All sources recoded. At the moment only
+UTF-8 can be used as local encoding for *.b6 files and output messages.
+Upgrade to automake 1.10.
+
+
+------------------------------------------------------------------------
+r48 | vak | 2008-02-18 14:59:22 +0300 (Mon, 18 Feb 2008) | 5 lines
+
+New functions for output: gost_putc() and gost_write().
+Printing rewritten using GOST as main encoding.
+Fixed "make log" to use english locale.
+
+
+------------------------------------------------------------------------
 r47 | leobru | 2008-02-18 11:28:22 +0300 (Mon, 18 Feb 2008) | 2 lines
 
 Implemented setting of error interception in the passport.

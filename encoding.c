@@ -590,7 +590,16 @@ unicode_to_koi8 (ushort val)
 		break;
 	case 0x20:
 		switch ((unsigned char) val) {
+		case 0x15: return '-';
+		case 0x18: return '`';
+		case 0x19: return '\'';
 		case 0x28: return 0x0a;
+		}
+		break;
+	case 0x21:
+		switch ((unsigned char) val) {
+		case 0x2f: return 'e';
+		case 0x91: return '@';
 		}
 		break;
 	case 0x22:
@@ -598,6 +607,7 @@ unicode_to_koi8 (ushort val)
 		case 0x19: return 0x95;
 		case 0x1a: return 0x96;
 		case 0x48: return 0x97;
+		case 0x60: return '#';
 		case 0x64: return 0x98;
 		case 0x65: return 0x99;
 		}
@@ -659,6 +669,7 @@ unicode_to_koi8 (ushort val)
 		case 0x92: return 0x91;
 		case 0x93: return 0x92;
 		case 0xa0: return 0x94;
+		case 0xca: return '$';
 		}
 		break;
 	}
@@ -869,6 +880,7 @@ unicode_to_cp1251 (ushort val)
 		switch ((unsigned char) val) {
 		case 0x13: return 0x96;
 		case 0x14: return 0x97;
+		case 0x15: return '-';
 		case 0x18: return 0x91;
 		case 0x19: return 0x92;
 		case 0x1a: return 0x82;
@@ -890,6 +902,18 @@ unicode_to_cp1251 (ushort val)
 		switch ((unsigned char) val) {
 		case 0x16: return 0xb9;
 		case 0x22: return 0x99;
+		case 0x2f: return 'e';
+		case 0x91: return '@';
+		}
+		break;
+	case 0x22:
+		switch ((unsigned char) val) {
+		case 0x60: return '#';
+		}
+		break;
+	case 0x25:
+		switch ((unsigned char) val) {
+		case 0xca: return '$';
 		}
 		break;
 	}
@@ -1076,18 +1100,24 @@ unicode_to_cp866 (ushort val)
 		break;
 	case 0x20:
 		switch ((unsigned char) val) {
+		case 0x15: return '-';
+		case 0x18: return '`';
+		case 0x19: return '\'';
 		case 0x28: return 0x0a;
 		}
 		break;
 	case 0x21:
 		switch ((unsigned char) val) {
 		case 0x16: return 0xfc;
+		case 0x2f: return 'e';
+		case 0x91: return '@';
 		}
 		break;
 	case 0x22:
 		switch ((unsigned char) val) {
 		case 0x19: return 0xf9;
 		case 0x1a: return 0xfb;
+		case 0x60: return '#';
 		}
 		break;
 	case 0x25:
@@ -1141,6 +1171,7 @@ unicode_to_cp866 (ushort val)
 		case 0x92: return 0xb1;
 		case 0x93: return 0xb2;
 		case 0xa0: return 0xfe;
+		case 0xca: return '$';
 		}
 		break;
 	}
@@ -1303,8 +1334,12 @@ gost_putc (uchar ch, FILE *fout)
 {
 	const ushort *gost_to_unicode = pout_latin ?
 		gost_to_unicode_lat : gost_to_unicode_cyr;
+	ushort u;
 
-	unicode_putc (gost_to_unicode [ch], fout);
+	u = gost_to_unicode [ch];
+	if (! u)
+		u = '?';
+	unicode_putc (u, fout);
 }
 
 /*
@@ -1316,9 +1351,14 @@ gost_write (uchar *line, int n, FILE *fout)
 {
 	const ushort *gost_to_unicode = pout_latin ?
 		gost_to_unicode_lat : gost_to_unicode_cyr;
+	ushort u;
 
-	while (n-- > 0)
-		unicode_putc (gost_to_unicode [*line++], fout);
+	while (n-- > 0) {
+		u = gost_to_unicode [*line++];
+		if (! u)
+			u = '?';
+		unicode_putc (u, fout);
+	}
 }
 
 /*
