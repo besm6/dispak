@@ -226,7 +226,9 @@ mpar:				inperr("ξετ παςαν");
 				return -1;
 			}
 			psp.entry = get_octal (cp);
-
+		} else if (art[0] == GOST_A && art[1] == GOST_B && art[2] == GOST_O) {
+			/* αχοστ [<octal>] - 020 by default */
+			psp.intercept = cp ? get_octal (cp) : 020;
 		} else if (art[0] == GOST_A && art[1] == GOST_TSE &&
 		    art[2] == GOST_PE) {
 			/* αγπ <decimal> */

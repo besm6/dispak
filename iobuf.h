@@ -19,6 +19,7 @@ struct ibword   {
 struct passport {
 	alureg_t                user;
 	uint                    entry;
+	uint			intercept;
 	uchar                   tele, keep, spec;
 	ushort                  nvol;
 	ushort                  lprlim;

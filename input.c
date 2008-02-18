@@ -95,6 +95,10 @@ ibr:
 			break;
 		}
 	}
+	if (psp.intercept) {
+		ninter = 1;
+		intercept = psp.intercept;
+	}
 	fstat(fileno(ibuf), &stbuf);
 	enda3 = stbuf.st_size;
 	return 0;
