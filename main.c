@@ -48,6 +48,8 @@
  *		punch to file
  *	-punch-binary
  *		punch in binary format (default dots and holes)
+ *	--input-encoding=codeset
+ *		set encoding for input files: utf8, koi8, cp1251, cp866
  *	--bootstrap
  *		run in user mode only to build 2099 (no E66, cannot use -x)
  *	--no-insn-check
@@ -95,6 +97,7 @@ enum {
 	OPT_BOOTSTRAP,
 	OPT_TRACE_E64,
 	OPT_PATH,
+	OPT_INPUT_ENCODING,
 	OPT_NO_INSN_CHECK,
 };
 
@@ -120,6 +123,7 @@ static struct option longopts[] = {
 	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
 	{ "bootstrap",		0,	0,	OPT_BOOTSTRAP	},
 	{ "path",		1,	0,	OPT_PATH	},
+	{ "input-encoding",	1,	0,	OPT_INPUT_ENCODING },
 	{ "no-insn-check",	0,	0,	OPT_NO_INSN_CHECK },
 	{ 0,			0,	0,	0		},
 };
@@ -153,6 +157,7 @@ usage ()
 	fprintf (stderr, "  --output-cyrillic      use Cyrillic letters for output (default)\n");
 	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
 	fprintf (stderr, "  --punch-binary         punch in binary format (default dots and holes)\n");
+	fprintf (stderr, "  --input-encoding=code  set encoding for input files: utf8, koi8, cp1251 or cp866\n");
 	fprintf (stderr, "  --bootstrap            used to generate contents of the system disk\n");
 	fprintf (stderr, "  --no-insn-check        all words but at addr 0 are treated as insns\n");
 
@@ -264,6 +269,9 @@ main(int argc, char **argv)
 			break;
 		case OPT_PATH:		/* set disk search path */
 			disk_path = optarg;
+			break;
+		case OPT_INPUT_ENCODING: /* set input encoding */
+			set_input_encoding (optarg);
 			break;
 		case OPT_NO_INSN_CHECK:
 			no_insn_check = 1;

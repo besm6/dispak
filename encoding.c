@@ -1181,29 +1181,67 @@ init_local_encoding ()
 
 	if (strncasecmp (lang, "koi8", 4) == 0) {
 		/* KOI8-R, KOI8-U and others. */
-		local_getc = koi8_getc;
 		local_putc = koi8_putc;
+		if (! local_getc)
+			local_getc = koi8_getc;
+		return;
+	}
+	if (strcasecmp (lang, "cp1251") == 0 ||
+	    strcasecmp (lang, "cp-1251") == 0) {
+		/* Windows code page 1251. */
+		local_putc = cp1251_putc;
+		if (! local_getc)
+			local_getc = cp1251_getc;
+		return;
+	}
+	if (strcasecmp (lang, "cp866") == 0 ||
+	    strcasecmp (lang, "cp-866") == 0) {
+		/* Windows code page 866. */
+		local_putc = cp866_putc;
+		if (! local_getc)
+			local_getc = cp866_getc;
+		return;
+	}
+	if (strcasecmp (lang, "utf8") == 0 ||
+	    strcasecmp (lang, "utf-8") == 0) {
+		/* UTF-8. */
+		local_putc = utf8_putc;
+		if (! local_getc)
+			local_getc = utf8_getc;
+		return;
+	}
+	fprintf (stderr, "%s: encoding %s is not supported.\n",
+		PACKAGE_NAME, lang);
+	fprintf (stderr, "%s: use UTF-8, KOI8-R, CP1251 or CP866.\n", PACKAGE_NAME);
+	exit (1);
+}
+
+void
+set_input_encoding (char *lang)
+{
+	if (! lang)
+		return;
+	if (strncasecmp (lang, "koi8", 4) == 0) {
+		/* KOI8-R, KOI8-U and others. */
+		local_getc = koi8_getc;
 		return;
 	}
 	if (strcasecmp (lang, "cp1251") == 0 ||
 	    strcasecmp (lang, "cp-1251") == 0) {
 		/* Windows code page 1251. */
 		local_getc = cp1251_getc;
-		local_putc = cp1251_putc;
 		return;
 	}
 	if (strcasecmp (lang, "cp866") == 0 ||
 	    strcasecmp (lang, "cp-866") == 0) {
 		/* Windows code page 866. */
 		local_getc = cp866_getc;
-		local_putc = cp866_putc;
 		return;
 	}
 	if (strcasecmp (lang, "utf8") == 0 ||
 	    strcasecmp (lang, "utf-8") == 0) {
 		/* UTF-8. */
 		local_getc = utf8_getc;
-		local_putc = utf8_putc;
 		return;
 	}
 	fprintf (stderr, "%s: encoding %s is not supported.\n",

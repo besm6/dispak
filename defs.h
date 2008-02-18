@@ -445,7 +445,6 @@ int input (unsigned);
 int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
 
 /* encoding.c */
-extern const uchar koi8_to_gost[];
 extern const uchar itm_to_gost[], gost_to_itm[];
 extern const uchar text_to_gost[];
 void gost_putc (uchar, FILE*);
@@ -454,6 +453,7 @@ uchar unicode_to_gost (ushort);
 uchar utf8_to_gost (uchar**);
 void utf8_puts (char*, FILE*);
 int unicode_getc (FILE*);
+void set_input_encoding (char*);
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
