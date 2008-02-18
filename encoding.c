@@ -42,14 +42,14 @@ const uchar koi8_to_gost [256] = {
 /*          */	0,      0,      0,      0,      0,      0,      0,      0,
 /*          */	0,      0,      0,      0,      0,      0,      0,      0,
 /*          */	0,      0,      0,      0,      0,      0,      0,      0,
-/* àáâãäåæç */	0075,   0040,   0041,   0066,   0044,   0045,   0064,   0043,
-/* èéêëìíîï */	0065,   0050,   0051,   0052,   0053,   0054,   0055,   0056,
-/* ðñòóôõö÷ */	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
-/* øùúûüýþÿ */	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
 /* ÀÁÂÃÄÅÆÇ */	0075,   0040,   0041,   0066,   0044,   0045,   0064,   0043,
 /* ÈÉÊËÌÍÎÏ */	0065,   0050,   0051,   0052,   0053,   0054,   0055,   0056,
 /* ÐÑÒÓÔÕÖ× */	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
 /* ØÙÚÛÜÝÞß */	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
+/* àáâãäåæç */	0075,   0040,   0041,   0066,   0044,   0045,   0064,   0043,
+/* èéêëìíîï */	0065,   0050,   0051,   0052,   0053,   0054,   0055,   0056,
+/* ðñòóôõö÷ */	0057,   0076,   0060,   0061,   0062,   0063,   0046,   0042,
+/* øùúûüýþÿ */	0073,   0072,   0047,   0070,   0074,   0071,   0067,   0135,
 };
 
 /* ß is a placeholder */
@@ -100,9 +100,9 @@ const uchar itm_to_gost [256] =
 		0,			0,
 		0,			0,
 /* 040 */	GOST_SPACE,		GOST_RIGHT_QUOTATION,
-		GOST_LOZENGE,		GOST_LOW_LINE,
+		GOST_LOZENGE,		GOST_UNDERLINE,
 		GOST_VERTICAL_LINE,	GOST_SEMICOLON,
-		GOST_COMMA,		GOST_STOP,
+		GOST_COMMA,		GOST_DOT,
 /* 050 */	GOST_OVERLINE,		GOST_RIGHT_PARENTHESIS,
 		0,			GOST_LEFT_BRACKET,
 		GOST_GREATER_THAN,	GOST_DEGREE,
@@ -110,7 +110,7 @@ const uchar itm_to_gost [256] =
 /* 060 */	GOST_V,			GOST_PLUS,
 		GOST_PERCENT,		GOST_EXCLAMATION,
 		GOST_LEFT_QUOTATION,	GOST_COLON,
-		GOST_RIGHT_BRACKET,	GOST_SOLIDUS,
+		GOST_RIGHT_BRACKET,	GOST_SLASH,
 /* 070 */	GOST_MINUS,		GOST_LOGICAL_AND,
 		GOST_X,			0,
 		GOST_LESS_THAN,		GOST_LEFT_QUOTATION,
@@ -234,14 +234,14 @@ const uchar gost_to_itm [256] =
  */
 const uchar text_to_gost [64] =
 {
-/* 000 */	GOST_SPACE,		GOST_STOP,
+/* 000 */	GOST_SPACE,		GOST_DOT,
 		GOST_BE,		GOST_TSE,
 		GOST_DE,		GOST_EF,
 		GOST_GHE,		GOST_CYRILLIC_I,
 /* 010 */	GOST_LEFT_PARENTHESIS,	GOST_RIGHT_PARENTHESIS,
 		GOST_ASTERISK,		GOST_SHORT_I,
 		GOST_EL,		GOST_YA,
-		GOST_ZHE,		GOST_SOLIDUS,
+		GOST_ZHE,		GOST_SLASH,
 /* 020 */	GOST_0,			GOST_1,
 		GOST_2,			GOST_3,
 		GOST_4,			GOST_5,
@@ -267,3 +267,15 @@ const uchar text_to_gost [64] =
 		GOST_REVERSE_E,		GOST_SHCHA,
 		GOST_CHE,		GOST_YU,
 };
+
+void
+gost_putc (int ch, FILE *fout)
+{
+	putc (gost_to_koi8 [ch], fout);
+}
+
+void gost_write (uchar *line, int n, FILE *fout)
+{
+	while (n-- > 0)
+		putc (gost_to_koi8 [*line++], fout);
+}

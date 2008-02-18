@@ -86,14 +86,14 @@ lflush(uchar *line)
 	int     i;
 
 	for (i = 127; i >= 0; --i)
-		if (line[i] != ' ')
+		if (line[i] != GOST_SPACE)
 			break;
 
 	if (i < 0)
 		return 0;
 
-	fwrite(line, 1, i + 1, stdout);
-	memset(line, ' ', i + 1);
+	gost_write (line, i + 1, stdout);
+	memset (line, GOST_SPACE, i + 1);
 	return 1;
 }
 
@@ -144,24 +144,24 @@ done:			printf ("\n");
 			}
 		else {
 			switch (c) {
-			case 0172:
+			case GOST_END_OF_INFORMATION:
 			case 0231:
-			case 0377:
+			case GOST_EOF:
 				goto done;
 			case 0201: /* new page */
 				if (pos > 0)
 					pos = 0;
 				++pos;
 				break;
-			case 0175:
-			case 0214: /* new line */
+			case GOST_CARRIAGE_RETURN:
+			case GOST_NEWLINE:
 				pos = 0;
 				break;
 			case 0143:
 			case 0242: /* ignore */
 			case 0341:
 				break;
-			case 0173:
+			case GOST_SET_POSITION:
 			case 0200: /* set position */
 				c = getbyte(&bp);
 				printf ("-%03o", c);
@@ -192,7 +192,7 @@ static ushort
 print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 {
 	ptr             bp;
-	uchar           c, ch;
+	uchar           c;
 
 	bp.p_w = addr0;
 	bp.p_b = 0;
@@ -206,9 +206,9 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 
 		c = getbyte(&bp);
 		switch (c) {
-		case 0172: /* end of information */
+		case GOST_EOF:
+		case GOST_END_OF_INFORMATION:
 		case 0231:
-		case 0377:
 			if (pos==0 || pos==128)
 				*need_newline = 0;
 			if (bp.p_b)
@@ -221,10 +221,10 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			}
 			if (! isatty (1))
 				putchar('\f');
-			line[pos++] = ' ';
+			line[pos++] = GOST_SPACE;
 			break;
-		case 0175:
-		case 0214: /* new line */
+		case GOST_CARRIAGE_RETURN:
+		case GOST_NEWLINE:
 			if (pos) {
 				lflush(line);
 				pos = 0;
@@ -235,17 +235,15 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 		case 0242: /* ignore */
 		case 0341:
 			break;
-		case 0173:
+		case GOST_SET_POSITION:
 		case 0200: /* set position */
 			c = getbyte(&bp);
 			pos = c % 128;
 			break;
-		case 0176: /* blank */
-			ch = ' ';
-			goto addchar;
+		case GOST_SPACE2: /* blank */
+			c = GOST_SPACE;
+			/* fall through... */
 		default:
-			ch = gost_to_koi8[c];
-addchar:
 			if (pos == 128) {
 				/* No space left on line. */
 				c &= 017;
@@ -255,7 +253,7 @@ addchar:
 					++bp.p_w;
 				return bp.p_w;
 			}
-			line[pos++] = ch;
+			line[pos++] = c;
 			if (pos == 128) {
 				/* No space left on line. */
 				lflush(line);
@@ -307,7 +305,7 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 				++bp.p_w;
 			return bp.p_w;
 		case 040: /* blank */
-			line[pos++] = ' ';
+			line[pos++] = GOST_SPACE;
 			break;
 		case 0173: /* repeat last symbol */
 			c = getbyte(&bp);
@@ -325,7 +323,7 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 					line[pos++] = lastc;
 			break;
 		default:
-			line[pos++] = gost_to_koi8 [itm_to_gost [c]];
+			line[pos++] = itm_to_gost [c];
 			break;
 		}
 	}
@@ -378,7 +376,7 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 
 		w <<= 64 - digits * 3;
 		for (i=0; i<digits; ++i) {
-			print_char (line, &pos, ((int) (w >> 61) & 7) | '0');
+			print_char (line, &pos, (int) (w >> 61) & 7);
 			w <<= 3;
 		}
 
@@ -393,26 +391,26 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 static void
 print_command1 (uchar *line, int *pos, unsigned long cmd)
 {
-	print_char (line, pos, (cmd >> 23 & 1) | '0');
-	print_char (line, pos, (cmd >> 20 & 7) | '0');
-	print_char (line, pos, ' ');
+	print_char (line, pos, cmd >> 23 & 1);
+	print_char (line, pos, cmd >> 20 & 7);
+	print_char (line, pos, GOST_SPACE);
 	if (cmd & 02000000) {
 		/* long address command */
-		print_char (line, pos, (cmd >> 18 & 3) | '0');
-		print_char (line, pos, (cmd >> 15 & 7) | '0');
-		print_char (line, pos, ' ');
-		print_char (line, pos, (cmd >> 12 & 7) | '0');
+		print_char (line, pos, cmd >> 18 & 3);
+		print_char (line, pos, cmd >> 15 & 7);
+		print_char (line, pos, GOST_SPACE);
+		print_char (line, pos, cmd >> 12 & 7);
 	} else {
 		/* short address command */
-		print_char (line, pos, (cmd >> 18 & 1) | '0');
-		print_char (line, pos, (cmd >> 15 & 7) | '0');
-		print_char (line, pos, (cmd >> 12 & 7) | '0');
-		print_char (line, pos, ' ');
+		print_char (line, pos, cmd >> 18 & 1);
+		print_char (line, pos, cmd >> 15 & 7);
+		print_char (line, pos, cmd >> 12 & 7);
+		print_char (line, pos, GOST_SPACE);
 	}
-	print_char (line, pos, (cmd >> 9 & 7) | '0');
-	print_char (line, pos, (cmd >> 6 & 7) | '0');
-	print_char (line, pos, (cmd >> 3 & 7) | '0');
-	print_char (line, pos, (cmd & 7) | '0');
+	print_char (line, pos, cmd >> 9 & 7);
+	print_char (line, pos, cmd >> 6 & 7);
+	print_char (line, pos, cmd >> 3 & 7);
+	print_char (line, pos, cmd & 7);
 }
 
 /*
@@ -446,7 +444,7 @@ print_command(ushort addr0, ushort addr1, uchar *line, int pos,
 		++addr0;
 
 		print_command1 (line, &pos, a);
-		print_char (line, &pos, ' ');
+		print_char (line, &pos, GOST_SPACE);
 		print_command1 (line, &pos, b);
 
 		if (! repeat)
@@ -531,23 +529,23 @@ print_real(ushort addr0, ushort addr1, uchar *line, int pos,
 		}
 		++addr0;
 
-		print_char (line, &pos, ' ');
-		print_char (line, &pos, negative ? '-' : '+');
+		print_char (line, &pos, GOST_SPACE);
+		print_char (line, &pos, negative ? GOST_MINUS : GOST_PLUS);
 		for (i=0; i<digits-4; ++i) {
 			value = value * 10;
 			digit = (int) value;
-			print_char (line, &pos, '0' + digit);
+			print_char (line, &pos, digit);
 			value -= digit;
 		}
-		print_char (line, &pos, 'e');
+		print_char (line, &pos, GOST_LOWER_TEN);
 		if (exponent >= 0)
-			print_char (line, &pos, '+');
+			print_char (line, &pos, GOST_PLUS);
 		else {
-			print_char (line, &pos, '-');
+			print_char (line, &pos, GOST_MINUS);
 			exponent = -exponent;
 		}
-		print_char (line, &pos, '0' + exponent / 10);
-		print_char (line, &pos, '0' + exponent % 10);
+		print_char (line, &pos, exponent / 10);
+		print_char (line, &pos, exponent % 10);
 
 		if (! repeat)
 			return addr0;
@@ -611,7 +609,7 @@ print(void)
 		addr1 = 0; /* No limit */
 
 	/* Execute every format word in order. */
-	memset(line, ' ', sizeof(line));
+	memset(line, GOST_SPACE, sizeof(line));
 again:
 	wp = wp0;
 	for (;;) {
@@ -891,7 +889,7 @@ e50(void)
 				acc.r = 0;
 			for (sp = errtxt[acc.r], di = 0; di < 18; ++di)
 				core[reg[015]].w_b[di] = *sp ?
-					koi8_to_gost[*sp++] : 017;
+					koi8_to_gost[*sp++] : GOST_SPACE;
 		}
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
@@ -1154,16 +1152,16 @@ ttout(uchar flags, ushort a1, ushort a2)
 			putchar(*sp & 0x7f);
 		} else
 		switch (*sp) {
-		case 0172:
-		case 0377:
+		case GOST_END_OF_INFORMATION:
+		case GOST_EOF:
 			if (!(flags & 010)) {
 				/* if not a prompt */
 				putchar('\n');
 			}
 			goto done;
-		case 0175:
+		case GOST_CARRIAGE_RETURN:
 			/* maybe should output backslash here ? */
-		case 0214:
+		case GOST_NEWLINE:
 			putchar('\n');
 			break;
 		case 0136:
@@ -1187,7 +1185,7 @@ ttout(uchar flags, ushort a1, ushort a2)
 			/* fall thru */
 		default:
 			if (*sp <= 0134)
-				putchar(gost_to_koi8[*sp]);
+				gost_putc(*sp, stdout);
 			else {
 				printf("[%03o]", *sp);
 			}
@@ -1222,7 +1220,7 @@ ttin(uchar flags, ushort a1, ushort a2)
 		} else
 		switch (*sp) {
 		case '\n':
-			PUTB(0377);
+			PUTB(GOST_EOF);
 			goto done;
 		default:
 			if (*sp >= 040)
@@ -1542,8 +1540,7 @@ uget(void)
 rpt:
 	c = getbyte(&txt);
 	switch (c) {
-	case 0175:
-	case 0214:
+	case GOST_CARRIAGE_RETURN:
 	case 0341:
 		c = GOST_NEWLINE;
 		break;
@@ -1573,7 +1570,7 @@ diag(char *s)
 		dp = (uchar*) (core + diagaddr + 1);
 		for (cp=(uchar*)s; *cp; ++cp)
 			*dp++ = koi8_to_gost [*cp];
-		*dp = 0172;
+		*dp = GOST_END_OF_INFORMATION;
 		enreg.l = 0;
 		enreg.r = strlen(s) / 6 + 1;
 		STORE(enreg, diagaddr);

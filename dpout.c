@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "defs.h"
 #include "disk.h"
+#include "gost10859.h"
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x
@@ -26,13 +27,13 @@
 #define PUT(c)  { \
 	if (pos > maxp) \
 		maxp = pos; \
-	if (line[pos] == ' ') \
-		line[pos] = gost_to_koi8[(c)]; \
+	if (line[pos] == GOST_SPACE) \
+		line[pos] = (c); \
 	++pos; \
 }
 
 static unsigned char	para[PARASZ];
-static char		line[129];
+static uchar		line[129];
 static int		pos;
 static int		maxp;
 static int		done;
@@ -42,7 +43,7 @@ static unsigned char	lastc;
 static void
 rstline(void)
 {
-	memset(line, ' ', 128);
+	memset(line, GOST_SPACE, 128);
 	line[128] = 0;
 	pos = 0;
 	maxp = -1;
@@ -78,7 +79,7 @@ dump(FILE *fout, unsigned sz)
 			continue;
 		}
 		if (maxp >= 0) {
-			fwrite(line, 1, maxp + 1, fout);
+			gost_write(line, maxp + 1, fout);
 			rstline();
 		}
 		if (*cp == 0176)
@@ -157,7 +158,7 @@ pout_decode (char *outname)
 	decode (fout, (char*) (core + 0160000) + 3*PARASZ);
 
 	if (maxp >= 0) {
-		fwrite(line, 1, maxp + 1, fout);
+		gost_write(line, maxp + 1, fout);
 		putc('\n', fout);
 	}
 	if (fout != stdout)
@@ -195,7 +196,7 @@ pout_decode_file (char *inname, char *outname)
 	fclose (fin);
 
 	if (maxp >= 0) {
-		fwrite(line, 1, maxp + 1, fout);
+		gost_write(line, maxp + 1, fout);
 		putc('\n', fout);
 	}
 	fflush (fout);

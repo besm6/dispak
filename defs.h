@@ -448,6 +448,8 @@ extern uchar gost_to_koi8_cyr[], gost_to_koi8_lat[], *gost_to_koi8;
 extern const uchar koi8_to_gost[];
 extern const uchar itm_to_gost[], gost_to_itm[];
 extern const uchar text_to_gost[];
+void gost_putc (int, FILE*);
+void gost_write (uchar*, int, FILE*);
 
 #ifdef __GNUC__
 #define	GCC_SPECIFIC(x)	x

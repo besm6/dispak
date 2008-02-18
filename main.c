@@ -61,6 +61,7 @@
 #include "defs.h"
 #include "optab.h"
 #include "disk.h"
+#include "gost10859.h"
 
 static struct   {
 	int     dsk;
@@ -166,17 +167,17 @@ cget(void)
 
 	c = getc(input_fd);
 	if (c < 0)
-		return (uchar) -1;
+		return GOST_EOF;
 	if (c == '\\') {
 		c = getc(input_fd);
 		if (c < 0)
-			return (uchar) -1;
+			return GOST_EOF;
 		switch (c) {
-		case '*': c = (uchar) '\236'; break;
-		case '<': c = (uchar) '\230'; break;
-		case '>': c = (uchar) '\231'; break;
-		case ':': c = (uchar) '\237'; break;
-		case '@': c = (uchar) '\234'; break;
+		case '*': return GOST_MULTIPLICATION;
+		case '<': return GOST_LESS_THAN_OR_EQUAL;
+		case '>': return GOST_GREATER_THAN_OR_EQUAL;
+		case ':': return GOST_DIVISION;
+		case '@': return GOST_LOWER_TEN;
 		}
 	}
 	c = koi8_to_gost [c];
@@ -457,7 +458,7 @@ stat_out(void)
 
 	for (i = 0; i < 0120; ++i)
 		if (optab[i].o_count)
-			printf("%s\t%10ld\t%7.4f%%\t%ld cpi\n",
+			printf("%s\t%10d\t%7.4f%%\t%d cpi\n",
 				optab[i].o_name,
 				optab[i].o_count,
 				100.0 * optab[i].o_count / total,

@@ -20,12 +20,6 @@
 #include "iobuf.h"
 #include "gost10859.h"
 
-#define SKIP_SP()       {while (ch == GOST_SPACE || ch == GOST_NEWLINE) nextc();}
-#define PAST_SP()       {while (ch != (uchar) -1 && ch != GOST_SPACE && ch != GOST_NEWLINE) nextc(); SKIP_SP();}
-#define NEXT_ART()      {while (ch != (uchar) -1 && ch != GOST_OVERLINE) nextc(); nextc(); SKIP_SP();}
-#define ASSERT_CH(c)    {if (ch != c) goto fs;}
-#define EAT_CH(c)       {ASSERT_CH(c); nextc();}
-
 static unsigned                 lineno, pncline, pncsym;
 static unsigned                 level, array;
 static uchar			ch;
@@ -48,6 +42,14 @@ static unsigned                 nextcp(void);
 static int                      dump(uchar tag, unsigned long long w);
 static int                      prettycard(unsigned char * s, unsigned long long w[]);
 extern unsigned long long       nextw(void);
+
+static void
+SKIP_SP()
+{
+	while (ch == GOST_SPACE || ch == GOST_NEWLINE ||
+	   ch == GOST_CARRIAGE_RETURN)
+		nextc();
+}
 
 static unsigned
 NEXT_NS()
@@ -109,7 +111,7 @@ is_prettycard (uchar *s)
 	int i;
 
 	for (i=0; i<80; ++i)
-		if (s[i] != GOST_STOP && s[i] != GOST_O)
+		if (s[i] != GOST_DOT && s[i] != GOST_O)
 			return 0;
 	return 1;
 }
@@ -152,7 +154,13 @@ fw:
 			}
 		} else
 			goto fw;
-		PAST_SP();
+
+		/* Find an argument. */
+		while (ch != GOST_EOF && ch != GOST_SPACE &&
+		    ch != GOST_NEWLINE)
+			nextc();
+		SKIP_SP();
+
 		if (ch > GOST_9) {
 fs:
 			inperr("ώυφοκ σινχομ");
@@ -198,14 +206,18 @@ d_6_12:
 				return i;
 			nextc();
 		}
-		NEXT_ART();
+		while (ch != GOST_EOF && ch != GOST_OVERLINE)
+			nextc();
+		if (ch != GOST_EOF)
+			nextc();
+		SKIP_SP();
 	}
 
-	while (ch != (uchar) -1 && ch != GOST_E) {
+	while (ch != GOST_EOF && ch != GOST_E) {
 		uchar   art[80], *cp;
 
 		/* Get a passport line, ended by ^.*/
-		for (cp = art; ch != (uchar) -1 &&
+		for (cp = art; ch != GOST_EOF &&
 		    ch != GOST_OVERLINE; nextc())
 			*cp++ = ch;
 		*cp = GOST_OVERLINE;
@@ -313,7 +325,11 @@ mpar:				inperr("ξετ παςαν");
 				++psp.nvol;
 			}
 		}
-		NEXT_ART();
+		while (ch != GOST_EOF && ch != GOST_OVERLINE)
+			nextc();
+		if (ch != GOST_EOF)
+			nextc();
+		SKIP_SP();
 	}
 
 	if (! edit) {
@@ -384,7 +400,7 @@ newaddr:
 			break;
 		case GOST_BE:
 			for (i = 0; i < 6; ++i) {
-				if (nextc() == (uchar) -1) {
+				if (nextc() == GOST_EOF) {
 noend:
 					inperr("ξετ λοξγα χχοδα");
 					return -1;
@@ -411,10 +427,10 @@ noend:
 				    do {
 					nextc();
 				    } while (ch == GOST_NEWLINE);
-				    if (ch == (uchar) -1)
+				    if (ch == GOST_EOF)
 					goto noend;
 				    if (ch == GOST_LOZENGE &&
-					pch == GOST_LOW_LINE) {
+					pch == GOST_UNDERLINE) {
 					if (i) {
 					    w <<= (6 - i) * 8;
 					    if ((i = dump(W_DATA, w)))
@@ -436,13 +452,13 @@ a1done:
 			    unsigned char       s[121], c;
 
 			    NEXT_NS();
-			    while (ch != (uchar) -1) {
+			    while (ch != GOST_EOF) {
 				/* ` in 1st pos is special */
 				memset((char *) w, 0, sizeof(w));
-				for (i = 0; i < 120 && ch != (uchar) -1 &&
+				for (i = 0; i < 120 && ch != GOST_EOF &&
 				    ch != GOST_NEWLINE; ++i)
 				{
-				    if (ch == (uchar) -1)
+				    if (ch == GOST_EOF)
 					goto noend;
 				    s[i] = ch;
 				    nextc();
@@ -462,7 +478,7 @@ a1done:
 				}
 				s[i] = GOST_NEWLINE;
 				while (ch != GOST_NEWLINE &&
-				    ch != (uchar) -1)
+				    ch != GOST_EOF)
 				    nextc();
 				nextc();
 				if (i == 80 && is_prettycard(s)) {
@@ -509,7 +525,7 @@ a3over:;
 			} else
 				goto fs;
 			break;
-		case (uchar) -1:
+		case GOST_EOF:
 			if (level == 1)
 				return 0;
 			else
@@ -517,12 +533,11 @@ a3over:;
 		case GOST_E:
 			if (array) {
 				nextc();
-wrap:
-				EAT_CH(GOST_K);
-				EAT_CH(GOST_O);
-				EAT_CH(GOST_H);
-				EAT_CH(GOST_E);
-				EAT_CH(GOST_TSE);
+wrap:				if (ch != GOST_K) goto fs; nextc();
+				if (ch != GOST_O) goto fs; nextc();
+				if (ch != GOST_H) goto fs; nextc();
+				if (ch != GOST_E) goto fs; nextc();
+				if (ch != GOST_TSE) goto fs; nextc();
 				return 0;
 			} else {
 				array = 1;
@@ -552,7 +567,7 @@ static int chad(unsigned long long w[], int bit, char val)
 		w[index] <<= 1;
 		w[index] |= 1;
 		return 0;
-	case GOST_STOP:
+	case GOST_DOT:
 		w[index] <<= 1;
 		return 0;
 	default:
@@ -646,11 +661,7 @@ nextcp(void)
 	uchar c = *stpsp++;
 
 	switch (c) {
-	case 0377:
-		c = -1;
-		break;
-	case 0214:
-	case 0175:
+	case GOST_CARRIAGE_RETURN:
 		c = GOST_NEWLINE;
 		break;
 	}

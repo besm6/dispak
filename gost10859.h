@@ -23,11 +23,11 @@
 #define GOST_9				0011	/* 9 */
 #define GOST_PLUS			0012	/* + */
 #define GOST_MINUS			0013	/* - */
-#define GOST_SOLIDUS			0014	/* / */
+#define GOST_SLASH			0014	/* / */
 #define GOST_COMMA			0015	/* , */
-#define GOST_STOP			0016	/* . */
+#define GOST_DOT			0016	/* . */
 #define GOST_SPACE			0017
-#define GOST_GOST_LOWER_TEN		0020	/* e */
+#define GOST_LOWER_TEN			0020	/* e */
 #define GOST_UPWARDS_ARROW		0021	/* @ */
 #define GOST_LEFT_PARENTHESIS		0022	/* ( */
 #define GOST_RIGHT_PARENTHESIS		0023	/* ) */
@@ -89,23 +89,28 @@
 #define GOST_W				0113	/* W */
 #define GOST_Z				0114	/* Z */
 #define GOST_OVERLINE			0115	/* ^ */
-#define GOST_LESS_THAN_OR_EQUAL		0116
-#define GOST_GREATER_THAN_OR_EQUAL	0117
+#define GOST_LESS_THAN_OR_EQUAL		0116	/* ˜ */
+#define GOST_GREATER_THAN_OR_EQUAL	0117	/* ™ */
 #define GOST_LOGICAL_OR			0120	/* v */
 #define GOST_LOGICAL_AND		0121	/* & */
 #define GOST_IMPLICATION		0122	/* ? */
 #define GOST_NOT			0123	/* ~ */
-#define GOST_DIVISION			0124
+#define GOST_DIVISION			0124	/* Ÿ */
 #define GOST_IDENTICAL			0125	/* = */
 #define GOST_PERCENT			0126	/* % */
-#define GOST_LOZENGE			0127	/* $ */
+#define GOST_LOZENGE			0127	/* ÒÏÍÂ */
 #define GOST_VERTICAL_LINE		0130	/* | */
 #define GOST_HORIZONTAL_BAR		0131	/* - */
-#define GOST_LOW_LINE			0132	/* _ */
+#define GOST_UNDERLINE			0132	/* _ */
 #define GOST_EXCLAMATION		0133	/* ! */
 #define GOST_QUOTATION			0134	/* " */
 #define GOST_HARD_SIGN			0135	/* ÿ */
-#define GOST_DEGREE			0136	/* ` */
+#define GOST_DEGREE			0136	/* œ */
 #define GOST_PRIME			0137	/* ' */
 
+#define GOST_END_OF_INFORMATION		0172
+#define GOST_SET_POSITION		0173
+#define GOST_CARRIAGE_RETURN		0175
+#define GOST_SPACE2			0176
 #define GOST_NEWLINE			0214
+#define GOST_EOF			0377

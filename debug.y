@@ -117,9 +117,9 @@ command:        /* void */
 			for (j = 0; j < 8; ++j) {
 				LOAD(wd, $1);
 				for (i = 0; i < 4; ++i)
-					putchar(gost_to_koi8[text_to_gost[(wd.l >> (18 - i * 6)) & 63]]);
+					gost_putc (text_to_gost[(wd.l >> (18 - i * 6)) & 63], stdout);
 				for (i = 0; i < 4; ++i)
-					putchar(gost_to_koi8[text_to_gost[(wd.r >> (18 - i * 6)) & 63]]);
+					gost_putc (text_to_gost[(wd.r >> (18 - i * 6)) & 63], stdout);
 				putchar('\n');
 			$1 += 1;
 			}
@@ -139,7 +139,7 @@ command:        /* void */
 				int     i, j;
 				for (j = 0; j < 8; ++j) {
 					for (i = 0; i < 6; ++i)
-						putchar(gost_to_koi8[core[$1].w_b[i]]);
+						gost_putc (core[$1].w_b[i], stdout);
 					putchar('\n');
 					$1 += 1;
 				}
@@ -149,7 +149,7 @@ command:        /* void */
 				int     i, j;
 				for (j = 0; j < 8; ++j) {
 					for (i = 0; i < 6; ++i)
-						putchar(gost_to_koi8[itm_to_gost[core[$1].w_b[i]]]);
+						gost_putc (itm_to_gost[core[$1].w_b[i]], stdout);
 					putchar('\n');
 					$1 += 1;
 				}

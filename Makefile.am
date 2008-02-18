@@ -40,4 +40,4 @@ diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b
 
 log:	.svn
 	svn update
-	svn log > ChangeLog
+	LANG=en_US svn log > ChangeLog
