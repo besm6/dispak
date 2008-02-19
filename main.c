@@ -158,7 +158,7 @@ usage ()
 	fprintf (stderr, "  --output-cyrillic      use Cyrillic letters for output (default)\n");
 	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
 	fprintf (stderr, "  --punch-binary         punch in binary format (default dots and holes)\n");
-	fprintf (stderr, "  --input-encoding=code  set encoding for input files: utf8, koi8, cp1251 or cp866\n");
+	fprintf (stderr, "  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 cp866\n");
 	fprintf (stderr, "  --bootstrap            used to generate contents of the system disk\n");
 	fprintf (stderr, "  --no-insn-check        all words but at addr 0 are treated as insns\n");
 
@@ -364,12 +364,12 @@ main(int argc, char **argv)
 	sec = TIMEDIFF(start_time, stop_time) - excuse;
 	if (!sec)
 		sec = 0.000001;
-	printf("%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
+	if (stats) {
+		printf("%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
 			icnt, sec, (long)(icnt/sec), (sec * 1000000) / icnt);
-
-	if (stats)
-		stat_out();
-
+		if (stats > 1)
+			stat_out();
+	}
 	if (pout_enable && xnative && pout_raw)
 		pout_dump(pout_raw);
 	terminate();

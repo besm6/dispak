@@ -822,12 +822,13 @@ ENDFOREVER
 		pout_decode(pout_file);
 	pc = abpc;
 	right = abright;
-/*      printf("Error %d\n", err);     */
-	utf8_puts(errtxt[err], stdout);
-	putc('\n', stdout);
 	pcm_dbg = pcm;
-	where();
-
+	if (pout_enable || err != 1) {
+/*		printf("Error %d\n", err);     */
+		utf8_puts(errtxt[err], stdout);
+		putc('\n', stdout);
+		where();
+	}
 	return icount;
 
 }

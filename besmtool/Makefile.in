@@ -43,8 +43,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_besmtool_OBJECTS = besmtool.$(OBJEXT) imgtodisk.$(OBJEXT) \
-	zdump.$(OBJEXT) list.$(OBJEXT) erase.$(OBJEXT) disk.$(OBJEXT) \
+am_besmtool_OBJECTS = besmtool.$(OBJEXT) write.$(OBJEXT) \
+	dump.$(OBJEXT) list.$(OBJEXT) erase.$(OBJEXT) disk.$(OBJEXT) \
 	encoding.$(OBJEXT)
 besmtool_OBJECTS = $(am_besmtool_OBJECTS)
 besmtool_LDADD = $(LDADD)
@@ -146,7 +146,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-besmtool_SOURCES = besmtool.c imgtodisk.c zdump.c list.c erase.c \
+besmtool_SOURCES = besmtool.c write.c dump.c list.c erase.c \
 	../disk.c ../encoding.c
 
 AM_CFLAGS = -Wall -g -O2
@@ -218,11 +218,11 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/besmtool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/disk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encoding.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/erase.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imgtodisk.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zdump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/write.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

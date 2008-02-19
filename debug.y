@@ -374,9 +374,9 @@ okno (int trace)
 {
 	word_t  *wp;
 	int     i;
-        extern ulong icnt;
+
 	wp = &core[pcm_dbg];
-	printf ("icnt %ld; %c%05o%c", icnt, pcm_dbg & 0x8000 ? 'S' : ' ',
+	printf ("%c%05o%c", pcm_dbg & 0x8000 ? 'S' : ' ',
 				ADDR(pcm_dbg), right ? ' ' : ':');
 	if (right)
 		if (Rstruct(*wp))
