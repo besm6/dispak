@@ -15,6 +15,7 @@
 #define EXTERN                          /* to allocate common data      */
 #include "defs.h"
 #include "optab.h"
+#include "encoding.h"
 
 long aumodes[] = {
 	0,

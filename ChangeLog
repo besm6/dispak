@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r56 | vak | 2008-02-19 13:01:39 +0300 (Tue, 19 Feb 2008) | 4 lines
+
+Added examples/pascal-pretty.b6. Simplified Bemsh examples.
+Besmdisk/ renamed to besmtool/ and prepared for automake.
+
+
+------------------------------------------------------------------------
 r55 | vak | 2008-02-19 01:31:06 +0300 (Tue, 19 Feb 2008) | 4 lines
 
 Fixed extracode 64. All tests run fine, except Algol-BESM, which in native

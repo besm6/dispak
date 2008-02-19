@@ -10,19 +10,22 @@
  * either version 2 of the License, or (at your discretion) any later version.
  * See the accompanying file "COPYING" for more details.
  */
-#include "defs.h"
-#include "gost10859.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "encoding.h"
+#include "gost10859.h"
+
+int gost_latin = 0; /* default cyrillics */
 
 static int (*local_getc) (FILE *fin);
-static void (*local_putc) (ushort ch, FILE *fout);
+static void (*local_putc) (unsigned short ch, FILE *fout);
 
 /*
  * GOST-10859 encoding.
  * Documentation: http://en.wikipedia.org/wiki/GOST_10859
  */
-static const ushort gost_to_unicode_cyr [256] = {
+static const unsigned short gost_to_unicode_cyr [256] = {
 /* 000-007 */	0x30,   0x31,   0x32,   0x33,   0x34,   0x35,   0x36,   0x37,
 /* 010-017 */	0x38,   0x39,   0x2b,   0x2d,   0x2f,   0x2c,   0x2e,   0x20,
 /* 020-027 */	0x65,   0x2191, 0x28,   0x29,   0xd7,   0x3d,   0x3b,   0x5b,
@@ -37,7 +40,7 @@ static const ushort gost_to_unicode_cyr [256] = {
 /* 130-137 */	0x7c,   0x2015, 0x5f,   0x21,   0x22,   0x042a, 0xb0,   0x2032,
 };
 
-static const ushort gost_to_unicode_lat [256] = {
+static const unsigned short gost_to_unicode_lat [256] = {
 /* 000-007 */   0x30,   0x31,   0x32,   0x33,   0x34,   0x35,   0x36,   0x37,
 /* 010-017 */   0x38,   0x39,   0x2b,   0x2d,   0x2f,   0x2c,   0x2e,   0x20,
 /* 020-027 */   0x65,   0x2191, 0x28,   0x29,   0xd7,   0x3d,   0x3b,   0x5b,
@@ -52,8 +55,8 @@ static const ushort gost_to_unicode_lat [256] = {
 /* 130-137 */   0x7c,   0x2015, 0x5f,   0x21,   0x22,   0x042a, 0xb0,   0x2032,
 };
 
-uchar
-unicode_to_gost (ushort val)
+unsigned char
+unicode_to_gost (unsigned short val)
 {
 	static const unsigned char tab0 [256] = {
 /* 000-007 */	017,	017,	017,	017,	017,	017,	017,	017,
@@ -199,7 +202,7 @@ unicode_to_gost (ushort val)
  * Encoding of ITM autocode.
  * Documentation: http://besm6.googlegroups.com/web/%D0%90%D0%B2%D1%82%D0%BE%D0%BA%D0%BE%D0%B4-%D0%91%D0%AD%D0%A1%D0%9C6-%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F.pdf
  */
-const uchar itm_to_gost [256] =
+const unsigned char itm_to_gost [256] =
 {
 /* 000 */	GOST_0,			GOST_1,
 		GOST_2,			GOST_3,
@@ -331,7 +334,7 @@ const uchar itm_to_gost [256] =
 		0,			0,
 };
 
-const uchar gost_to_itm [256] =
+const unsigned char gost_to_itm [256] =
 {
 /* 000-007 */	0000,	0001,	0002,	0003,	0004,	0005,	0006,	0007,
 /* 010-017 */	0010,	0011,	0061,	0070,	0067,	0046,	0047,	0017,
@@ -350,7 +353,7 @@ const uchar gost_to_itm [256] =
 /*
  * "Text" encoding of monitoring system Dubna.
  */
-const uchar text_to_gost [64] =
+const unsigned char text_to_gost [64] =
 {
 /* 000 */	GOST_SPACE,		GOST_DOT,
 		GOST_BE,		GOST_TSE,
@@ -413,7 +416,7 @@ utf8_getc (FILE *fin)
  * xxxxyyyy.yyzzzzzz -> 1110xxxx, 10yyyyyy, 10zzzzzz
  */
 static void
-utf8_putc (ushort ch, FILE *fout)
+utf8_putc (unsigned short ch, FILE *fout)
 {
 	if (ch < 0x80) {
 		putc (ch, fout);
@@ -436,7 +439,7 @@ utf8_putc (ushort ch, FILE *fout)
 static int
 koi8_getc (FILE *fin)
 {
-	static const ushort koi8_to_unicode [256] = {
+	static const unsigned short koi8_to_unicode [256] = {
 		0x00,   0x01,   0x02,   0x03,   0x04,   0x05,   0x06,   0x07,
 		0x08,   0x09,   0x0a,   0x0b,   0x0c,   0x0d,   0x0e,   0x0f,
 		0x10,   0x11,   0x12,   0x13,   0x14,   0x15,   0x16,   0x17,
@@ -478,10 +481,10 @@ koi8_getc (FILE *fin)
 	return koi8_to_unicode [c];
 }
 
-static uchar
-unicode_to_koi8 (ushort val)
+static unsigned char
+unicode_to_koi8 (unsigned short val)
 {
-	static uchar tab0 [256] = {
+	static unsigned char tab0 [256] = {
 		0,     0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07,
 		0x08,  0x09,  0x0a,  0x0b,  0x0c,  0x0d,  0x0e,  0x0f,
 		0x10,  0x11,  0x12,  0x13,  0x14,  0x15,  0x16,  0x17,
@@ -681,7 +684,7 @@ unicode_to_koi8 (ushort val)
  * Convert to KOI8-R encoding.
  */
 static void
-koi8_putc (ushort ch, FILE *fout)
+koi8_putc (unsigned short ch, FILE *fout)
 {
 	ch = unicode_to_koi8 (ch);
 	if (! ch)
@@ -696,7 +699,7 @@ koi8_putc (ushort ch, FILE *fout)
 static int
 cp1251_getc (FILE *fin)
 {
-	static const ushort cp1251_to_unicode [256] = {
+	static const unsigned short cp1251_to_unicode [256] = {
 		0x00,   0x01,   0x02,   0x03,   0x04,   0x05,   0x06,   0x07,
 		0x08,   0x09,   0x0a,   0x0b,   0x0c,   0x0d,   0x0e,   0x0f,
 		0x10,   0x11,   0x12,   0x13,   0x14,   0x15,   0x16,   0x17,
@@ -738,8 +741,8 @@ cp1251_getc (FILE *fin)
 	return cp1251_to_unicode [c];
 }
 
-static uchar
-unicode_to_cp1251 (ushort val)
+static unsigned char
+unicode_to_cp1251 (unsigned short val)
 {
 	static char tab0 [256] = {
 		0,     0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07,
@@ -925,7 +928,7 @@ unicode_to_cp1251 (ushort val)
  * Convert to Windows code page 1251.
  */
 static void
-cp1251_putc (ushort ch, FILE *fout)
+cp1251_putc (unsigned short ch, FILE *fout)
 {
 	ch = unicode_to_cp1251 (ch);
 	if (! ch)
@@ -940,7 +943,7 @@ cp1251_putc (ushort ch, FILE *fout)
 static int
 cp866_getc (FILE *fin)
 {
-	static const ushort cp866_to_unicode [256] = {
+	static const unsigned short cp866_to_unicode [256] = {
 		0x00,   0x01,   0x02,   0x03,   0x04,   0x05,   0x06,   0x07,
 		0x08,   0x09,   0x0a,   0x0b,   0x0c,   0x0d,   0x0e,   0x0f,
 		0x10,   0x11,   0x12,   0x13,   0x14,   0x15,   0x16,   0x17,
@@ -982,8 +985,8 @@ cp866_getc (FILE *fin)
 	return cp866_to_unicode [c];
 }
 
-static uchar
-unicode_to_cp866 (ushort val)
+static unsigned char
+unicode_to_cp866 (unsigned short val)
 {
 	static char tab0 [256] = {
 		0,     0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07,
@@ -1183,12 +1186,20 @@ unicode_to_cp866 (ushort val)
  * Convert to Windows code page 866.
  */
 static void
-cp866_putc (ushort ch, FILE *fout)
+cp866_putc (unsigned short ch, FILE *fout)
 {
 	ch = unicode_to_cp866 (ch);
 	if (! ch)
 		ch = '?';
 	putc (ch, fout);
+}
+
+static void
+fatal_encoding (char *lang)
+{
+	fprintf (stderr, "Encoding %s is not supported.\n", lang);
+	fprintf (stderr, "Use UTF-8, KOI8-R, CP1251 or CP866.\n");
+	exit (1);
 }
 
 static void
@@ -1241,10 +1252,7 @@ init_local_encoding ()
 			local_getc = utf8_getc;
 		return;
 	}
-	fprintf (stderr, "%s: encoding %s is not supported.\n",
-		PACKAGE_NAME, lang);
-	fprintf (stderr, "%s: use UTF-8, KOI8-R, CP1251 or CP866.\n", PACKAGE_NAME);
-	exit (1);
+	fatal_encoding (lang);
 }
 
 void
@@ -1275,10 +1283,7 @@ set_input_encoding (char *lang)
 		local_getc = utf8_getc;
 		return;
 	}
-	fprintf (stderr, "%s: encoding %s is not supported.\n",
-		PACKAGE_NAME, lang);
-	fprintf (stderr, "%s: use UTF-8, KOI8-R, CP1251 or CP866.\n", PACKAGE_NAME);
-	exit (1);
+	fatal_encoding (lang);
 }
 
 /*
@@ -1298,7 +1303,7 @@ unicode_getc (FILE *fin)
  * Convert to local encoding (UTF-8, KOI8-R, CP-1251, CP-866).
  */
 void
-unicode_putc (ushort ch, FILE *fout)
+unicode_putc (unsigned short ch, FILE *fout)
 {
 	if (! local_putc)
 		init_local_encoding();
@@ -1309,8 +1314,8 @@ unicode_putc (ushort ch, FILE *fout)
  * Fetch GOST-10859 symbol from UTF-8 string.
  * Advance string pointer.
  */
-uchar
-utf8_to_gost (uchar **p)
+unsigned char
+utf8_to_gost (unsigned char **p)
 {
 	int c1, c2, c3;
 
@@ -1330,15 +1335,15 @@ utf8_to_gost (uchar **p)
  * Convert to local encoding (UTF-8, KOI8-R, CP-1251, CP-866).
  */
 void
-gost_putc (uchar ch, FILE *fout)
+gost_putc (unsigned char ch, FILE *fout)
 {
-	const ushort *gost_to_unicode = pout_latin ?
+	const unsigned short *gost_to_unicode = gost_latin ?
 		gost_to_unicode_lat : gost_to_unicode_cyr;
-	ushort u;
+	unsigned short u;
 
 	u = gost_to_unicode [ch];
 	if (! u)
-		u = '?';
+		u = ' ';
 	unicode_putc (u, fout);
 }
 
@@ -1347,16 +1352,16 @@ gost_putc (uchar ch, FILE *fout)
  * Convert to local encoding (UTF-8, KOI8-R, CP-1251, CP-866).
  */
 void
-gost_write (uchar *line, int n, FILE *fout)
+gost_write (unsigned char *line, int n, FILE *fout)
 {
-	const ushort *gost_to_unicode = pout_latin ?
+	const unsigned short *gost_to_unicode = gost_latin ?
 		gost_to_unicode_lat : gost_to_unicode_cyr;
-	ushort u;
+	unsigned short u;
 
 	while (n-- > 0) {
 		u = gost_to_unicode [*line++];
 		if (! u)
-			u = '?';
+			u = ' ';
 		unicode_putc (u, fout);
 	}
 }

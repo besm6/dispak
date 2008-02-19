@@ -63,6 +63,7 @@
 #include "defs.h"
 #include "optab.h"
 #include "disk.h"
+#include "encoding.h"
 #include "gost10859.h"
 
 static struct   {
@@ -218,10 +219,10 @@ main(int argc, char **argv)
 			printf ("Version: %s\n", PACKAGE_VERSION);
 			return 0;
 		case 'l':		/* use Latin letters for output */
-			pout_latin = 1;
+			gost_latin = 1;
 			break;
 		case OPT_CYRILLIC:	/* use Cyrillic letters for output */
-			pout_latin = 0;
+			gost_latin = 0;
 			break;
 		case 'b':		/* break on first cmd */
 			breakflg = 1;

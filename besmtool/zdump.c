@@ -1,91 +1,75 @@
 #include <stdio.h>
+#include "besmtool.h"
 #include "disk.h"
+#include "encoding.h"
 
-static char     upp[] = "0123456789+-/,. E@()x=;[]*'\"#<>:\
-АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЫЬЭЮЯD\
-FGIJLNQRSUVWZ^<>V&??:=%$|-_!";
-
-void dump (unsigned, unsigned, unsigned);
-
-int
-main(int argc, char **argv)
+static void
+print_char (unsigned char ch)
 {
-	void      *diskh;
-	unsigned  diskno, zs, ze, addr = 0, l, r, b = 0;
-	unsigned char   buf[6144], *cp;
-
-	if (argv[1] && !strcmp(argv[1], "-b"))
-		b = 1;
-
-	if (argc - b < 4) {
-		fprintf(stderr, "Arg count\n");
-		exit(1);
-	}
-
-	sscanf(argv[1 + b], "%d", &diskno);
-	if (!(diskh = disk_open(diskno, DISK_READ_ONLY)))
-		exit(1);
-	sscanf(argv[2 + b], "%o", &zs);
-	sscanf(argv[3 + b], "%o", &ze);
-	ze += zs;
-	if (argc - b > 4)
-		sscanf(argv[4 + b], "%o", &addr);
-
-	for (; zs < ze; ++zs) {
-		if (disk_read(diskh, zs, (char*) buf) != DISK_IO_OK)
-			exit(1);
-
-		if (b)
-			fwrite(buf, 6144, 1, stdout);
-		else
-			for (cp = buf; cp < buf + 6144; cp += 6) {
-				l = (cp[0] << 16) | (cp[1] << 8) | cp[2];
-				r = (cp[3] << 16) | (cp[4] << 8) | cp[5];
-				dump(addr, l, r);
-				addr = (addr + 1) & 077777;
-			}
-	}
-
-	exit(0);
+	gost_putc (ch, stdout);
 }
 
-#define PRINT_I(h) { \
-	if ((h) & 0x80000)\
-		printf("%02o %02o %05o", \
-			(h) >> 20, \
-			((h) >> 15) & 037, \
-			(h) & 077777); \
-	else \
-		printf("%02o %03o %04o", \
-			(h) >> 20, \
-			((h) >> 12) & 0177, \
-			(h) & 07777); \
+static void
+print_command (unsigned cmd)
+{
+	if (cmd & 0x80000)
+		printf ("%02o %02o %05o", cmd >> 20,
+			(cmd >> 15) & 037, cmd & 077777);
+	else
+		printf ("%02o %03o %04o", cmd >> 20,
+			(cmd >> 12) & 0177, cmd & 07777);
 }
 
-#define PRINT_U(c) { \
-	if ((c) < 0134) \
-		putchar(upp[c]); \
-	else \
-		putchar('.'); \
+static void
+dump_word (unsigned zone, unsigned addr, unsigned left, unsigned right)
+{
+	printf ("%04o.%04o:  ", zone, addr & 01777);
+	print_command (left);
+	fputs ("  ", stdout);
+	print_command (right);
+	printf ("  %04o %04o %04o %04o  ",
+		left >> 12, left & 07777, right >> 12, right & 07777);
+	print_char (left >> 16);
+	print_char (left >> 8);
+	print_char (left);
+	print_char (right >> 16);
+	print_char (right >> 8);
+	print_char (right);
+	putchar ('\n');
+}
+
+static void
+dump_zone (unsigned zone, unsigned char *buf)
+{
+	unsigned addr, left, right;
+	unsigned char *cp;
+
+	addr = 0;
+	for (cp = buf; cp < buf + ZBYTES; cp += 6) {
+		left = (cp[0] << 16) | (cp[1] << 8) | cp[2];
+		right = (cp[3] << 16) | (cp[4] << 8) | cp[5];
+		dump_word (zone, addr, left, right);
+		++addr;
+	}
 }
 
 void
-dump(unsigned addr, unsigned l, unsigned r)
+dump_disk (unsigned diskno, unsigned start, unsigned length)
 {
+	void *disk;
+	unsigned limit, z;
+	char buf [ZBYTES];
 
-	printf("%05o:\t", addr);
-	PRINT_I(l);
-	putchar(' ');
-	putchar(' ');
-	PRINT_I(r);
-	putchar('\t');
-	printf("%04o %04o %04o %04o\t", l >> 12, l & 07777,
-					r >> 12, r & 07777);
-	PRINT_U(l >> 16);
-	PRINT_U((l >> 8) & 0377);
-	PRINT_U(l & 0377);
-	PRINT_U(r >> 16);
-	PRINT_U((r >> 8) & 0377);
-	PRINT_U(r & 0377);
-	putchar('\n');
+	disk = disk_open (diskno, DISK_READ_ONLY);
+	if (! disk) {
+		fprintf (stderr, "Disk %d: cannot open\n", diskno);
+		return;
+	}
+
+	limit = length ? (start + length) : MAXZ;
+	for (z=start; z<limit; ++z) {
+		if (disk_read (disk, z, buf) != DISK_IO_OK)
+			return;
+		dump_zone (z, (unsigned char*) buf);
+	}
 }

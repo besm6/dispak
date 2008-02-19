@@ -19,6 +19,7 @@
 
 #include "defs.h"
 #include "optab.h"
+#include "encoding.h"
 
 #define PROMPT "- "
 

@@ -349,7 +349,6 @@ EXTERN ushort           abpc;
 EXTERN uchar            abright;
 EXTERN uchar            pout_enable;	/* e64 printing allowed */
 EXTERN uchar            pout_disable;	/* e64 printing suppressed */
-EXTERN uchar            pout_latin;	/* use latin letters for output */
 EXTERN char		*pout_file;	/* e64 output file name */
 EXTERN uchar            xnative;        /* native xcodes */
 EXTERN uchar		bootstrap;	/* run without disk 2099 */
@@ -443,16 +442,5 @@ int input (unsigned);
 
 /* vsinput.c */
 int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
-
-/* encoding.c */
-extern const uchar itm_to_gost[], gost_to_itm[];
-extern const uchar text_to_gost[];
-void gost_putc (uchar, FILE*);
-void gost_write (uchar*, int, FILE*);
-uchar unicode_to_gost (ushort);
-uchar utf8_to_gost (uchar**);
-void utf8_puts (char*, FILE*);
-int unicode_getc (FILE*);
-void set_input_encoding (char*);
 
 #endif  /* defs_h */

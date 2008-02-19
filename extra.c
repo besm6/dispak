@@ -19,6 +19,7 @@
 #include "disk.h"
 #include "iobuf.h"
 #include "gost10859.h"
+#include "encoding.h"
 
 static void     exform(void);
 
