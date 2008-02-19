@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r55 | vak | 2008-02-19 01:31:06 +0300 (Tue, 19 Feb 2008) | 4 lines
+
+Fixed extracode 64. All tests run fine, except Algol-BESM, which in native
+version gives more empty lines.
+
+
+------------------------------------------------------------------------
 r54 | vak | 2008-02-18 22:39:26 +0300 (Mon, 18 Feb 2008) | 3 lines
 
 Madlen example prints a table of GOST encoding.

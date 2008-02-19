@@ -1,14 +1,13 @@
+SUBDIRS = . besmtool examples
 bin_PROGRAMS = besm6
 besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c \
 	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
 AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 
 all-local: diskdir/2099
-	${MAKE} -C besmdisk all
 
 install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2053 \
 	${datadir}/besm6/2099
-	${MAKE} -C examples install
 
 ${datadir}/besm6/2048: diskdir/2048
 	${install_sh_DATA} $< $@
@@ -21,8 +20,6 @@ ${datadir}/besm6/2099: diskdir/2099
 
 clean-local:
 	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
-	${MAKE} -C besmdisk clean
-	${MAKE} -C examples clean
 
 distclean-local:
 	-rm -rf diskdir/2099 autom4te.cache

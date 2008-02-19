@@ -2212,6 +2212,8 @@ ac_config_headers="$ac_config_headers config.h"
 
 ac_config_files="$ac_config_files Makefile"
 
+ac_config_files="$ac_config_files besmtool/Makefile"
+
 
 # Checks for programs.
 ac_ext=c
@@ -5263,6 +5265,7 @@ do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "besmtool/Makefile") CONFIG_FILES="$CONFIG_FILES besmtool/Makefile" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
