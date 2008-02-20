@@ -112,7 +112,8 @@ disk_open(u_int diskno, u_int mode)
 		disk_find_path (fname, diskno);
 	} else {
 		disk_local_path (fname);
-		sprintf(fname + strlen(fname), "/drum%d", (int) getpid());
+		sprintf(fname + strlen(fname), "/drumXXXXXX");
+		mktemp(fname);
 	}
 	if (!(mode & DISK_TEMP)) {
 		if (-1 == access(fname, R_OK)) {

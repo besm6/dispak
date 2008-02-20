@@ -1223,7 +1223,11 @@ init_local_encoding ()
 
 	lang = getenv ("LANG");
 	if (! lang)
+#ifdef __CYGWIN__
+		lang = "en_US.cp1251";
+#else
 		lang = "en_US.utf8";
+#endif
 
 	/* Strip optional modifier. */
 	p = strchr (lang, '@');
