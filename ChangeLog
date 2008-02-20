@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r60 | vak | 2008-02-20 17:10:26 +0300 (Wed, 20 Feb 2008) | 3 lines
+
+Added disk 2049 and tapes 101, 102, 103.
+
+
+------------------------------------------------------------------------
+r59 | leobru | 2008-02-20 03:35:10 +0300 (Wed, 20 Feb 2008) | 1 line
+
+Restored bemsh-auto.b6 to working order
+------------------------------------------------------------------------
+r58 | vak | 2008-02-19 23:49:32 +0300 (Tue, 19 Feb 2008) | 5 lines
+
+Printing of instructions per second is now done only with option "-s".
+Repeat "-s" twice to get statistics by instructions.
+Output listings of examples added to repository.
+
+
+------------------------------------------------------------------------
+r57 | vak | 2008-02-19 16:37:58 +0300 (Tue, 19 Feb 2008) | 5 lines
+
+Implemented "besmtool dump" and "besmtool write --from-file=foo".
+Added encoding.h: now encoding.c could be used independently
+from other files.
+
+
+------------------------------------------------------------------------
 r56 | vak | 2008-02-19 13:01:39 +0300 (Tue, 19 Feb 2008) | 4 lines
 
 Added examples/pascal-pretty.b6. Simplified Bemsh examples.

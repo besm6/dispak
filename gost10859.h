@@ -98,7 +98,7 @@
 #define GOST_DIVISION			0124	/* ÷ */
 #define GOST_IDENTICAL			0125	/* = */
 #define GOST_PERCENT			0126	/* % */
-#define GOST_LOZENGE			0127	/* ромб */
+#define GOST_DIAMOND			0127	/* ромб */
 #define GOST_VERTICAL_LINE		0130	/* | */
 #define GOST_HORIZONTAL_BAR		0131	/* - */
 #define GOST_UNDERLINE			0132	/* _ */

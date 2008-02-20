@@ -430,7 +430,7 @@ noend:
 				    } while (ch == GOST_NEWLINE);
 				    if (ch == GOST_EOF)
 					goto noend;
-				    if (ch == GOST_LOZENGE &&
+				    if (ch == GOST_DIAMOND &&
 					pch == GOST_UNDERLINE) {
 					if (i) {
 					    w <<= (6 - i) * 8;

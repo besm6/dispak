@@ -218,7 +218,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 				pos = 0;
 			}
 			if (! isatty (1))
-				putchar('\f');
+				utf8_puts("\f", stdout);
 			line[pos++] = GOST_SPACE;
 			break;
 		case GOST_CARRIAGE_RETURN:
@@ -231,7 +231,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 				lflush(line);
 				pos = 0;
 			}
-			putchar('\n');
+			utf8_puts("\n", stdout);
 			break;
 		case 0143: /* null width symbol */
 		case 0341:

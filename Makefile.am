@@ -6,10 +6,13 @@ AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 
 all-local: diskdir/2099
 
-install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2053 \
-	${datadir}/besm6/2099
+install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2049 \
+	${datadir}/besm6/2053 ${datadir}/besm6/2099
 
 ${datadir}/besm6/2048: diskdir/2048
+	${install_sh_DATA} $< $@
+
+${datadir}/besm6/2049: diskdir/2049
 	${install_sh_DATA} $< $@
 
 ${datadir}/besm6/2053: diskdir/2053

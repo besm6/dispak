@@ -16,6 +16,7 @@
 #include "defs.h"
 #include "disk.h"
 #include "gost10859.h"
+#include "encoding.h"
 
 #define PARASZ  (256 * 6)
 #define PUT(c)  { \
@@ -77,7 +78,7 @@ dump(FILE *fout, unsigned sz)
 			rstline();
 		}
 		if (*cp == 0176)
-			putc('\f', fout);
+			utf8_puts("\f", fout);
 		else
 			for (rc = *cp - 0141; rc; --rc)
 				putc('\n', fout);

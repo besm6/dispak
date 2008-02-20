@@ -36,7 +36,7 @@ static const unsigned short gost_to_unicode_cyr [256] = {
 /* 070-077 */	0x0428, 0x0429, 0x042b, 0x042c, 0x042d, 0x042e, 0x042f, 0x44,
 /* 100-107 */	0x46,   0x47,   0x49,   0x4a,   0x4c,   0x4e,   0x51,   0x52,
 /* 110-117 */	0x53,   0x55,   0x56,   0x57,   0x5a,   0x203e, 0x2264, 0x2265,
-/* 120-127 */	0x2228, 0x2227, 0x2283, 0xac,   0xf7,   0x2261, 0x25,   0x25ca,
+/* 120-127 */	0x2228, 0x2227, 0x2283, 0xac,   0xf7,   0x2261, 0x25,   0x25c7,
 /* 130-137 */	0x7c,   0x2015, 0x5f,   0x21,   0x22,   0x042a, 0xb0,   0x2032,
 };
 
@@ -51,7 +51,7 @@ static const unsigned short gost_to_unicode_lat [256] = {
 /* 070-077 */   0x0428, 0x0429, 0x042b, 0x042c, 0x042d, 0x042e, 0x042f, 0x44,
 /* 100-107 */   0x46,   0x47,   0x49,   0x4a,   0x4c,   0x4e,   0x51,   0x52,
 /* 110-117 */   0x53,   0x55,   0x56,   0x57,   0x5a,   0x203e, 0x2264, 0x2265,
-/* 120-127 */   0x2228, 0x2227, 0x2283, 0xac,   0xf7,   0x2261, 0x25,   0x25ca,
+/* 120-127 */   0x2228, 0x2227, 0x2283, 0xac,   0xf7,   0x2261, 0x25,   0x25c7,
 /* 130-137 */   0x7c,   0x2015, 0x5f,   0x21,   0x22,   0x042a, 0xb0,   0x2032,
 };
 
@@ -191,6 +191,7 @@ unicode_to_gost (unsigned short val)
 		break;
 	case 0x25:
 		switch ((unsigned char) val) {
+		case 0xc7: return 0127;
 		case 0xca: return 0127;
 		}
 		break;
@@ -221,7 +222,7 @@ const unsigned char itm_to_gost [256] =
 		0,			0,
 		0,			0,
 /* 040 */	GOST_SPACE,		GOST_RIGHT_QUOTATION,
-		GOST_LOZENGE,		GOST_UNDERLINE,
+		GOST_DIAMOND,		GOST_UNDERLINE,
 		GOST_VERTICAL_LINE,	GOST_SEMICOLON,
 		GOST_COMMA,		GOST_DOT,
 /* 050 */	GOST_OVERLINE,		GOST_RIGHT_PARENTHESIS,
@@ -397,7 +398,7 @@ static int
 utf8_getc (FILE *fin)
 {
 	int c1, c2, c3;
-
+again:
 	c1 = getc (fin);
 	if (c1 < 0 || ! (c1 & 0x80))
 		return c1;
@@ -405,6 +406,10 @@ utf8_getc (FILE *fin)
 	if (! (c1 & 0x20))
 		return (c1 & 0x1f) << 6 | (c2 & 0x3f);
 	c3 = getc (fin);
+	if (c1 == 0xEF && c2 == 0xBB && c3 == 0xBF) {
+		/* Skip zero width no-break space. */
+		goto again;
+	}
 	return (c1 & 0x0f) << 12 | (c2 & 0x3f) << 6 | (c3 & 0x3f);
 }
 
@@ -418,6 +423,15 @@ utf8_getc (FILE *fin)
 static void
 utf8_putc (unsigned short ch, FILE *fout)
 {
+	static int initialized = 0;
+
+	if (! initialized) {
+		/* Write UTF-8 tag: zero width no-break space. */
+		putc (0xEF, fout);
+		putc (0xBB, fout);
+		putc (0xBF, fout);
+		initialized = 1;
+	}
 	if (ch < 0x80) {
 		putc (ch, fout);
 		return;
