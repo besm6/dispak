@@ -1,0 +1,13 @@
+# List of source files which contain translatable strings.
+arith.c
+cu.c
+debug.y
+disk.c
+dpout.c
+encoding.c
+errtxt.c
+extra.c
+input.c
+main.c
+optab.c
+vsinput.c

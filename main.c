@@ -65,6 +65,7 @@
 #include "disk.h"
 #include "encoding.h"
 #include "gost10859.h"
+#include "gettext.h"
 
 static struct   {
 	int     dsk;
@@ -132,11 +133,11 @@ static struct option longopts[] = {
 static void
 usage ()
 {
-	fprintf (stderr, "%s version %s, Copyright 1967-1987 USSR\n",
+	fprintf (stderr, _("%s version %s, Copyright 1967-1987 USSR\n"),
 		PACKAGE_NAME, PACKAGE_VERSION);
-	fprintf (stderr, "This is free software, covered by the GNU General Public License.\n");
+	fprintf (stderr, _("This is free software, covered by the GNU General Public License.\n"));
 	fprintf (stderr, "\n");
-	fprintf (stderr, "Emulator of BESM-6, soviet computer of 60-x.\n");
+	fprintf (stderr, _("Emulator of BESM-6, soviet computer of 60-x.\n"));
 	fprintf (stderr, "Usage:\n");
 	fprintf (stderr, "  %s [options] <task-file>\n", PACKAGE_NAME);
 	fprintf (stderr, "  %s [options] <input-buf-number>\n", PACKAGE_NAME);
@@ -204,6 +205,11 @@ main(int argc, char **argv)
 	void            *nh;
 	char 		*endptr;
 	int		decode_output = 0;
+
+	/* Set locale and message catalogs. */
+	setlocale (LC_ALL, "");
+	bindtextdomain (PACKAGE_NAME, "/usr/local/share/locale");
+	textdomain (PACKAGE_NAME);
 
 	disk_path = getenv ("BESM6_PATH");
 

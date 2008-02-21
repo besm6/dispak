@@ -6,7 +6,7 @@ AC_INIT([besm6], [2.5], [http://groups.google.com/group/besm6/topics])
 AM_INIT_AUTOMAKE(besm6, 2.5, no-define)
 AC_CONFIG_SRCDIR([extra.c])
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile po/Makefile.in])
 AC_CONFIG_FILES([besmtool/Makefile])
 
 # Checks for programs.
@@ -15,6 +15,7 @@ AC_PROG_YACC
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [sin])
+AM_GNU_GETTEXT([external])
 
 # Checks for header files.
 

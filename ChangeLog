@@ -1,4 +1,11 @@
 ------------------------------------------------------------------------
+r65 | vak | 2008-02-21 23:47:43 +0300 (Thu, 21 Feb 2008) | 4 lines
+
+Fixed printing error messages in Algol-BESM. It uses undocumented
+symbol 265 - repeating last character.
+
+
+------------------------------------------------------------------------
 r64 | vak | 2008-02-21 20:55:48 +0300 (Thu, 21 Feb 2008) | 5 lines
 
 Using mkstemp() instead of mktemp: it's more secure.

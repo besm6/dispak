@@ -46,6 +46,8 @@ typedef unsigned int    uint;
 #define EXTERN  extern
 #endif
 
+#define _(string)	gettext(string)
+
 #define JHBSZ   16
 #define JMP(addr)       { \
 	pc = (addr); \
