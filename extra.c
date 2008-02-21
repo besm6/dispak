@@ -1408,6 +1408,9 @@ physaddr(void)
 	case 0522:
 		acc.l = 0777; acc.r = 0; /* E33П25 */
 		break;
+	case 01413:			/* ВРЕМЯ */
+		reg[016] = 010;
+		return e53();
 	case 02100:                     /* ? (try also 0100000) */
 		acc.l = acc.r = 0;
 		break;
