@@ -24,6 +24,10 @@ AC_CHECK_TYPES([ulong])
 AC_CHECK_TYPES([ushort])
 AC_CHECK_TYPES([uint])
 AC_C_BIGENDIAN
+AC_TYPE_INT64_T
+AC_TYPE_UINT64_T
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([long long])
 
 # Checks for library functions.
 AC_CHECK_FUNCS(getopt_long)

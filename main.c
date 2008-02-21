@@ -319,7 +319,7 @@ main(int argc, char **argv)
 			exit(1);
 		fclose (input_fd);
 	}
-	drumh = disk_open(0, DISK_READ_WRITE | DISK_TEMP);
+	drumh = disk_open(0, DISK_READ_WRITE);
 	if (! drumh)
 		exit(1);
 	k = input(i);
@@ -349,7 +349,8 @@ main(int argc, char **argv)
 		disks[i].diskh = drumh;
 		disks[i].offset = i * 040;
 	}
-	if (!(nh = disk_open(0, DISK_READ_WRITE | DISK_TEMP)))
+	nh = disk_open(0, DISK_READ_WRITE);
+	if (! nh)
 		exit(1);
 	disks[OSD_NOMML3].diskh = nh;
 

@@ -3,15 +3,35 @@
 
 #include "config.h"
 #include <sys/types.h>
+
 #ifndef HAVE_ULONG
 typedef unsigned long   ulong;
 #endif
+
 #ifndef HAVE_USHORT
 typedef unsigned short  ushort;
 #endif
+
 #ifndef HAVE_UINT
 typedef unsigned int    uint;
 #endif
+
+#ifndef int64_t
+#  if SIZEOF_LONG == 8
+#    define int64_t long
+#  elif SIZEOF_LONG_LONG == 8
+#    define int64_t long long
+#  endif
+#endif
+
+#ifndef uint64_t
+#  if SIZEOF_LONG == 8
+#    define uint64_t unsigned long
+#  elif SIZEOF_LONG_LONG == 8
+#    define uint64_t unsigned long long
+#  endif
+#endif
+
 #include <sys/param.h>
 #include <sys/times.h>
 #include <sys/time.h>

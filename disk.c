@@ -97,9 +97,9 @@ disk_open(u_int diskno, u_int mode)
 	char fname[256];
 	u_int f, newmode = 0;
 	int size, i;
-	u_long pos;
+	ulong pos;
 
-	if (mode > (DISK_READ_TOTAL | DISK_TEMP)) {
+	if (mode > DISK_READ_TOTAL) {
 		fprintf(stderr, "disk_open: bad mode %d\n", mode);
 		return 0;
 	}
@@ -110,38 +110,23 @@ disk_open(u_int diskno, u_int mode)
 
 	if (diskno) {
 		disk_find_path (fname, diskno);
+		if (access(fname, W_OK) < 0) {
+			newmode = DISK_RW_NO_WAY;
+			if ((mode & DISK_READ_TOTAL) == DISK_READ_WRITE) {
+				fprintf(stderr, "disk_open: %d is write-protected\n", diskno);
+				return 0;
+			}
+		}
+		f = open(fname, newmode == DISK_RW_NO_WAY ? O_RDONLY : O_RDWR);
 	} else {
 		disk_local_path (fname);
 		sprintf(fname + strlen(fname), "/drumXXXXXX");
-		mktemp(fname);
-	}
-	if (!(mode & DISK_TEMP)) {
-		if (-1 == access(fname, R_OK)) {
-			perror(fname);
-			return 0;
-		}
-
-		if (-1 == access(fname, W_OK)) {
-			newmode = DISK_RW_NO_WAY;
-		}
-	} else {
+		f = mkstemp(fname);
 		unlink(fname);
 	}
-
-	if (newmode == DISK_RW_NO_WAY && (mode & DISK_READ_TOTAL) == DISK_READ_WRITE) {
-		fprintf(stderr, "disk_open: %d is write-protected\n", diskno);
-		return 0;
-	}
-
-	f = open(fname,
-		(newmode == DISK_RW_NO_WAY ? O_RDONLY : O_RDWR) |
-		(mode & DISK_TEMP ? O_CREAT : 0), 0600);
 	if (f == -1) {
 		perror(fname);
 		return 0;
-	}
-	if (mode & DISK_TEMP) {
-		unlink(fname);
 	}
 
 	d = calloc(sizeof(disk_t), 1);
@@ -161,7 +146,7 @@ disk_open(u_int diskno, u_int mode)
 		return 0;
 	}
 
-	if (! (mode & DISK_TEMP)) {
+	if (diskno) {
 		size = read(f, d->d_md[0], sizeof(md_t));
 		if ((size != 4 && size != sizeof(md_t)) ||
 			memcmp(d->d_md[0]->md_magic, DISK_MAGIC, 4)) {
@@ -171,7 +156,6 @@ disk_open(u_int diskno, u_int mode)
 		}
 	} else {
 		memcpy(d->d_md[0]->md_magic, DISK_MAGIC, 4);
-		mode &= ~DISK_TEMP;
 		size = 4;
 	}
 
@@ -216,7 +200,7 @@ disk_close(void *ud)
 {
 	disk_t *d = (disk_t *) ud;
 	int i;
-	u_long pos = 0;
+	ulong pos = 0;
 	if (! d || d->d_magic != DESCR_MAGIC) {
 		fprintf(stderr, "disk_close: bad descriptor\n");
 		return DISK_IO_FATAL;
@@ -362,7 +346,7 @@ disk_writei(void *ud, u_int zone, char *buf, u_int mode)
 static int
 disk_positioni(disk_t *d, u_int zone)
 {
-	u_long pos;
+	ulong pos;
 	int block = zone / BLOCK_ZONES;
 
 	if (d->d_md[block] == NULL) {
@@ -382,7 +366,7 @@ disk_positioni(disk_t *d, u_int zone)
 static int
 disk_makezonei(disk_t *d, u_int zone)
 {
-	u_long pos;
+	ulong pos;
 	int block = zone / BLOCK_ZONES, i;
 
 	i = block;
@@ -436,7 +420,7 @@ disk_makezonei(disk_t *d, u_int zone)
 static int
 disk_writedescri(disk_t *d, int block)
 {
-	u_long pos;
+	ulong pos;
 	if (block == 0) {
 #ifdef DEBUG
 		fprintf(stderr, "disk_writedescr: seeking to -0- for descriptor\n");

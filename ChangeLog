@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r63 | leobru | 2008-02-21 08:50:30 +0300 (Thu, 21 Feb 2008) | 1 line
+
+Added an address to *65 for SERP
+------------------------------------------------------------------------
+r62 | vak | 2008-02-21 00:52:14 +0300 (Thu, 21 Feb 2008) | 3 lines
+
+Ported to Cygwin. Default encoding is cp1251. Using mkstemp() 
+for creating temporary files. 
+
+------------------------------------------------------------------------
+r61 | vak | 2008-02-20 18:06:59 +0300 (Wed, 20 Feb 2008) | 4 lines
+
+Symbol LOZENGE (25CA) replaced byа WHITE DIAMOND (25C7).
+Added EF-BB-BF at beginning of UTF-8 output.
+
+
+------------------------------------------------------------------------
 r60 | vak | 2008-02-20 17:10:26 +0300 (Wed, 20 Feb 2008) | 3 lines
 
 Added disk 2049 and tapes 101, 102, 103.

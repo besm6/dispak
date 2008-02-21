@@ -40,9 +40,9 @@ static int                      scan(int edit);
 static void                     inperr(char *);
 static uchar                    *passload(char *src);
 static unsigned                 nextcp(void);
-static int                      dump(uchar tag, unsigned long long w);
-static int                      prettycard(unsigned char * s, unsigned long long w[]);
-extern unsigned long long       nextw(void);
+static int                      dump(uchar tag, uint64_t w);
+static int                      prettycard(unsigned char * s, uint64_t w[]);
+extern uint64_t			nextw(void);
 
 static void
 SKIP_SP()
@@ -334,7 +334,7 @@ mpar:				inperr("НЕТ ПАРАМ");
 	}
 
 	if (! edit) {
-		unsigned long long      w = 0;
+		uint64_t w = 0;
 newaddr:
 		w = nextw();
 		if (w == EKONEC)
@@ -354,7 +354,7 @@ newaddr:
 	nextc();        /* eat 'E'      */
 
 	for (;;) {
-		unsigned long long      w = 0;
+		uint64_t w = 0;
 
 		switch (ch) {
 		case GOST_SPACE:
@@ -449,8 +449,8 @@ noend:
 a1done:
 			    NEXT_NS();
 			} else if (ch == GOST_3 || ch == GOST_5) {
-			    unsigned long long  w[24];
-			    unsigned char       s[121], c;
+			    uint64_t		w[24];
+			    unsigned char	s[121], c;
 
 			    NEXT_NS();
 			    while (ch != GOST_EOF) {
@@ -559,7 +559,7 @@ wrap:				if (ch != GOST_K) goto fs; nextc();
 	}
 }
 
-static int chad(unsigned long long w[], int bit, char val)
+static int chad (uint64_t w[], int bit, char val)
 {
 	int index = bit / 40;
 
@@ -582,7 +582,7 @@ static int chad(unsigned long long w[], int bit, char val)
 
 /* The first line already in s, will need to read the other 11 */
 static int
-prettycard(unsigned char *s, unsigned long long w[])
+prettycard (unsigned char *s, uint64_t w[])
 {
 	int bit;
 
@@ -669,7 +669,7 @@ nextcp(void)
 }
 
 static int
-dump(uchar tag, unsigned long long w)
+dump(uchar tag, uint64_t w)
 {
 	int             i, fd, l;
 	struct ibword   ibw;

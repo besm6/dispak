@@ -11,7 +11,6 @@
 #define DISK_READ_ONLY  0
 #define DISK_READ_WRITE 1
 #define DISK_READ_TOTAL 1
-#define DISK_TEMP       2
 
 #define DISK_IO_OK      0
 #define DISK_IO_ENWRITE 1

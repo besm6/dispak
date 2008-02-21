@@ -723,10 +723,10 @@ fetch_real (int addr)
 {
 	alureg_t word;
 	math_t exponent;
-	long long mantissa;
+	int64_t mantissa;
 
 	LOAD(word, addr);
-	mantissa = ((long long) word.l << 24 | word.r) << (64 - 48 + 7);
+	mantissa = ((int64_t) word.l << 24 | word.r) << (64 - 48 + 7);
 
 	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
 	exponent.u.right32 = 0;

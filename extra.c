@@ -38,11 +38,11 @@ getbyte(ptr *bp)
 	return c;
 }
 
-unsigned long long
+uint64_t
 getword(ptr *bp)
 {
-	unsigned long long      w = 0;
-	int                     i;
+	uint64_t	w = 0;
+	int		i;
 
 	if (bp->p_b) {
 		bp->p_b = 0;
@@ -349,7 +349,7 @@ static ushort
 print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 	int digits, int width, int repeat)
 {
-	unsigned long long w;
+	uint64_t w;
 	int i;
 
 	if (digits > 16)
@@ -368,10 +368,10 @@ print_octal(ushort addr0, ushort addr1, uchar *line, int pos,
 				return 0;
 			return addr0;
 		}
-		w = (unsigned long long) core[addr0].w_b[0] << 40 |
-			(unsigned long long) core[addr0].w_b[1] << 32 |
-			(unsigned long) core[addr0].w_b[2] << 24 |
-			(unsigned long) core[addr0].w_b[3] << 16 |
+		w = (uint64_t) core[addr0].w_b[0] << 40 |
+			(uint64_t) core[addr0].w_b[1] << 32 |
+			(uint) core[addr0].w_b[2] << 24 |
+			(uint) core[addr0].w_b[3] << 16 |
 			core[addr0].w_b[4] << 8 | core[addr0].w_b[5];
 		++addr0;
 
@@ -1556,7 +1556,7 @@ rpt:
 	return c;
 }
 
-unsigned long long
+uint64_t
 nextw(void)
 {
 	return getword(&txt);
@@ -1585,8 +1585,8 @@ diag(char *s)
 static void
 exform(void)
 {
-	unsigned long long      w;
-	int                     r;
+	uint64_t	w;
+	int		r;
 
 	txt.p_w = ADDR(acc.r);
 	txt.p_b = 0;

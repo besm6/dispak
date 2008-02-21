@@ -91,11 +91,11 @@ _abort(err) {
 	LOAD(acc, reg[STACKREG] | (supmode & sup_mmap));\
 }
 
-static inline unsigned long long
+static inline uint64_t
 rdtsc(void)
 {
 #ifdef i386
-	unsigned long long      rv;
+	uint64_t rv;
 
 	asm volatile(".byte 0x0f, 0x31" : "=A" (rv));
 	return (rv);
@@ -115,7 +115,7 @@ ulong   run() {
 	ulong                   icount = 0;
 	uchar                   mem;
 	uchar                   last_op = 0;
-	unsigned long long      tsc = rdtsc();
+	uint64_t		tsc = rdtsc();
 
 FOREVER
 
