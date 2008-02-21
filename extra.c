@@ -190,7 +190,7 @@ static ushort
 print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 {
 	ptr             bp;
-	uchar           c;
+	uchar           c, lastc = GOST_SPACE;
 
 	bp.p_w = addr0;
 	bp.p_b = 0;
@@ -241,6 +241,21 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			c = getbyte(&bp);
 			pos = c % 128;
 			break;
+		case 0265: /* repeat last symbol */
+			c = getbyte(&bp);
+			if (c == 040) {
+				/* fill line by last symbol (?) */
+				memset (line, lastc, 128);
+				lflush(line);
+				putchar('\n');
+				pos = 0;
+			} else
+				while (c-- & 017) {
+					if (line[pos] == GOST_SPACE)
+						line[pos] = lastc;
+					++pos;
+				}
+			break;
 		case GOST_SPACE2: /* blank */
 		case 0242: /* used as space by forex */
 			c = GOST_SPACE;
@@ -257,7 +272,10 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 					return bp.p_w;
 				}
 			}
-			line[pos++] = c;
+			if (line[pos] == GOST_SPACE)
+				line[pos] = c;
+			lastc = c;
+			++pos;
 			if (pos == 128) {
 				/* No space left on line. */
 				lflush(line);
@@ -276,7 +294,7 @@ static ushort
 print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 {
 	ptr             bp;
-	uchar           c, lastc;
+	uchar           c, lastc = GOST_SPACE;
 
 	bp.p_w = addr0;
 	bp.p_b = 0;
@@ -310,9 +328,6 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 			break;
 		case 0173: /* repeat last symbol */
 			c = getbyte(&bp);
-			if (pos < 1)
-				break;
-			lastc = line[pos-1];
 			if (c == 040) {
 				/* fill line by last symbol (?) */
 				memset (line, lastc, 128);
@@ -324,7 +339,8 @@ print_itm(ushort addr0, ushort addr1, uchar *line, int pos)
 					line[pos++] = lastc;
 			break;
 		default:
-			line[pos++] = itm_to_gost [c];
+			lastc = itm_to_gost [c];
+			line[pos++] = lastc;
 			break;
 		}
 	}

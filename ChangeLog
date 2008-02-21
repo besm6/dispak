@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r64 | vak | 2008-02-21 20:55:48 +0300 (Thu, 21 Feb 2008) | 5 lines
+
+Using mkstemp() instead of mktemp: it's more secure.
+Using types int64_t and uint64_t, autoconfigured.
+No long long's more.
+
+
+------------------------------------------------------------------------
 r63 | leobru | 2008-02-21 08:50:30 +0300 (Thu, 21 Feb 2008) | 1 line
 
 Added an address to *65 for SERP
