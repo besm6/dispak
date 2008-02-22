@@ -51,7 +51,7 @@ disk_find_path (char *fname, u_int diskno)
 {
 	char *p, *q;
 
-	if (! disk_path) {
+	if (! disk_path && ! (disk_path = getenv("BESM6_PATH")) ) {
 		char *home;
 
 		home = getenv ("HOME");

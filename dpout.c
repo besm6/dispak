@@ -19,12 +19,16 @@
 #include "encoding.h"
 
 #define PARASZ  (256 * 6)
-#define PUT(c)  { \
+#define PUT(c)  { int saved = pos;\
 	if (pos > maxp) \
 		maxp = pos; \
-	if (line[pos] == GOST_SPACE) \
-		line[pos] = (c); \
-	++pos; \
+	if (line[pos] != GOST_SPACE) {\
+		gost_write(line, maxp+1, fout);\
+		rstline();\
+		fputs("\\\n", fout);\
+	}\
+		line[saved] = (c); \
+	pos=saved+1; \
 }
 
 static unsigned char	para[PARASZ];

@@ -324,6 +324,7 @@ mpar:				inperr("НЕТ ПАРАМ");
 				if (*cp++ != GOST_RIGHT_PARENTHESIS)
 					goto fs;
 				++psp.nvol;
+				while (*cp == GOST_SPACE) cp++;
 			}
 		}
 		while (ch != GOST_EOF && ch != GOST_OVERLINE)

@@ -211,8 +211,6 @@ main(int argc, char **argv)
 	bindtextdomain (PACKAGE_NAME, "/usr/local/share/locale");
 	textdomain (PACKAGE_NAME);
 
-	disk_path = getenv ("BESM6_PATH");
-
 	for (;;) {
 		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);
 		if (i < 0)
