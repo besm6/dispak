@@ -241,6 +241,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 			c = getbyte(&bp);
 			pos = c % 128;
 			break;
+		case 0174:
 		case 0265: /* repeat last symbol */
 			c = getbyte(&bp);
 			if (c == 040) {
@@ -910,6 +911,8 @@ e50(void)
 					utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
+	case 01212:	/* discard print stream */
+		return E_SUCCESS;
 	case 07700:	/* set alarm */
 		if (!(acc.r & 0x7fff)) {
 			struct itimerval        itv = {{0, 0}, {0, 0}};
@@ -1394,6 +1397,10 @@ physaddr(void)
 	case 6:
 	case 7:
 		LOAD(acc, addr | 0100000);
+		break;
+	case IPZ + 076:			/* ??? */
+		acc.l = 0;
+		acc.r = 0;
 		break;
 	case IPZ + 077:
 		acc = user;

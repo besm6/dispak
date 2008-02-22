@@ -19,17 +19,6 @@
 #include "encoding.h"
 
 #define PARASZ  (256 * 6)
-#define PUT(c)  { int saved = pos;\
-	if (pos > maxp) \
-		maxp = pos; \
-	if (line[pos] != GOST_SPACE) {\
-		gost_write(line, maxp+1, fout);\
-		rstline();\
-		fputs("\\\n", fout);\
-	}\
-		line[saved] = (c); \
-	pos=saved+1; \
-}
 
 static unsigned char	para[PARASZ];
 static uchar		line[129];
@@ -49,19 +38,43 @@ rstline(void)
 }
 
 static void
+put(FILE * fout, uchar c)
+{
+	if (line[pos] != GOST_SPACE) {
+		int saved = pos;
+		if (trace_e64)
+			putchar('\n');
+		gost_write(line, maxp+1, fout);
+		rstline();
+		pos = saved;
+		fputs("\\\n", fout);
+	}
+	if (pos > maxp)
+		maxp = pos;
+	line[pos++] = (c);
+}
+
+static void
 dump(FILE *fout, unsigned sz)
 {
 	unsigned char   *cp, rc;
 
 	for (cp = para + 12; cp - para < sz; ++cp) {
+		if (*cp && trace_e64) {
+			printf("%03o-", *cp <= 0140 ? *cp-1 : *cp);
+		}
 		switch (*cp) {
 		case 0177:
+			if (trace_e64)
+				printf("%03o-", cp[1]);
 			for (rc = *++cp; rc; --rc)
-				PUT(lastc);
+				put(fout, lastc);
 			continue;
 		case 0174:
 		case 0175:
 		case 0:
+			if (trace_e64)
+				putchar('\n');
 			return;
 		}
 		if (*cp & 0200) {
@@ -70,7 +83,7 @@ dump(FILE *fout, unsigned sz)
 		}
 		if (*cp <= 0140) {
 			lastc = *cp - 1;
-			PUT(lastc);
+			put(fout, lastc);
 			continue;
 		}
 		if (*cp == 0141) {
@@ -78,6 +91,8 @@ dump(FILE *fout, unsigned sz)
 			continue;
 		}
 		if (maxp >= 0) {
+			if (trace_e64)
+				putchar('\n');
 			gost_write(line, maxp + 1, fout);
 			rstline();
 		}
