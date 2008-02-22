@@ -176,9 +176,10 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 besmtool_SOURCES = besmtool.c write.c dump.c list.c erase.c \
-	../disk.c ../encoding.c
+	../emulator/disk.c ../emulator/encoding.c
 
 AM_CFLAGS = -Wall -g -O2
+AM_CPPFLAGS = -I../emulator
 all: all-am
 
 .SUFFIXES:
@@ -267,33 +268,33 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 
-disk.o: ../disk.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT disk.o -MD -MP -MF $(DEPDIR)/disk.Tpo -c -o disk.o `test -f '../disk.c' || echo '$(srcdir)/'`../disk.c
+disk.o: ../emulator/disk.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT disk.o -MD -MP -MF $(DEPDIR)/disk.Tpo -c -o disk.o `test -f '../emulator/disk.c' || echo '$(srcdir)/'`../emulator/disk.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/disk.Tpo $(DEPDIR)/disk.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../disk.c' object='disk.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../emulator/disk.c' object='disk.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o disk.o `test -f '../disk.c' || echo '$(srcdir)/'`../disk.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o disk.o `test -f '../emulator/disk.c' || echo '$(srcdir)/'`../emulator/disk.c
 
-disk.obj: ../disk.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT disk.obj -MD -MP -MF $(DEPDIR)/disk.Tpo -c -o disk.obj `if test -f '../disk.c'; then $(CYGPATH_W) '../disk.c'; else $(CYGPATH_W) '$(srcdir)/../disk.c'; fi`
+disk.obj: ../emulator/disk.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT disk.obj -MD -MP -MF $(DEPDIR)/disk.Tpo -c -o disk.obj `if test -f '../emulator/disk.c'; then $(CYGPATH_W) '../emulator/disk.c'; else $(CYGPATH_W) '$(srcdir)/../emulator/disk.c'; fi`
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/disk.Tpo $(DEPDIR)/disk.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../disk.c' object='disk.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../emulator/disk.c' object='disk.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o disk.obj `if test -f '../disk.c'; then $(CYGPATH_W) '../disk.c'; else $(CYGPATH_W) '$(srcdir)/../disk.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o disk.obj `if test -f '../emulator/disk.c'; then $(CYGPATH_W) '../emulator/disk.c'; else $(CYGPATH_W) '$(srcdir)/../emulator/disk.c'; fi`
 
-encoding.o: ../encoding.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT encoding.o -MD -MP -MF $(DEPDIR)/encoding.Tpo -c -o encoding.o `test -f '../encoding.c' || echo '$(srcdir)/'`../encoding.c
+encoding.o: ../emulator/encoding.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT encoding.o -MD -MP -MF $(DEPDIR)/encoding.Tpo -c -o encoding.o `test -f '../emulator/encoding.c' || echo '$(srcdir)/'`../emulator/encoding.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/encoding.Tpo $(DEPDIR)/encoding.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../encoding.c' object='encoding.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../emulator/encoding.c' object='encoding.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o encoding.o `test -f '../encoding.c' || echo '$(srcdir)/'`../encoding.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o encoding.o `test -f '../emulator/encoding.c' || echo '$(srcdir)/'`../emulator/encoding.c
 
-encoding.obj: ../encoding.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT encoding.obj -MD -MP -MF $(DEPDIR)/encoding.Tpo -c -o encoding.obj `if test -f '../encoding.c'; then $(CYGPATH_W) '../encoding.c'; else $(CYGPATH_W) '$(srcdir)/../encoding.c'; fi`
+encoding.obj: ../emulator/encoding.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT encoding.obj -MD -MP -MF $(DEPDIR)/encoding.Tpo -c -o encoding.obj `if test -f '../emulator/encoding.c'; then $(CYGPATH_W) '../emulator/encoding.c'; else $(CYGPATH_W) '$(srcdir)/../emulator/encoding.c'; fi`
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/encoding.Tpo $(DEPDIR)/encoding.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../encoding.c' object='encoding.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../emulator/encoding.c' object='encoding.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o encoding.obj `if test -f '../encoding.c'; then $(CYGPATH_W) '../encoding.c'; else $(CYGPATH_W) '$(srcdir)/../encoding.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o encoding.obj `if test -f '../emulator/encoding.c'; then $(CYGPATH_W) '../emulator/encoding.c'; else $(CYGPATH_W) '$(srcdir)/../emulator/encoding.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

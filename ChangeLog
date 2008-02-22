@@ -1,4 +1,27 @@
 ------------------------------------------------------------------------
+r71 | vak | 2008-02-22 21:21:30 +0300 (Fri, 22 Feb 2008) | 3 lines
+
+Updated examples/dtran.b6.
+
+
+------------------------------------------------------------------------
+r70 | leobru | 2008-02-22 20:16:09 +0300 (Fri, 22 Feb 2008) | 2 lines
+
+The service program COPY (PERE) works; added tracing to native e64.
+
+------------------------------------------------------------------------
+r69 | vak | 2008-02-22 18:48:12 +0300 (Fri, 22 Feb 2008) | 3 lines
+
+Added missing chars for koi8, cp1251, cp866.
+
+
+------------------------------------------------------------------------
+r68 | vak | 2008-02-22 13:23:19 +0300 (Fri, 22 Feb 2008) | 3 lines
+
+All text strings prepared for localization.
+
+
+------------------------------------------------------------------------
 r67 | leobru | 2008-02-22 08:19:43 +0300 (Fri, 22 Feb 2008) | 1 line
 
 Build fixes, BESM6_PATH checked in one place, better passport parsing, visible overprint

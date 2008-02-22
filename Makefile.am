@@ -1,45 +1,12 @@
-SUBDIRS = . besmtool examples po
-bin_PROGRAMS = besm6
-besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c \
-	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
-AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
-LDADD = @LIBINTL@
+SUBDIRS = . emulator besmtool examples po
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = config.rpath m4/ChangeLog
 
-all-local: diskdir/2099
-
-install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2049 \
-	${datadir}/besm6/2053 ${datadir}/besm6/2099
-
-${datadir}/besm6/2048: diskdir/2048
-	${install_sh_DATA} $< $@
-
-${datadir}/besm6/2049: diskdir/2049
-	${install_sh_DATA} $< $@
-
-${datadir}/besm6/2053: diskdir/2053
-	${install_sh_DATA} $< $@
-
-${datadir}/besm6/2099: diskdir/2099
-	${install_sh_DATA} $< $@
-
 clean-local:
-	-rm -rf *~ debug.c diskdir/ibuf/[0-9][0-9][0-9]
+	-rm -rf *~
 
 distclean-local:
-	-rm -rf diskdir/2099 autom4te.cache
-
-diskdir/2099: make2099.b6 disp99.b6 e64.b6 ekdisp.b6 sostav.b6 spe66.b6 macros.b6
-	${MAKE} besm6
-	echo -n DISK > diskdir/2099
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 macros.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 disp99.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 e64.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 ekdisp.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 sostav.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 spe66.b6
-	./besm6 -q --bootstrap --path=diskdir --input-encoding=utf8 make2099.b6
+	-rm -rf autom4te.cache
 
 log:	.svn
 	svn update

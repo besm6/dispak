@@ -4,9 +4,9 @@
 AC_PREREQ(2.59)
 AC_INIT([besm6], [2.5], [http://groups.google.com/group/besm6/topics])
 AM_INIT_AUTOMAKE(besm6, 2.5, no-define)
-AC_CONFIG_SRCDIR([extra.c])
+AC_CONFIG_SRCDIR([emulator/extra.c])
 AC_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile po/Makefile.in])
+AC_CONFIG_FILES([Makefile emulator/Makefile po/Makefile.in])
 AC_CONFIG_FILES([besmtool/Makefile])
 
 # Checks for programs.
