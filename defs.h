@@ -4,6 +4,7 @@
 #include "config.h"
 #include <sys/types.h>
 #include <locale.h>
+#include "gettext.h"
 
 #ifndef HAVE_ULONG
 typedef unsigned long   ulong;

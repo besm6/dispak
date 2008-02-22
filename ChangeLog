@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r67 | leobru | 2008-02-22 08:19:43 +0300 (Fri, 22 Feb 2008) | 1 line
+
+Build fixes, BESM6_PATH checked in one place, better passport parsing, visible overprint
+------------------------------------------------------------------------
+r66 | vak | 2008-02-22 01:25:50 +0300 (Fri, 22 Feb 2008) | 6 lines
+
+Using gettext() for localization. Convert all text strings, which should
+be localized, into _(strings). Run make, then extract string prototypes
+from po/besm6.pot, put them to po/ru.po and localize. Run make install,
+and besm6 will start speaking Russian.
+
+
+------------------------------------------------------------------------
 r65 | vak | 2008-02-21 23:47:43 +0300 (Thu, 21 Feb 2008) | 4 lines
 
 Fixed printing error messages in Algol-BESM. It uses undocumented

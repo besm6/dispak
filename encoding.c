@@ -15,6 +15,7 @@
 #include <string.h>
 #include "encoding.h"
 #include "gost10859.h"
+#include "gettext.h"
 
 int gost_latin = 0; /* default cyrillics */
 
@@ -1211,8 +1212,8 @@ cp866_putc (unsigned short ch, FILE *fout)
 static void
 fatal_encoding (char *lang)
 {
-	fprintf (stderr, "Encoding %s is not supported.\n", lang);
-	fprintf (stderr, "Use UTF-8, KOI8-R, CP1251 or CP866.\n");
+	fprintf (stderr, gettext ("Encoding %s is not supported.\n"
+		"Use UTF-8, KOI8-R, CP1251 or CP866.\n"), lang);
 	exit (1);
 }
 

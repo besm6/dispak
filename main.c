@@ -65,7 +65,6 @@
 #include "disk.h"
 #include "encoding.h"
 #include "gost10859.h"
-#include "gettext.h"
 
 static struct   {
 	int     dsk;
@@ -138,32 +137,32 @@ usage ()
 	fprintf (stderr, _("This is free software, covered by the GNU General Public License.\n"));
 	fprintf (stderr, "\n");
 	fprintf (stderr, _("Emulator of BESM-6, soviet computer of 60-x.\n"));
-	fprintf (stderr, "Usage:\n");
-	fprintf (stderr, "  %s [options] <task-file>\n", PACKAGE_NAME);
-	fprintf (stderr, "  %s [options] <input-buf-number>\n", PACKAGE_NAME);
-	fprintf (stderr, "  %s [options] --decode-output <raw-file>\n", PACKAGE_NAME);
-	fprintf (stderr, "Options:\n");
-	fprintf (stderr, "  -x, --native           use native extracode E64\n");
-	fprintf (stderr, "  -b, --break            break on first cmd\n");
-	fprintf (stderr, "  -v, --visual           visual mode for debugger\n");
-	fprintf (stderr, "  -t, --trace            trace all extracodes\n");
-	fprintf (stderr, "  --trace-e64            trace extracode 064\n");
-	fprintf (stderr, "  -s, --stats            show statistics for machine instructions\n");
-	fprintf (stderr, "  --path=dir1:dir2...    specify search path for disk images\n");
-	fprintf (stderr, "  -p, --output-enable    display printing output (default for batch tasks)\n");
-	fprintf (stderr, "  -q, --output-disable   no printing output (default for TELE tasks)\n");
-	fprintf (stderr, "  -o file, --output=file redirect printing output to file\n");
-	fprintf (stderr, "  --output-raw=file      dump raw output to file\n");
-	fprintf (stderr, "  --decode-output file   decode raw output file to text\n");
-	fprintf (stderr, "  -l, --output-latin     use Latin letters for output\n");
-	fprintf (stderr, "  --output-cyrillic      use Cyrillic letters for output (default)\n");
-	fprintf (stderr, "  -c file, --punch=file  punch to file\n");
-	fprintf (stderr, "  --punch-binary         punch in binary format (default dots and holes)\n");
-	fprintf (stderr, "  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 cp866\n");
-	fprintf (stderr, "  --bootstrap            used to generate contents of the system disk\n");
-	fprintf (stderr, "  --no-insn-check        all words but at addr 0 are treated as insns\n");
+	fprintf (stderr, _("Usage:\n"));
+	fprintf (stderr, _("  %s [options] <task-file>\n"), PACKAGE_NAME);
+	fprintf (stderr, _("  %s [options] <input-buf-number>\n"), PACKAGE_NAME);
+	fprintf (stderr, _("  %s [options] --decode-output <raw-file>\n"), PACKAGE_NAME);
+	fprintf (stderr, _("Options:\n"));
+	fprintf (stderr, _("  -x, --native           use native extracode E64\n"));
+	fprintf (stderr, _("  -b, --break            break on first cmd\n"));
+	fprintf (stderr, _("  -v, --visual           visual mode for debugger\n"));
+	fprintf (stderr, _("  -t, --trace            trace all extracodes\n"));
+	fprintf (stderr, _("  --trace-e64            trace extracode 064\n"));
+	fprintf (stderr, _("  -s, --stats            show statistics for machine instructions\n"));
+	fprintf (stderr, _("  --path=dir1:dir2...    specify search path for disk images\n"));
+	fprintf (stderr, _("  -p, --output-enable    display printing output (default for batch tasks)\n"));
+	fprintf (stderr, _("  -q, --output-disable   no printing output (default for TELE tasks)\n"));
+	fprintf (stderr, _("  -o file, --output=file redirect printing output to file\n"));
+	fprintf (stderr, _("  --output-raw=file      dump raw output to file\n"));
+	fprintf (stderr, _("  --decode-output file   decode raw output file to text\n"));
+	fprintf (stderr, _("  -l, --output-latin     use Latin letters for output\n"));
+	fprintf (stderr, _("  --output-cyrillic      use Cyrillic letters for output (default)\n"));
+	fprintf (stderr, _("  -c file, --punch=file  punch to file\n"));
+	fprintf (stderr, _("  --punch-binary         punch in binary format (default dots and holes)\n"));
+	fprintf (stderr, _("  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 cp866\n"));
+	fprintf (stderr, _("  --bootstrap            used to generate contents of the system disk\n"));
+	fprintf (stderr, _("  --no-insn-check        all words but at addr 0 are treated as insns\n"));
 
-	fprintf (stderr, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
+	fprintf (stderr, _("\nReport bugs to %s\n"), PACKAGE_BUGREPORT);
 	exit (1);
 }
 
@@ -298,7 +297,7 @@ main(int argc, char **argv)
 		usage ();
 
 	if (optind < argc-1) {
-		fprintf (stderr, "%s: too many files\n", PACKAGE_NAME);
+		fprintf (stderr, _("%s: too many files\n"), PACKAGE_NAME);
 		exit (1);
 	}
 	ifile = argv[optind];
@@ -328,7 +327,7 @@ main(int argc, char **argv)
 		exit(1);
 	k = input(i);
 	if (k < 0) {
-		utf8_puts (" ОШ ВВД ", stderr);
+		utf8_puts (_(" ОШ ВВД "), stderr);
 		fprintf(stderr, "%03o\n", i);
 		exit(1);
 	}
@@ -341,7 +340,7 @@ main(int argc, char **argv)
 	}
 
 	if (!bootstrap && !sv_load()) {
-		fprintf(stderr, "Error loading supervisor.\n");
+		fprintf(stderr, _("Error loading supervisor.\n"));
 		exit(1);
 	}
 
@@ -370,7 +369,7 @@ main(int argc, char **argv)
 	if (!sec)
 		sec = 0.000001;
 	if (stats) {
-		printf("%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n",
+		printf(_("%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n"),
 			icnt, sec, (long)(icnt/sec), (sec * 1000000) / icnt);
 		if (stats > 1)
 			stat_out();
@@ -385,7 +384,7 @@ main(int argc, char **argv)
 void
 catchsig (int sig)
 {
-	printf ("\nInterrupt\n");
+	printf (_("\nInterrupt\n"));
 	breakflg = 1;
 	if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
 		signal (SIGTERM, catchsig);

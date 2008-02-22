@@ -50,7 +50,7 @@ _abort(err) {
 		pc = abpc;
 		right = abright;
 /*              fprintf(stderr, "Error %d\n", err);     */
-		utf8_puts(errtxt[err], stderr);
+		utf8_puts(_(errtxt[err]), stderr);
 		putc('\n', stderr);
 		visual = 1;
 		where();
@@ -825,7 +825,7 @@ ENDFOREVER
 	pcm_dbg = pcm;
 	if (pout_enable || err != 1) {
 /*		printf("Error %d\n", err);     */
-		utf8_puts(errtxt[err], stdout);
+		utf8_puts(_(errtxt[err]), stdout);
 		putc('\n', stdout);
 		where();
 	}

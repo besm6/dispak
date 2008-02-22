@@ -41,7 +41,7 @@ input(unsigned ibufno)
 	}
 	if (fread(&psp, sizeof(psp), 1, ibuf) != 1) {
 ibr:
-		perror("Input buffer read");
+		perror(_("Input buffer read"));
 		return -1;
 	}
 

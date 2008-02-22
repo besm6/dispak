@@ -146,7 +146,7 @@ scan(int edit)
 		if (ch == GOST_SHA) {
 			if (nextc() != GOST_CYRILLIC_I || nextc() != GOST_EF) {
 fw:
-				inperr("ЧУЖОЕ СЛОВО");
+				inperr(_("ЧУЖОЕ СЛОВО"));
 				return -1;
 			}
 		} else if (ch == GOST_U) {
@@ -164,13 +164,13 @@ fw:
 
 		if (ch > GOST_9) {
 fs:
-			inperr("ЧУЖОЙ СИМВОЛ");
+			inperr(_("ЧУЖОЙ СИМВОЛ"));
 			return -1;
 		}
 		for (i = 0; i < 6; ++i) {
 			if (ch > GOST_9) {
 d_6_12:
-				inperr("ЦИФР # 6 и # 12");
+				inperr(_("ЦИФР # 6 и # 12"));
 				return -1;
 			}
 			psp.user.l = (psp.user.l << 4) | ch;
@@ -195,7 +195,7 @@ d_6_12:
 			pname[1] = ch;
 			spass = stpsp = passload((char*) pname);
 			if (!spass) {
-				inperr("НЕТ СТПАСП");
+				inperr(_("НЕТ СТПАСП"));
 				return -1;
 			}
 			level = 1;
@@ -235,7 +235,7 @@ d_6_12:
 		if (art[0] == GOST_B && art[1] == GOST_X && art[2] == GOST_O) {
 			/* ВХО <octal> */
 			if (! cp) {
-mpar:				inperr("НЕТ ПАРАМ");
+mpar:				inperr(_("НЕТ ПАРАМ"));
 				return -1;
 			}
 			psp.entry = get_octal (cp);
@@ -286,7 +286,7 @@ mpar:				inperr("НЕТ ПАРАМ");
 				int off;
 
 				if (psp.nvol >= 12) {
-					inperr("ЛЕНТ >= 12");
+					inperr(_("ЛЕНТ >= 12"));
 					return -1;
 				}
 				u = get_octal (cp);
@@ -299,7 +299,7 @@ mpar:				inperr("НЕТ ПАРАМ");
 				cp += 3;
 				u = get_decimal (cp);
 				if (! u || u >= 4096) {
-					inperr("ПЛОХ ТОМ");
+					inperr(_("ПЛОХ ТОМ"));
 					return -1;
 				}
 				while (*cp <= GOST_9)
@@ -394,7 +394,7 @@ newaddr:
 				w = w << s | ch;
 			}
 			if (i != 9 && i != 18) {
-				inperr("ЦИФР НЕ 9 И НЕ 18");
+				inperr(_("ЦИФР НЕ 9 И НЕ 18"));
 				return -1;
 			}
 			if ((i = dump(W_CODE, w)))
@@ -404,7 +404,7 @@ newaddr:
 			for (i = 0; i < 6; ++i) {
 				if (nextc() == GOST_EOF) {
 noend:
-					inperr("НЕТ КОНЦА ВВОДА");
+					inperr(_("НЕТ КОНЦА ВВОДА"));
 					return -1;
 				}
 				if (ch == GOST_NEWLINE) {
@@ -495,7 +495,7 @@ a1done:
                                     FILE *f = fopen((char*) s+1, "r");
                                     uchar p[120];
                                     if (!f) {
-                                        inperr("МАССИВ ПУСТ");
+                                        inperr(_("МАССИВ ПУСТ"));
                                         return -1;
                                     }
                                     while (120 == fread(p, 1, 120, f)) {
@@ -546,7 +546,7 @@ wrap:				if (ch != GOST_K) goto fs; nextc();
 				iaddr = 0;
 				if (! ibuf || (psp.arr_end = ftell(ibuf)) ==
 				    sizeof(psp)) {
-					inperr("МАССИВ ПУСТ");
+					inperr(_("МАССИВ ПУСТ"));
 					return -1;
 				}
 				NEXT_NS();
@@ -575,7 +575,7 @@ static int chad (uint64_t w[], int bit, char val)
 	default:
 		pncline = bit / 80 + 1;
 		pncsym = (bit % 80) / 8 + 1;
-		inperr("ЗАМЯТИЕ");
+		inperr(_("ЗАМЯТИЕ"));
 		pncline = pncsym = 0;
 		return -1;
     }
@@ -619,8 +619,8 @@ inperr(char *s)
 {
 	char    buf[160];
 
-	sprintf(buf, "   АВВД   НПК    НС   НСТ   СИМ ШИФР %06u%06u\n"
-		     "  %05o%6d%6d%6d   %03o %s\n",
+	sprintf(buf, _("   АВВД   НПК    НС   НСТ   СИМ ШИФР %06u%06u\n"
+		       "  %05o%6d%6d%6d   %03o %s\n"),
 		user_hi, user_lo,
 		iaddr, lineno, pncline, pncsym, ch, s);
 	diagftn(buf);
@@ -634,7 +634,7 @@ passload(char *src)
 	uchar   *buf, *cp;
 
 	if (!(buf = malloc(12288))) {
-		utf8_puts ("СТПАСП", stderr);
+		utf8_puts (_("СТПАСП"), stderr);
 		perror("");
 		return NULL;
 	}
@@ -676,7 +676,7 @@ dump(uchar tag, uint64_t w)
 	struct ibword   ibw;
 
 	if (! iaddr) {
-		diagftn(" НЕТ АВВД\n");
+		diagftn(_(" НЕТ АВВД\n"));
 		return -1;
 	}
 	if (! ibuf) {
@@ -694,14 +694,14 @@ dump(uchar tag, uint64_t w)
 			ibuf = fdopen(fd, "w");
 			if (!ibuf) {
 ioberr:
-				diagftn(" ОШ БУФ ВВД\n");
+				diagftn(_(" ОШ БУФ ВВД\n"));
 				return -1;
 			}
 			ibufno = i;
 			break;
 		}
 		if (!ibuf) {
-			diagftn(" БУФ ПЕРЕП\n");
+			diagftn(_(" БУФ ПЕРЕП\n"));
 			return -1;
 		}
 		fseek(ibuf, (long) sizeof(struct passport), SEEK_SET);

@@ -1,31 +1,596 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR USSR
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Russian translations for besm6 package
+# Русские переводы для пакета besm6.
+# Copyright (C) 2008 USSR
+# This file is distributed under the same license as the besm6 package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: besm6 2.5\n"
 "Report-Msgid-Bugs-To: http://groups.google.com/group/besm6/topics\n"
-"POT-Creation-Date: 2008-02-22 00:37+0300\n"
+"POT-Creation-Date: 2008-02-22 13:18+0300\n"
 "PO-Revision-Date: 2008-02-22 00:43+0300\n"
-"Last-Translator: Serge Vakulenko <sergeL@vak.ru>\n"
-"Language-Team: Russian\n"
+"Last-Translator: Serge Vakulenko <serge@vak.ru>\n"
+"Language-Team: besm6.sourceforge.net\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: main.c:136
+#: encoding.c:1215
+#, c-format
+msgid ""
+"Encoding %s is not supported.\n"
+"Use UTF-8, KOI8-R, CP1251 or CP866.\n"
+msgstr ""
+
+#: errtxt.c:16
+msgid " Неизвестная ош."
+msgstr " Неизвестная ош."
+
+#: errtxt.c:17
+msgid " КОНЕЦ ЗАДАЧИ"
+msgstr ""
+
+#: errtxt.c:18
+msgid " Внутр.ош.эмул"
+msgstr ""
+
+#: errtxt.c:19
+msgid " Пока рано"
+msgstr ""
+
+#: errtxt.c:20
+msgid " Стоп машина!"
+msgstr ""
+
+#: errtxt.c:21
+msgid " Err 5"
+msgstr ""
+
+#: errtxt.c:22
+msgid " Err 6"
+msgstr ""
+
+#: errtxt.c:23
+msgid " Err 7"
+msgstr ""
+
+#: errtxt.c:24
+msgid " Err 8"
+msgstr ""
+
+#: errtxt.c:25
+msgid " Err 9"
+msgstr ""
+
+#: errtxt.c:26
+msgid " Err 10"
+msgstr ""
+
+#: errtxt.c:27
+msgid " Err 11"
+msgstr ""
+
+#: errtxt.c:28
+msgid " Err 12"
+msgstr ""
+
+#: errtxt.c:29
+msgid " Err 13"
+msgstr ""
+
+#: errtxt.c:30
+msgid " ДЕЛЕНИЕ НА НУЛЬ"
+msgstr ""
+
+#: errtxt.c:31
+msgid " ПЕРЕПОЛНЕНИЕ АУ"
+msgstr ""
+
+#: errtxt.c:32
+msgid " ЧИС.В ЧУЖ.ЛИСТЕ"
+msgstr ""
+
+#: errtxt.c:33
+msgid " КОМ.В ЧУЖ.ЛИСТЕ"
+msgstr ""
+
+#: errtxt.c:34
+msgid " ЗАПРЕЩ.КОМАНДА"
+msgstr ""
+
+#: errtxt.c:35
+msgid " СНЯТА ОПЕРАТОРОМ"
+msgstr ""
+
+#: errtxt.c:36
+msgid " КОНТРОЛЬ КОМАНДЫ"
+msgstr ""
+
+#: errtxt.c:37
+msgid " ОСТАНОВ ПО СЧИТ."
+msgstr ""
+
+#: errtxt.c:38
+msgid " ОСТАНОВ ПО ЗАП."
+msgstr ""
+
+#: errtxt.c:39
+msgid " ОСТАНОВ ПО КРА"
+msgstr ""
+
+#: errtxt.c:40
+msgid " ЗАТЕРТО СПО"
+msgstr ""
+
+#: errtxt.c:41
+msgid " ВЫВОД ЗАПРЕЩЕН"
+msgstr ""
+
+#: errtxt.c:42
+msgid " НЕСУЩ.ВИД РАБОТЫ"
+msgstr ""
+
+#: errtxt.c:43
+msgid " СМЕНИЛСЯ ВИД РАБ"
+msgstr ""
+
+#: errtxt.c:44
+msgid " СБОЙ   АРХИВА"
+msgstr ""
+
+#: errtxt.c:45
+msgid " МАС.НЕ ВХ.В ПОЛЕ"
+msgstr ""
+
+#: errtxt.c:46
+msgid " НЕТ КОНЦА БЦ.ИНФ"
+msgstr ""
+
+#: errtxt.c:47
+msgid " ДЛ.МАССИВА>6200"
+msgstr ""
+
+#: errtxt.c:48
+msgid " ДАЙ ТРАКТЫ"
+msgstr ""
+
+#: errtxt.c:49
+msgid " ОБРАЩ.К НЕЗАК.МЛ"
+msgstr ""
+
+#: errtxt.c:50
+msgid " ОШ.В ИНФ.СЛ.ЭКСТ"
+msgstr ""
+
+#: errtxt.c:51
+msgid " ОБРАЩ.К НЕСУЩ.СП"
+msgstr ""
+
+#: errtxt.c:52
+msgid " ЗАПРЕЩ.ЭКСТРАКОД"
+msgstr ""
+
+#: errtxt.c:53
+msgid " ОШИБКА МЛ ЭВМ"
+msgstr ""
+
+#: errtxt.c:54
+msgid " ИСТЕКЛО ВРЕМЯ"
+msgstr ""
+
+#: errtxt.c:55
+msgid " ДАЙ МЕТРЫ АЦПУ!"
+msgstr ""
+
+#: errtxt.c:56
+msgid " ИСТЕК.ВРЕМ.ПО ЭК"
+msgstr ""
+
+#: errtxt.c:57
+msgid " ЧИСЛ.ВЫД.ПК>4096"
+msgstr ""
+
+#: errtxt.c:58
+msgid " ОШИБКА МД ЭВМ"
+msgstr ""
+
+#: errtxt.c:59
+msgid " НЕТ МЛ В ЭК.РЕС"
+msgstr ""
+
+#: errtxt.c:60
+msgid " В ЭК.РЕС.ТРАК>32"
+msgstr ""
+
+#: errtxt.c:61
+msgid " СНЯТА ПОЛЬЗОВАТ."
+msgstr ""
+
+#: errtxt.c:62
+msgid " ДАЙ РАБ.В ЭК.РЕС"
+msgstr ""
+
+#: errtxt.c:63
+msgid " ЗАПРЕЩ.НАПР.В ЭК"
+msgstr ""
+
+#: errtxt.c:64
+msgid " ОШИБКА МБ ЭВМ"
+msgstr ""
+
+#: errtxt.c:65
+msgid " НЕВЕРНЫЙ  ПАРОЛЬ"
+msgstr ""
+
+#: errtxt.c:66
+msgid " ДАЙ ЗАПИСЬ НА МЛ"
+msgstr ""
+
+#: errtxt.c:67
+msgid " УЗЕЛ"
+msgstr ""
+
+#: errtxt.c:68
+msgid " АRСSIN(Х):|Х|>1"
+msgstr ""
+
+#: errtxt.c:69
+msgid " КОРЕНЬ(Х): Х <0"
+msgstr ""
+
+#: errtxt.c:70
+msgid " ЛОГАРИФМ(Х):Х<0"
+msgstr ""
+
+#: errtxt.c:71
+msgid " ЕХР(Х): Х>44"
+msgstr ""
+
+#: errtxt.c:72
+msgid " ЧИСЛО ЗОН>200"
+msgstr ""
+
+#: errtxt.c:73
+msgid " ИНФ.СЛ.В ЧУЖ.ЛИС"
+msgstr ""
+
+#: errtxt.c:74
+msgid " ЛИСТ В ЭК.ЧУЖОЙ"
+msgstr ""
+
+#: errtxt.c:75
+msgid " МАССИВ НЕ СУЩ-Т."
+msgstr ""
+
+#: errtxt.c:76
+msgid " СНЯЛАСЬ  ГЛАВНАЯ"
+msgstr ""
+
+#: errtxt.c:77
+msgid " НЕТ МЕСТА В КАТА"
+msgstr ""
+
+#: errtxt.c:78
+msgid " СНЯТА  ГЛАВНОЙ"
+msgstr ""
+
+#: errtxt.c:79
+msgid " М220 НЕ ПЕРЕДАЛА"
+msgstr ""
+
+#: errtxt.c:80
+msgid " ЧУЖАЯ ИНФОРМАЦИЯ"
+msgstr ""
+
+#: errtxt.c:81
+msgid " СБО,ВВЕДИ ПО ИНС"
+msgstr ""
+
+#: errtxt.c:82
+msgid " ЭКСТР.>ДОПУСТ."
+msgstr ""
+
+#: errtxt.c:83
+msgid " ЗАДАЧА УПРЯТАНА"
+msgstr ""
+
+#: errtxt.c:84
+msgid " НЕТ БОБИНЫ СВЯЗИ"
+msgstr ""
+
+#: errtxt.c:85
+msgid " КЧ В РЕЖ.ТЕСТА"
+msgstr ""
+
+#: errtxt.c:86
+msgid " НЕ ЗАКАЗАН ТЕРМ."
+msgstr ""
+
+#: errtxt.c:87
+msgid " НЕКОР.ОБРАЩЕНИЕ"
+msgstr ""
+
+#: errtxt.c:88
+msgid " ОБРЫВ СВЯЗИ"
+msgstr ""
+
+#: errtxt.c:89
+msgid " ОШ.ЗП НА МЛ"
+msgstr ""
+
+#: errtxt.c:90
+msgid " ПО СЧИТ."
+msgstr ""
+
+#: errtxt.c:91
+msgid " ПО ЗАП."
+msgstr ""
+
+#: errtxt.c:92
+msgid " КРА"
+msgstr ""
+
+#: errtxt.c:93
+msgid " НЕТ ИНФ. ДЛЯ ОТЛ"
+msgstr ""
+
+#: errtxt.c:94
+msgid " ЕNQ<=ОСТАН.=>DЕQ"
+msgstr ""
+
+#: errtxt.c:95
+msgid " Err 79"
+msgstr ""
+
+#: errtxt.c:96
+msgid " Err 80"
+msgstr ""
+
+#: errtxt.c:97
+msgid " ОШ. УЧЕТА"
+msgstr ""
+
+#: input.c:44
+msgid "Input buffer read"
+msgstr ""
+
+#: main.c:135
 #, c-format
 msgid "%s version %s, Copyright 1967-1987 USSR\n"
 msgstr "%s версия %s, Copyright 1967-1987 СССР\n"
 
-#: main.c:138
+#: main.c:137
 #, c-format
 msgid "This is free software, covered by the GNU General Public License.\n"
-msgstr "Это свободное программное обеспечение, распространяемое по лицензии GNU GPL.\n"
+msgstr ""
+"Это свободное программное обеспечение, распространяемое по лицензии GNU "
+"GPL.\n"
+
+#: main.c:139
+#, c-format
+msgid "Emulator of BESM-6, soviet computer of 60-x.\n"
+msgstr "Эмулятор БЭСМ-6, советского суперкомпьютера 60-х годов.\n"
 
 #: main.c:140
 #, c-format
-msgid "Emulator of BESM-6, soviet computer of 60-x.\n"
-msgstr "Эмулятор БЭСМ-6, советского компьютера 60-х годов.\n"
+msgid "Usage:\n"
+msgstr "Вызов:\n"
+
+#: main.c:141
+#, c-format
+msgid "  %s [options] <task-file>\n"
+msgstr ""
+
+#: main.c:142
+#, c-format
+msgid "  %s [options] <input-buf-number>\n"
+msgstr ""
+
+#: main.c:143
+#, c-format
+msgid "  %s [options] --decode-output <raw-file>\n"
+msgstr ""
+
+#: main.c:144
+#, c-format
+msgid "Options:\n"
+msgstr ""
+
+#: main.c:145
+#, c-format
+msgid "  -x, --native           use native extracode E64\n"
+msgstr ""
+
+#: main.c:146
+#, c-format
+msgid "  -b, --break            break on first cmd\n"
+msgstr ""
+
+#: main.c:147
+#, c-format
+msgid "  -v, --visual           visual mode for debugger\n"
+msgstr ""
+
+#: main.c:148
+#, c-format
+msgid "  -t, --trace            trace all extracodes\n"
+msgstr ""
+
+#: main.c:149
+#, c-format
+msgid "  --trace-e64            trace extracode 064\n"
+msgstr ""
+
+#: main.c:150
+#, c-format
+msgid "  -s, --stats            show statistics for machine instructions\n"
+msgstr ""
+
+#: main.c:151
+#, c-format
+msgid "  --path=dir1:dir2...    specify search path for disk images\n"
+msgstr ""
+
+#: main.c:152
+#, c-format
+msgid ""
+"  -p, --output-enable    display printing output (default for batch tasks)\n"
+msgstr ""
+
+#: main.c:153
+#, c-format
+msgid "  -q, --output-disable   no printing output (default for TELE tasks)\n"
+msgstr ""
+
+#: main.c:154
+#, c-format
+msgid "  -o file, --output=file redirect printing output to file\n"
+msgstr ""
+
+#: main.c:155
+#, c-format
+msgid "  --output-raw=file      dump raw output to file\n"
+msgstr ""
+
+#: main.c:156
+#, c-format
+msgid "  --decode-output file   decode raw output file to text\n"
+msgstr ""
+
+#: main.c:157
+#, c-format
+msgid "  -l, --output-latin     use Latin letters for output\n"
+msgstr ""
+
+#: main.c:158
+#, c-format
+msgid "  --output-cyrillic      use Cyrillic letters for output (default)\n"
+msgstr ""
+
+#: main.c:159
+#, c-format
+msgid "  -c file, --punch=file  punch to file\n"
+msgstr ""
+
+#: main.c:160
+#, c-format
+msgid ""
+"  --punch-binary         punch in binary format (default dots and holes)\n"
+msgstr ""
+
+#: main.c:161
+#, c-format
+msgid ""
+"  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 "
+"cp866\n"
+msgstr ""
+
+#: main.c:162
+#, c-format
+msgid "  --bootstrap            used to generate contents of the system disk\n"
+msgstr ""
+
+#: main.c:163
+#, c-format
+msgid "  --no-insn-check        all words but at addr 0 are treated as insns\n"
+msgstr ""
+
+#: main.c:165
+#, c-format
+msgid ""
+"\n"
+"Report bugs to %s\n"
+msgstr ""
+
+#: main.c:300
+#, c-format
+msgid "%s: too many files\n"
+msgstr ""
+
+#: main.c:330
+msgid " ОШ ВВД "
+msgstr ""
+
+#: main.c:343
+#, c-format
+msgid "Error loading supervisor.\n"
+msgstr ""
+
+#: main.c:372
+#, c-format
+msgid "%ld instructions per %2f seconds - %ld IPS, %3f uSPI\n"
+msgstr ""
+
+#: main.c:387
+#, c-format
+msgid ""
+"\n"
+"Interrupt\n"
+msgstr ""
+
+#: vsinput.c:149
+msgid "ЧУЖОЕ СЛОВО"
+msgstr ""
+
+#: vsinput.c:167
+msgid "ЧУЖОЙ СИМВОЛ"
+msgstr ""
+
+#: vsinput.c:173
+msgid "ЦИФР # 6 и # 12"
+msgstr ""
+
+#: vsinput.c:198
+msgid "НЕТ СТПАСП"
+msgstr ""
+
+#: vsinput.c:238
+msgid "НЕТ ПАРАМ"
+msgstr ""
+
+#: vsinput.c:289
+msgid "ЛЕНТ >= 12"
+msgstr ""
+
+#: vsinput.c:302
+msgid "ПЛОХ ТОМ"
+msgstr ""
+
+#: vsinput.c:397
+msgid "ЦИФР НЕ 9 И НЕ 18"
+msgstr ""
+
+#: vsinput.c:407
+msgid "НЕТ КОНЦА ВВОДА"
+msgstr ""
+
+#: vsinput.c:498 vsinput.c:549
+msgid "МАССИВ ПУСТ"
+msgstr ""
+
+#: vsinput.c:578
+msgid "ЗАМЯТИЕ"
+msgstr ""
+
+#: vsinput.c:622
+#, c-format
+msgid ""
+"   АВВД   НПК    НС   НСТ   СИМ ШИФР %06u%06u\n"
+"  %05o%6d%6d%6d   %03o %s\n"
+msgstr ""
+
+#: vsinput.c:637
+msgid "СТПАСП"
+msgstr ""
+
+#: vsinput.c:679
+msgid " НЕТ АВВД\n"
+msgstr ""
+
+#: vsinput.c:697
+msgid " ОШ БУФ ВВД\n"
+msgstr ""
+
+#: vsinput.c:704
+msgid " БУФ ПЕРЕП\n"
+msgstr ""
