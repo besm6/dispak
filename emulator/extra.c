@@ -273,8 +273,11 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 					return bp.p_w;
 				}
 			}
-			if (line[pos] == GOST_SPACE)
-				line[pos] = c;
+			if (line[pos] != GOST_SPACE) {
+				lflush(line);
+				fputs("\\\n", stdout);
+			}
+			line[pos] = c;
 			lastc = c;
 			++pos;
 			if (pos == 128) {
