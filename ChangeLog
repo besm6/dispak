@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r73 | leobru | 2008-02-23 07:59:06 +0300 (Sat, 23 Feb 2008) | 1 line
+
+Overprinting made visible in emulated e64
+------------------------------------------------------------------------
+r72 | vak | 2008-02-23 00:30:26 +0300 (Sat, 23 Feb 2008) | 4 lines
+
+Sources moved to emulator/ subdirectory.
+Directory diskdir/ renamed to disks/.
+
+
+------------------------------------------------------------------------
 r71 | vak | 2008-02-22 21:21:30 +0300 (Fri, 22 Feb 2008) | 3 lines
 
 Updated examples/dtran.b6.
