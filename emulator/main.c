@@ -184,6 +184,9 @@ cget(void)
 		case '>': return GOST_GREATER_THAN_OR_EQUAL;
 		case ':': return GOST_DIVISION;
 		case '@': return GOST_LOWER_TEN;
+		case '|': return GOST_LOGICAL_OR;
+		case '=': return GOST_IDENTICAL;
+		case '?': return GOST_IMPLICATION;
 		}
 	}
 	c = unicode_to_gost (c);

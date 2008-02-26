@@ -821,13 +821,23 @@ e50(void)
 				acc.r = 077777;
 		}
 		return E_SUCCESS;
-	case 0112:	/* set volume offset in chunks of 040 blocks */
-		disks[(acc.r >> 12) & 077].offset = (acc.r << 5) & 07777;
+	case 0112: {	/* set volume offset */
+		uint unit = (acc.r >> 12) & 077;
+		/* set volume offset in zones for tapes,
+		 * in chunks of 040 blocks for disks
+		 */
+		disks[unit].offset =
+			(disks[unit].diskno < 2048 ? acc.r : acc.r << 5) & 07777;
 		return E_SUCCESS;
-	case 0113:	/* get current offset */
-		acc.l = disks[(acc.r >> 12) & 077].offset >> 5;
+	}
+	case 0113: {	/* get current offset */
+		uint unit = (acc.r >> 12) & 077;
+		acc.l = disks[unit].offset;
+		if (disks[unit].diskno >= 2048)
+			acc.l >>= 5;
 		acc.r = 0;
 		return E_SUCCESS;
+	}
 	case 0114: {	/* get date */
 		time_t t;
 		struct tm * d;
@@ -880,13 +890,19 @@ e50(void)
 		return E_SUCCESS;
 	case 0137:	/* undocumented */
 		return E_SUCCESS;
-	case 0156:	/* get volume type; pretend it is 29.5 Mb disk */
+	case 0156: { /* get volume type */
+		int i = disks[(acc.r >> 12) & 077].diskno;
 		acc.l = 0;
-		if (disks[(acc.r >> 12) & 077].diskno)
+		if (i == 0)
+			acc.r = 077777;
+		else if (i >= 2048)
+			/* pretend that the disks are 29.5 Mb */
 			acc.r = 1;
 		else
-			acc.r = 077777;
+			/* BESM-6 tape */
+			acc.r = 040;
 		return E_SUCCESS;
+	}
 	case 0165:      /* BESM owner + version + sys. disk info */
 		acc.l = GOST_B << 8 | GOST_EL;
 		acc.r = GOST_A << 16 | GOST_DE << 8 | GOST_E;
@@ -1068,6 +1084,41 @@ deb(void)
 	return E_SUCCESS;
 }
 
+void
+put_check_words(ushort u, ushort zone, ushort addr, int copy2_req) {
+	int i;
+	alureg_t t;
+	t.l = t.r = 0;
+	STORE(t, 010); 	/* unit id + date */
+	STORE(user, 011); /* writing user id, use current */
+	/* volume numbers - assigned and physical */
+	t.l = disks[u].diskno << 6;
+	t.r = disks[u].diskno;
+	STORE(t, 012);
+	/* zone numbers and a magic key are duplicated */
+	t.l = 070707;
+	t.r = (2*zone + 010) << 12 | (2*zone + 010 + copy2_req);
+	STORE(t, 013);
+	STORE(t, 016);
+	/* last word of the zone - tech. legacy reasons */
+	LOAD(t, addr + 01777);
+	STORE(t, 015);
+	t.l = t.r = 0;
+	for (i = 0; i < 02000; i++) {
+		uint carry;
+		alureg_t s;
+		LOAD(s, addr + i);
+		t.r = (carry = t.r + s.r) & 0xffffff;
+		carry >>= 24;
+		t.l = (carry = t.l + s.l + carry) & 0xffffff;
+		carry >>= 24;
+		t.r = (carry = t.r + carry) & 0xffffff;
+		carry >>= 24;
+		t.l = (carry = t.l + carry) & 0xffffff;
+	}
+	STORE(t, 017);	/* checksum */
+}
+
 int
 ddio(void)
 {
@@ -1133,6 +1184,10 @@ ddio(void)
 			(zone + disks[u].offset) & 0xfff,
 			(char *)(core + addr), iomode);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
+		if (uil.i_opcode & 1) {
+			/* check words requested */
+			put_check_words(u, zone, addr, 0 != (uir.i_opcode & 0200));
+		}
 	} else
 		r = disk_write(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
@@ -1437,7 +1492,7 @@ physaddr(void)
 	case 01413:			/* ВРЕМЯ */
 		reg[016] = 010;
 		return e53();
-	case 02100:                     /* ? (try also 0100000) */
+	case 02100:                     /* ПРЕДЕЛ, 16р = есть архив */
 		acc.l = acc.r = 0;
 		break;
 	default:
@@ -1613,7 +1668,16 @@ exform(void)
 {
 	uint64_t	w;
 	int		r;
+	uchar		c;
 
+	txt.p_w = ADDR(acc.r);
+	txt.p_b = 0;
+	
+	do {
+		c = getbyte(&txt);
+		gost_putc(c, stdout);
+	} while(c != GOST_TSE);
+	putchar('\n');
 	txt.p_w = ADDR(acc.r);
 	txt.p_b = 0;
 	w = getword(&txt);
