@@ -415,6 +415,10 @@ extern uint     to_2_10(uint src);
 #define E_CHECK		20		/* instruction check		*/
 #define E_DISKERR       42              /* self xplntry */
 #define E_RESOP         46              /* err in e72 cw */
+#define E_ASIN		52		/* asin(x), |x| < 1 */
+#define E_SQRT		53		/* sqrt(x), x < 0 */
+#define E_ALOG		54		/* log(x), x <= 0 */
+#define E_EXP		55		/* exp(x), x > 44 */
 #define E_TERM          1               /* normal termination   */
 #define E_MAX           81
 

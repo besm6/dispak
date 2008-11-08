@@ -356,7 +356,7 @@ elfun(int fun)
 qzero:
 		acc = zeroword;
 		return E_SUCCESS;
-	}
+	} else
 	if ((acc.ml & 0x8000) == 0) {   /* normalize */
 		while (acc.ml == 0) {
 			if ((acc.o -= 16) & 0x80)
@@ -382,6 +382,9 @@ qzero:
 	switch (fun) {
 	case EF_SQRT:
 		arg.d = sqrt(arg.d);
+		if (isnan(arg.d)) {
+			return E_SQRT;
+		}
 		break;
 	case EF_SIN:
 		arg.d = sin(arg.d);
@@ -394,12 +397,21 @@ qzero:
 		break;
 	case EF_ARCSIN:
 		arg.d = asin(arg.d);
+		if (isnan(arg.d)) {
+			return E_ASIN;
+		}
 		break;
 	case EF_ALOG:
 		arg.d = log(arg.d);
+		if (isnan(arg.d)) {
+			return E_ALOG;
+		}
 		break;
 	case EF_EXP:
 		arg.d = exp(arg.d);
+		if (isinf(arg.d)) {
+			return E_EXP;
+		}
 		break;
 	case EF_ENTIER:
 		arg.d = floor(arg.d);
@@ -413,8 +425,12 @@ qzero:
 
 	o = arg.u.left32 >> 20;
 	o = o - 1022 + 64;
-	if (o < 0)
-		goto qzero;
+	if (o < 0) {
+		// biased exponent is negative,
+		// flush to zero
+		acc = zeroword;
+		return E_SUCCESS;
+	}
 	acc.o = o & 0x7f;
 	acc.ml = ((arg.u.left32 & 0xfffff) | 0x100000) >> 5;
 	acc.mr = ((arg.u.left32 & 0x1f) << 19) |
@@ -422,7 +438,7 @@ qzero:
 	if (neg)
 		NEGATE(acc);
 	if ((o > 0x7f) && !dis_exc)
-		return E_OVFL;
+		return E_EXP;	// the only one that can overflow
 	PACK(acc)
 	return E_SUCCESS;
 
