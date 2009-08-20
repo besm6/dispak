@@ -48,6 +48,29 @@ file_to_disk (unsigned to_diskno, unsigned to_start, unsigned length,
 		z, z * 6, from_file, to_diskno);
 }
 
+/*
+ * Отладочная печать зоны.
+ */
+#if 0
+void
+dump_zone (int z, unsigned char *buf1, unsigned char *buf2)
+{
+	int i;
+	void dump_word (unsigned char *data) {
+		printf (" %02x-%02x-%02x-%02x-%02x-%02x", data[0], data[1],
+			data[2], data[3], data[4], data[5]);
+	}
+
+	printf ("%4d:", z);
+	for (i=0; i<516*6; i+=6)
+		dump_word (buf1+i);
+	printf ("\n     ");
+	for (i=0; i<516*6; i+=6)
+		dump_word (buf2+i);
+	printf ("\n");
+}
+#endif
+
 unsigned long long
 grebenka (unsigned short *data)
 {
@@ -85,7 +108,7 @@ repack (unsigned char *from, unsigned char *to)
 	unsigned short data[6];
 	unsigned long long word;
 
-	for (i=0; i<512; ++i) {
+	for (i=0; i<516; ++i) {
 		data[0] = from[0] | (from[1] << 8);
 		data[1] = from[2] | (from[3] << 8);
 		data[2] = from[4] | (from[5] << 8);
@@ -95,6 +118,7 @@ repack (unsigned char *from, unsigned char *to)
 		from += 10;
 
 		word = grebenka (data);
+/*printf (" %013llx", word);*/
 
 		*to++ = word >> 40;
 		*to++ = word >> 32;
@@ -106,14 +130,16 @@ repack (unsigned char *from, unsigned char *to)
 }
 
 /*
- * Создание образа диска из позонного каталога от эмулятора магнитных дисков Морозова.
+ * Создание образа диска из позонного каталога
+ * от эмулятора магнитных дисков Морозова.
  */
 void
 dir_to_disk (unsigned to_diskno, char *from_dir)
 {
 	void *disk;
 	int fd, z;
-	unsigned char buf [ZBYTES], raw [5160];
+	unsigned char raw [5160], buf1 [516*6], buf2 [516*6];
+	char buf [ZBYTES];
 	char filename [MAXPATHLEN];
 
 	disk = disk_open (to_diskno, DISK_READ_WRITE);
@@ -134,15 +160,21 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-		repack (raw, buf);
+/*printf ("%04d:", z);*/
+		repack (raw, buf1);
+/*printf ("\n");*/
 
 		if (read (fd, raw, sizeof (raw)) != sizeof (raw)) {
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-		repack (raw, buf + ZBYTES/2);
-
+/*printf ("     ");*/
+		repack (raw, buf2);
+/*printf ("\n");*/
 		close (fd);
+
+		memcpy (buf,            buf1 + 4*6, ZBYTES/2);
+		memcpy (buf + ZBYTES/2, buf2 + 4*6, ZBYTES/2);
 		if (disk_write (disk, z, (char*) buf) != DISK_IO_OK) {
 			fprintf (stderr, "Write to %d/%04o failed\n", to_diskno, z);
 			break;
@@ -170,11 +202,45 @@ void
 disk_to_file (unsigned from_diskno, unsigned from_start, unsigned length,
 	char *to_file)
 {
-	int limit;
+	int fd, limit, z, status;
+	void *disk;
+	char buf [ZBYTES];
+
+	if (strcmp (to_file, "-") == 0)
+		fd = 1;
+	else {
+		fd = open (to_file, O_WRONLY | O_CREAT, 0644);
+		if (fd < 0) {
+			perror (to_file);
+			return;
+		}
+	}
+
+	disk = disk_open (from_diskno, DISK_READ_ONLY);
+	if (! disk) {
+		fprintf (stderr, "Cannot open disk %d\n", from_diskno);
+		return;
+	}
 
 	limit = length ? (from_start + length) : MAXZ;
+	for (z=from_start; z<limit; ++z) {
+		status = disk_readi (disk, z, buf, DISK_MODE_LOUD);
+		if (status != DISK_IO_OK) {
+			if (status != DISK_IO_NEW)
+				fprintf (stderr, "Reading %d/%04o failed\n",
+					from_diskno, z);
+			break;
+		}
+		if (write (fd, buf, ZBYTES) != ZBYTES) {
+			fprintf (stderr, "%s: write failed\n", to_file);
+			break;
+		}
+	}
+	disk_close (disk);
+	if (fd != 1)
+		close (fd);
+
+	z -= from_start;
 	printf ("Writing %d zones (%d kbytes) from disk %d/%04o to file %s\n",
-		(limit - from_start), (limit - from_start) * 6,
-		from_diskno, from_start, to_file);
-	printf ("*** Not implemented yet. Sorry.\n");
+		z, z * 6, from_diskno, from_start, to_file);
 }

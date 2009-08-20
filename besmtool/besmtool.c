@@ -162,6 +162,9 @@ main (int argc, char **argv)
 				from_file, from_start);
 		else if (from_dir)
 			dir_to_disk (diskno, from_dir);
+		else if (to_file)
+			disk_to_file (diskno, start, length,
+				to_file);
 		else
 			disk_to_disk (diskno, start, length,
 				from_diskno, from_start);
