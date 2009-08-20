@@ -633,27 +633,31 @@ passload(char *src)
 	uint    sz;
 	uchar   *buf, *cp;
 
-	if (!(buf = malloc(12288))) {
+	buf = malloc (12288);
+	if (! buf) {
 		utf8_puts (_("СТПАСП"), stderr);
 		perror("");
 		return NULL;
 	}
-	dh = disk_open(2053, DISK_READ_ONLY);
-	if (!dh)
+#define PASSPORT_DISK	2053
+#define PASSPORT_ZONE	0543
+	dh = disk_open (PASSPORT_DISK, DISK_READ_ONLY);
+	if (! dh)
 		return NULL;
-	disk_read(dh, 0543, (char*) buf);
-	disk_read(dh, 0544, (char*) buf + 6144);
+	disk_read(dh, PASSPORT_ZONE, (char*) buf);
+	disk_read(dh, PASSPORT_ZONE + 1, (char*) buf + 6144);
 	disk_close(dh);
-	for (cp = buf; (cp < (buf + 12288)) && *cp;
-				cp += ((cp[4] << 8) | cp[5]) * 6)
-		if ((*src == *cp) && (src[1] == cp[1]))
-			goto found;
+	for (cp = buf; cp < buf + 12288; cp += sz) {
+		sz = ((cp[4] << 8) | cp[5]) * 6;
+		if (! sz)
+			break;
+		if (src[0] == cp[0] && src[1] == cp[1]) {
+			memcpy(buf, cp + 6, sz);
+			return realloc(buf, sz);
+		}
+	}
 	free(buf);
 	return NULL;
-found:
-	sz = ((cp[4] << 8) | cp[5]) * 6;
-	memcpy(buf, cp + 6, sz);
-	return realloc(buf, sz);
 }
 
 static unsigned

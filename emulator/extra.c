@@ -1290,7 +1290,8 @@ ttin(uchar flags, ushort a1, ushort a2)
 	else
 		fputs("-\r", stdout);
 	fflush(stdout);
-	fgets((char*) buf, sizeof(buf), stdin);
+	if (! fgets((char*) buf, sizeof(buf), stdin))
+		buf[0] = '\n';
 	dp = core[a1].w_b;
 	sp = buf;
 	while (dp - core[a1].w_b < (a2 - a1 + 1) * 6) {
@@ -1672,7 +1673,7 @@ exform(void)
 
 	txt.p_w = ADDR(acc.r);
 	txt.p_b = 0;
-	
+
 	do {
 		c = getbyte(&txt);
 		gost_putc(c, stdout);
