@@ -1399,7 +1399,7 @@ gost_write (unsigned char *line, int n, FILE *fout)
  * Convert to local encoding (UTF-8, KOI8-R, CP-1251, CP-866).
  */
 void
-utf8_puts (char *line, FILE *fout)
+utf8_puts (const char *line, FILE *fout)
 {
 	int c1, c2, c3;
 

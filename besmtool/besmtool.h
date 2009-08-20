@@ -3,6 +3,7 @@
 
 void list_all_disks (void);
 void list_disk (unsigned diskno);
+void passports (unsigned diskno, unsigned start);
 void erase_disk (unsigned diskno, unsigned start, unsigned length, int format);
 void dump_disk (unsigned diskno, unsigned start, unsigned length);
 void file_to_disk (unsigned to_diskno, unsigned to_start, unsigned length,

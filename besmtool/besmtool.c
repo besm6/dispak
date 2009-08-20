@@ -66,6 +66,7 @@ usage ()
 
 	fprintf (stderr, "Usage:\n");
 	fprintf (stderr, "\tbesmtool list [<disk-number>]\n");
+	fprintf (stderr, "\tbesmtool pass [<disk-number>]\n");
 	fprintf (stderr, "\tbesmtool erase <disk-number> [<options>...]\n");
 	fprintf (stderr, "\tbesmtool zero <disk-number> [<options>...]\n");
 	fprintf (stderr, "\tbesmtool dump <disk-number> [<options>...] [--to-file=<filename>]\n");
@@ -130,6 +131,10 @@ main (int argc, char **argv)
 			list_all_disks ();
 			return 0;
 		}
+		if (strcmp ("pass", argv[optind]) == 0) {
+			passports (2053, start);
+			return 0;
+		}
 		usage ();
 	}
 	if (optind != argc-2)
@@ -139,6 +144,10 @@ main (int argc, char **argv)
 
 	if (strcmp ("list", argv[optind]) == 0) {
 		list_disk (diskno);
+		return 0;
+	}
+	if (strcmp ("pass", argv[optind]) == 0) {
+		passports (diskno, start);
 		return 0;
 	}
 	if (strcmp ("erase", argv[optind]) == 0) {
@@ -162,9 +171,6 @@ main (int argc, char **argv)
 				from_file, from_start);
 		else if (from_dir)
 			dir_to_disk (diskno, from_dir);
-		else if (to_file)
-			disk_to_file (diskno, start, length,
-				to_file);
 		else
 			disk_to_disk (diskno, start, length,
 				from_diskno, from_start);

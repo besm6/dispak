@@ -50,7 +50,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_besmtool_OBJECTS = besmtool.$(OBJEXT) write.$(OBJEXT) \
-	dump.$(OBJEXT) list.$(OBJEXT) erase.$(OBJEXT) disk.$(OBJEXT) \
+	dump.$(OBJEXT) list.$(OBJEXT) erase.$(OBJEXT) passports.$(OBJEXT) disk.$(OBJEXT) \
 	encoding.$(OBJEXT)
 besmtool_OBJECTS = $(am_besmtool_OBJECTS)
 besmtool_LDADD = $(LDADD)
@@ -175,7 +175,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-besmtool_SOURCES = besmtool.c write.c dump.c list.c erase.c \
+besmtool_SOURCES = besmtool.c write.c dump.c list.c erase.c passports.c \
 	../emulator/disk.c ../emulator/encoding.c
 
 AM_CFLAGS = -Wall -g -O2
@@ -236,7 +236,7 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-besmtool$(EXEEXT): $(besmtool_OBJECTS) $(besmtool_DEPENDENCIES) 
+besmtool$(EXEEXT): $(besmtool_OBJECTS) $(besmtool_DEPENDENCIES)
 	@rm -f besmtool$(EXEEXT)
 	$(LINK) $(besmtool_OBJECTS) $(besmtool_LDADD) $(LIBS)
 
@@ -251,6 +251,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encoding.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/erase.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/passports.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/write.Po@am__quote@
 

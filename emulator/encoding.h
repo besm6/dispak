@@ -10,6 +10,7 @@ void gost_putc (unsigned char, FILE*);
 void gost_write (unsigned char*, int, FILE*);
 unsigned char unicode_to_gost (unsigned short);
 unsigned char utf8_to_gost (unsigned char**);
-void utf8_puts (char*, FILE*);
+void utf8_puts (const char*, FILE*);
 int unicode_getc (FILE*);
+void unicode_putc (unsigned short, FILE*);
 void set_input_encoding (char*);

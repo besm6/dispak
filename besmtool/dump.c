@@ -4,9 +4,32 @@
 #include "encoding.h"
 
 static void
-print_char (unsigned char ch)
+print_gost_char (unsigned char ch)
 {
 	gost_putc (ch, stdout);
+}
+
+static void
+print_text_char (unsigned char ch)
+{
+	gost_putc (text_to_gost[ch & 63], stdout);
+}
+
+static void
+print_iso_char (unsigned char ch)
+{
+	static const char *koi7_to_utf8 [32] = {
+		/* 0140 */ "Ю", "А", "Б", "Ц", "Д", "Е", "Ф", "Г",
+		/* 0150 */ "Х", "И", "Й", "К", "Л", "М", "Н", "О",
+		/* 0160 */ "П", "Я", "Р", "С", "Т", "У", "Ж", "В",
+		/* 0170 */ "Ь", "Ы", "З", "Ш", "Э", "Щ", "Ч", "Ъ",
+	};
+	if (ch < ' ' || ch >= 0200)
+		unicode_putc ('.', stdout);
+	else if (ch < 0140)
+		unicode_putc (ch, stdout);
+	else
+		utf8_puts (koi7_to_utf8 [ch - 0140], stdout);
 }
 
 static void
@@ -29,12 +52,28 @@ dump_word (unsigned zone, unsigned addr, unsigned left, unsigned right)
 	print_command (right);
 	printf ("  %04o %04o %04o %04o  ",
 		left >> 12, left & 07777, right >> 12, right & 07777);
-	print_char (left >> 16);
-	print_char (left >> 8);
-	print_char (left);
-	print_char (right >> 16);
-	print_char (right >> 8);
-	print_char (right);
+	print_gost_char (left >> 16);
+	print_gost_char (left >> 8);
+	print_gost_char (left);
+	print_gost_char (right >> 16);
+	print_gost_char (right >> 8);
+	print_gost_char (right);
+	fputs ("  ", stdout);
+	print_iso_char (left >> 16);
+	print_iso_char (left >> 8);
+	print_iso_char (left);
+	print_iso_char (right >> 16);
+	print_iso_char (right >> 8);
+	print_iso_char (right);
+	fputs ("  ", stdout);
+	print_text_char (left >> 18);
+	print_text_char (left >> 12);
+	print_text_char (left >> 6);
+	print_text_char (left);
+	print_text_char (right >> 18);
+	print_text_char (right >> 12);
+	print_text_char (right >> 6);
+	print_text_char (right);
 	putchar ('\n');
 }
 
