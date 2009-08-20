@@ -110,6 +110,10 @@ disk_open(u_int diskno, u_int mode)
 
 	if (diskno) {
 		disk_find_path (fname, diskno);
+		if (access(fname, R_OK) < 0) {
+			fprintf(stderr, "disk_open: no %d image found\n", diskno);
+			return 0;
+		}
 		if (access(fname, W_OK) < 0) {
 			newmode = DISK_RW_NO_WAY;
 			if ((mode & DISK_READ_TOTAL) == DISK_READ_WRITE) {

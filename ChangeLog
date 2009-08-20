@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r75 | leobru | 2008-02-26 09:03:15 +0300 (Tue, 26 Feb 2008) | 3 lines
+
+All ALGOL chars can now be input; implemented distinction between tapes and disks (offset granularity),
+check words for tapes.
+
+------------------------------------------------------------------------
+r74 | vak | 2008-02-23 12:09:15 +0300 (Sat, 23 Feb 2008) | 4 lines
+
+Added po/ru.gmo to repository - now user is now required to have gettext
+installed. Fixed references from examples/Makefile to emulator/besm6.
+
+
+------------------------------------------------------------------------
 r73 | leobru | 2008-02-23 07:59:06 +0300 (Sat, 23 Feb 2008) | 1 line
 
 Overprinting made visible in emulated e64

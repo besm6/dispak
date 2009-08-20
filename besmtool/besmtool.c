@@ -37,6 +37,7 @@ enum {
 	OPT_LENGTH,
 	OPT_FROM_FILE,
 	OPT_FROM_DISK,
+	OPT_FROM_DIR,
 	OPT_FROM_START,
 	OPT_TO_FILE,
 };
@@ -50,6 +51,7 @@ static struct option longopts[] = {
 	{ "length",		1,	0,	OPT_LENGTH	},
 	{ "from-file",		1,	0,	OPT_FROM_FILE	},
 	{ "from-disk",		1,	0,	OPT_FROM_DISK	},
+	{ "from-dir",		1,	0,	OPT_FROM_DIR	},
 	{ "from-start",		1,	0,	OPT_FROM_START	},
 	{ "to-file",		1,	0,	OPT_TO_FILE	},
 	{ 0,			0,	0,	0		},
@@ -76,6 +78,7 @@ usage ()
 	fprintf (stderr, "Write options:\n");
 	fprintf (stderr, "\t--from-file=<filename>\n");
 	fprintf (stderr, "\t--from-disk=<disknum>\n");
+	fprintf (stderr, "\t--from-dir=<dirname>\n");
 	fprintf (stderr, "\t--from-start=<zone>\n");
 	exit (-1);
 }
@@ -84,7 +87,7 @@ int
 main (int argc, char **argv)
 {
 	unsigned start = 0, length = 0, from_diskno = 0, from_start = 0;
-	char *from_file = 0, *to_file = 0;
+	char *from_file = 0, *to_file = 0, *from_dir = 0;
 	unsigned diskno;
 	int c;
 
@@ -110,6 +113,9 @@ main (int argc, char **argv)
 			break;
 		case OPT_FROM_DISK:
 			from_diskno = strtol (optarg, 0, 0);
+			break;
+		case OPT_FROM_DIR:
+			from_dir = optarg;
 			break;
 		case OPT_FROM_START:
 			from_start = strtol (optarg, 0, 0);
@@ -154,6 +160,8 @@ main (int argc, char **argv)
 		if (from_file)
 			file_to_disk (diskno, start, length,
 				from_file, from_start);
+		else if (from_dir)
+			dir_to_disk (diskno, from_dir);
 		else
 			disk_to_disk (diskno, start, length,
 				from_diskno, from_start);
