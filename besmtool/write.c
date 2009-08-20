@@ -132,6 +132,7 @@ repack (unsigned char *from, unsigned char *to)
 /*
  * Создание образа диска из позонного каталога
  * от эмулятора магнитных дисков Морозова.
+ * "Отрицательные" зоны теряем.
  */
 void
 dir_to_disk (unsigned to_diskno, char *from_dir)
@@ -147,7 +148,7 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 		fprintf (stderr, "Cannot open disk %d\n", to_diskno);
 		return;
 	}
-	for (z=0; z<MAXZ; ++z) {
+	for (z=4; z<MAXZ; ++z) {
 		strcpy (filename, from_dir);
 		sprintf (filename + strlen (filename), "/%04d", z);
 		fd = open (filename, O_RDONLY);
@@ -160,22 +161,18 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-/*printf ("%04d:", z);*/
 		repack (raw, buf1);
-/*printf ("\n");*/
 
 		if (read (fd, raw, sizeof (raw)) != sizeof (raw)) {
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-/*printf ("     ");*/
 		repack (raw, buf2);
-/*printf ("\n");*/
 		close (fd);
 
 		memcpy (buf,            buf1 + 4*6, ZBYTES/2);
 		memcpy (buf + ZBYTES/2, buf2 + 4*6, ZBYTES/2);
-		if (disk_write (disk, z, (char*) buf) != DISK_IO_OK) {
+		if (disk_write (disk, z - 4, (char*) buf) != DISK_IO_OK) {
 			fprintf (stderr, "Write to %d/%04o failed\n", to_diskno, z);
 			break;
 		}
