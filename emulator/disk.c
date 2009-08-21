@@ -394,16 +394,15 @@ disk_makezonei(disk_t *d, u_int zone)
 			fprintf(stderr, "disk_makezonei: seeking to end (%d) for new descriptor\n", pos);
 #endif
 			putlong(d->d_md[i - 1]->md_next, pos);
+			d->d_modif[i-1] = 1;
 
 			/* force writing intermediate descriptors */
 
-			if (disk_writedescri(d, i - 1) != DISK_IO_OK)
+			if (disk_writedescri(d, i) != DISK_IO_OK)
 				return DISK_IO_ENWRITE;
 		} while (i++ != block);
-		pos = lseek(d->d_fileno, sizeof(md_t), SEEK_END);
-	} else {
-		pos = lseek(d->d_fileno, 0, SEEK_END);
 	}
+	pos = lseek(d->d_fileno, 0, SEEK_END);
 
 #ifdef DEBUG
 	fprintf(stderr, "disk_makezonei: seeking to end (%d) for new zone\n", pos);
