@@ -232,8 +232,10 @@ d_6_12:
 		else
 			cp = 0;
 
-		if (art[0] == GOST_B && art[1] == GOST_X && art[2] == GOST_O) {
-			/* ВХО <octal> */
+		if ((art[0] == GOST_B && art[1] == GOST_X && art[2] == GOST_O) ||
+		    (art[0] == GOST_B && art[1] == GOST_E && art[2] == GOST_G)) {
+			/* ВХО <octal>
+			 * BEG ... */
 			if (! cp) {
 mpar:				inperr(_("НЕТ ПАРАМ"));
 				return -1;
@@ -242,8 +244,9 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 		} else if (art[0] == GOST_A && art[1] == GOST_B && art[2] == GOST_O) {
 			/* АВОСТ [<octal>] - 020 by default */
 			psp.intercept = cp ? get_octal (cp) : 020;
-		} else if (art[0] == GOST_A && art[1] == GOST_TSE &&
-		    art[2] == GOST_PE) {
+
+		} else if ((art[0] == GOST_A && art[1] == GOST_TSE && art[2] == GOST_PE) ||
+		    (art[0] == GOST_L && art[1] == GOST_P && art[2] == GOST_R)) {
 			/* АЦП <decimal> */
 			if (! cp)
 				goto mpar;
@@ -257,30 +260,40 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 			/* ТЕЛ */
 			psp.tele = 1;
 
-		} else if (art[0] == GOST_C && art[1] == GOST_PE &&
-		    art[2] == GOST_E) {
-			/* СПЕ */
+		} else if ((art[0] == GOST_C && art[1] == GOST_PE && art[2] == GOST_E) ||
+		    (art[0] == GOST_S && art[1] == GOST_P && art[2] == GOST_E)) {
+			/* СПЕ
+			 * SPE */
 			psp.spec = 1;
 
 		} else if (art[0] == GOST_O && art[1] == GOST_ZE &&
 		    art[2] == GOST_Y) {
 			/* ОЗУ - игнорируем */
 
-		} else if (art[0] == GOST_B && art[1] == GOST_P &&
-		    art[2] == GOST_E) {
-			/* ВРЕ - игнорируем */
+		} else if ((art[0] == GOST_B && art[1] == GOST_P && art[2] == GOST_E) ||
+		    (art[0] == GOST_T && art[1] == GOST_I && art[2] == GOST_M)) {
+			/* ВРЕ - игнорируем
+			 * TIM */
 
-		} else if (art[0] == GOST_T && art[1] == GOST_P &&
-		    art[2] == GOST_A) {
-			/* ТРА - игнорируем */
+		} else if ((art[0] == GOST_T && art[1] == GOST_P && art[2] == GOST_A) ||
+		    (art[0] == GOST_T && art[1] == GOST_R && art[2] == GOST_A)) {
+			/* ТРА - игнорируем
+			 * TRA */
 
-		} else if (art[0] == GOST_EL && art[1] == GOST_CYRILLIC_I &&
-		    art[2] == GOST_C) {
-			/* ЛИС - игнорируем */
+		} else if ((art[0] == GOST_EL && art[1] == GOST_CYRILLIC_I && art[2] == GOST_C) ||
+		    (art[0] == GOST_P && art[1] == GOST_A && art[2] == GOST_G)) {
+			/* ЛИС - игнорируем
+			 * PAG */
 
-		} else if (art[0] == GOST_EF && art[1] == GOST_CYRILLIC_I &&
-		    art[2] == GOST_ZE) {
-			/* ФИЗ <octal> */
+		} else if ((art[0] == GOST_P && art[1] == GOST_O && art[2] == GOST_C) ||
+		    (art[0] == GOST_W && art[1] == GOST_R && art[2] == GOST_I)) {
+			/* РОС - надо бы сделать
+			 * WRI */
+
+		} else if ((art[0] == GOST_EF && art[1] == GOST_CYRILLIC_I && art[2] == GOST_ZE) ||
+		    (art[0] == GOST_P && art[1] == GOST_H && art[2] == GOST_Y)) {
+			/* ФИЗ <octal>
+			 * PHY ... */
 			if (! cp)
 				goto mpar;
 			while (*cp && *cp != GOST_OVERLINE && *cp > GOST_9)
@@ -292,10 +305,12 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 
 		} else if ((art[0] == GOST_EL && art[1] == GOST_E && art[2] == GOST_H) ||
 		    (art[0] == GOST_T && art[1] == GOST_A && art[2] == GOST_P) ||
-		    (art[0] == GOST_DE && art[1] == GOST_CYRILLIC_I && art[2] == GOST_C)) {
+		    (art[0] == GOST_DE && art[1] == GOST_CYRILLIC_I && art[2] == GOST_C) ||
+		    (art[0] == GOST_D && art[1] == GOST_I && art[2] == GOST_S)) {
 			/* ЛЕН <octal> ( <decimal> [ C | -ЗП | - <octal> ] )
 			 * TAP ...
-			 * ДИС ... */
+			 * ДИС ...
+			 * DIS ... */
 			if (! cp)
 				goto mpar;
 			while (*cp != GOST_OVERLINE) {
@@ -431,7 +446,7 @@ noend:
 				}
 				if (ch == GOST_NEWLINE) {
 					for (; i < 6; ++i)
-						w = w << 8 | 017;
+						w = w << 8 | GOST_SPACE;
 					break;
 				}
 				w = w << 8 | ch;
