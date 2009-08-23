@@ -109,6 +109,8 @@ dump_disk (unsigned diskno, unsigned start, unsigned length)
 	for (z=start; z<limit; ++z) {
 		if (disk_read (disk, z, buf) != DISK_IO_OK)
 			return;
+		utf8_puts ("Zone ", stdout);
+		printf ("%d:\n", z);
 		dump_zone (z, (unsigned char*) buf);
 	}
 }

@@ -262,6 +262,22 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 			/* СПЕ */
 			psp.spec = 1;
 
+		} else if (art[0] == GOST_O && art[1] == GOST_ZE &&
+		    art[2] == GOST_Y) {
+			/* ОЗУ - игнорируем */
+
+		} else if (art[0] == GOST_B && art[1] == GOST_P &&
+		    art[2] == GOST_E) {
+			/* ВРЕ - игнорируем */
+
+		} else if (art[0] == GOST_T && art[1] == GOST_P &&
+		    art[2] == GOST_A) {
+			/* ТРА - игнорируем */
+
+		} else if (art[0] == GOST_EL && art[1] == GOST_CYRILLIC_I &&
+		    art[2] == GOST_C) {
+			/* ЛИС - игнорируем */
+
 		} else if (art[0] == GOST_EF && art[1] == GOST_CYRILLIC_I &&
 		    art[2] == GOST_ZE) {
 			/* ФИЗ <octal> */
@@ -274,11 +290,12 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
     			    psp.phys >= 0100)
 				goto mpar;
 
-		} else if ((art[0] == GOST_EL && art[1] == GOST_E &&
-		    art[2] == GOST_H) || (art[0] == GOST_T &&
-		    art[1] == GOST_A && art[2] == GOST_P)) {
+		} else if ((art[0] == GOST_EL && art[1] == GOST_E && art[2] == GOST_H) ||
+		    (art[0] == GOST_T && art[1] == GOST_A && art[2] == GOST_P) ||
+		    (art[0] == GOST_DE && art[1] == GOST_CYRILLIC_I && art[2] == GOST_C)) {
 			/* ЛЕН <octal> ( <decimal> [ C | -ЗП | - <octal> ] )
-			 * TAP ... */
+			 * TAP ...
+			 * ДИС ... */
 			if (! cp)
 				goto mpar;
 			while (*cp != GOST_OVERLINE) {
@@ -326,6 +343,11 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 				++psp.nvol;
 				while (*cp == GOST_SPACE) cp++;
 			}
+		} else {
+			printf ("Unknown passport entry: ");
+			for (cp = art; *cp != GOST_OVERLINE; ++cp)
+				gost_putc (*cp, stdout);
+			printf ("\n");
 		}
 		while (ch != GOST_EOF && ch != GOST_OVERLINE)
 			nextc();
@@ -651,6 +673,10 @@ passload(char *src)
 		sz = ((cp[4] << 8) | cp[5]) * 6;
 		if (! sz)
 			break;
+/*gost_putc (GOST_ZE, stdout);*/
+/*gost_putc (cp[0], stdout);*/
+/*gost_putc (cp[1], stdout);*/
+/*printf (": %d bytes\n", sz);*/
 		if (src[0] == cp[0] && src[1] == cp[1]) {
 			memcpy(buf, cp + 6, sz);
 			return realloc(buf, sz);
