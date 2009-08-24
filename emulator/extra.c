@@ -702,6 +702,36 @@ again:
 	return E_SUCCESS;
 }
 
+void
+restore_state() {
+	int addr = acc.r ? acc.r & 077777 : ehandler;
+	LOAD(acc, addr - 11);
+	LOAD(enreg, addr - 10);
+	enreg.l >>= 17;
+        dis_exc = enreg.l & 040;
+        G_LOG = enreg.o & 004;
+        G_MUL = enreg.o & 010;
+        G_ADD = enreg.o & 020;
+        dis_round = enreg.o & 002;
+        dis_norm = enreg.o & 001;
+        LOAD(accex, addr - 9);
+        LOAD(enreg, addr - 7);
+        reg[TRAPRETREG] = enreg.r & 077777;
+        LOAD(enreg, addr - 6);
+        right = enreg.r & 1;
+        LOAD(enreg, addr - 5);
+        reg[MODREG] = enreg.r & 077777;
+        LOAD(enreg, addr - 4);
+        reg[017] = enreg.r & 077777;
+        LOAD(enreg, addr - 3);
+        reg[016] = enreg.r & 077777;
+        LOAD(enreg, addr - 2);
+        reg[015] = enreg.r & 077777;
+        LOAD(enreg, addr - 8);
+	JMP(enreg.r & 077777);
+	eenab = 1;
+}
+
 int
 e53(void)
 {
@@ -732,7 +762,14 @@ e53(void)
 	case 012:		/* set event mask */
 		emask = acc.r & 0xffffff;
 		return E_SUCCESS;
+	case 013:		/* disable async processes */
+		eenab = 0;
+		return E_SUCCESS;
 	case 014:		/* enable async processes */
+		eenab = 1;
+		return E_SUCCESS;
+	case 015:
+		restore_state();
 		return E_SUCCESS;
 	case 017: {             /* wait for events      */
 		struct itimerval        itv = {{0, 0}, {0, 0}};
