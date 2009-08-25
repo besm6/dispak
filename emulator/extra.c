@@ -1531,6 +1531,7 @@ physaddr(void)
 	case 01413:			/* ВРЕМЯ */
 		reg[016] = 010;
 		return e53();
+	case 02040:			/* ПРЕДЕЛ БЭСМ-6 ? */
 	case 02100:                     /* ПРЕДЕЛ, 16р = есть архив */
 		acc.l = acc.r = 0;
 		break;
@@ -1559,7 +1560,7 @@ resources(void)
 		arg[i + 4] = (r.r >> ((3 - i) * 6)) & 077;
 	}
 	switch (arg[0]) {
-	case 020:
+	case 020:				/* close tape/disk */
 		for (i = 1; i < 7; ++i) {
 			if (arg[i] == 077)
 				break;
@@ -1573,10 +1574,10 @@ resources(void)
 			}
 		}
 		return E_SUCCESS;
-	case 047:
-	case 040:
+	case 047:				/* free drums/tracks */
+	case 040:				/* free unused tracks */
 		return E_SUCCESS;
-	case 037:
+	case 037:				/* rename tape/disk */
 #define USRC    (arg[i])
 #define UDST    (arg[i + 2])
 		for (i = 1; i < 7; i += 3) {
@@ -1593,7 +1594,7 @@ resources(void)
 		return E_SUCCESS;
 #undef USRC
 #undef UDST
-	case 030:
+	case 030:				/* exchange tape/disk */
 #define USRC    (arg[i])
 #define UDST    (arg[i + 2])
 		for (i = 1; i < 7; i += 3) {
@@ -1613,7 +1614,7 @@ resources(void)
 		return E_SUCCESS;
 #undef USRC
 #undef UDST
-	case 010:
+	case 010:				/* exchange RAM pages */
 #define USRC    (arg[i])
 #define UDST    (arg[i + 1])
 		for (i = 1; i < 7; i += 2) {
@@ -1635,6 +1636,10 @@ resources(void)
 			}
 		}
 		return E_SUCCESS;
+	case 000:				/* free RAM pages */
+		return E_SUCCESS;
+	case 050:				/* exchange drum tracks */
+		return E_UNIMP;
 	default:
 		return E_UNIMP;
 	}
