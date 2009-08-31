@@ -40,6 +40,7 @@ enum {
 	OPT_FROM_DIR,
 	OPT_FROM_START,
 	OPT_TO_FILE,
+	OPT_ENCODING,
 };
 
 /* Table of options. */
@@ -54,6 +55,7 @@ static struct option longopts[] = {
 	{ "from-dir",		1,	0,	OPT_FROM_DIR	},
 	{ "from-start",		1,	0,	OPT_FROM_START	},
 	{ "to-file",		1,	0,	OPT_TO_FILE	},
+	{ "encoding",		1,	0,	OPT_ENCODING	},
 	{ 0,			0,	0,	0		},
 };
 
@@ -69,12 +71,20 @@ usage ()
 	fprintf (stderr, "\tbesmtool pass [<disk-number>]\n");
 	fprintf (stderr, "\tbesmtool erase <disk-number> [<options>...]\n");
 	fprintf (stderr, "\tbesmtool zero <disk-number> [<options>...]\n");
+	fprintf (stderr, "\tbesmtool view <disk-number> [<options>...] [--encoding=g,k,t,i]\n");
 	fprintf (stderr, "\tbesmtool dump <disk-number> [<options>...] [--to-file=<filename>]\n");
 	fprintf (stderr, "\tbesmtool write <disk-number> [<options>...]\n");
 
 	fprintf (stderr, "Options:\n");
 	fprintf (stderr, "\t--start=<zone>\n");
 	fprintf (stderr, "\t--length=<nzones>\n");
+
+	fprintf (stderr, "View options:\n");
+	fprintf (stderr, "\t--encoding=g,k,t,i\n");
+	fprintf (stderr, "\t\tg - GOST-10859 encoding\n");
+	fprintf (stderr, "\t\tk - KOI-7 encoding\n");
+	fprintf (stderr, "\t\tt - 'Text' encoding of Dubna monitoring system\n");
+	fprintf (stderr, "\t\ti - encoding of IPMCE autocode by Chaikovsky\n");
 
 	fprintf (stderr, "Write options:\n");
 	fprintf (stderr, "\t--from-file=<filename>\n");
@@ -88,7 +98,7 @@ int
 main (int argc, char **argv)
 {
 	unsigned start = 0, length = 0, from_diskno = 0, from_start = 0;
-	char *from_file = 0, *to_file = 0, *from_dir = 0;
+	char *from_file = 0, *to_file = 0, *from_dir = 0, *view_encoding = 0;
 	unsigned diskno;
 	int c;
 
@@ -124,6 +134,9 @@ main (int argc, char **argv)
 		case OPT_TO_FILE:
 			to_file = optarg;
 			break;
+		case OPT_ENCODING:
+			view_encoding = optarg;
+			break;
 		}
 	}
 	if (optind == argc-1) {
@@ -156,6 +169,10 @@ main (int argc, char **argv)
 	}
 	if (strcmp ("zero", argv[optind]) == 0) {
 		erase_disk (diskno, start, length, 0);
+		return 0;
+	}
+	if (strcmp ("view", argv[optind]) == 0) {
+		view_disk (diskno, start, length, view_encoding);
 		return 0;
 	}
 	if (strcmp ("dump", argv[optind]) == 0) {
