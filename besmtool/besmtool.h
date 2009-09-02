@@ -7,6 +7,7 @@ void passports (unsigned diskno, unsigned start);
 void erase_disk (unsigned diskno, unsigned start, unsigned length, int format);
 void view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding);
 void dump_disk (unsigned diskno, unsigned start, unsigned length);
+void search_disk (unsigned diskno, char *pattern, unsigned start, unsigned length);
 void file_to_disk (unsigned to_diskno, unsigned to_start, unsigned length,
 	char *from_file, unsigned from_start);
 void dir_to_disk (unsigned to_diskno, char *from_dir);

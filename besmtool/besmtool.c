@@ -69,6 +69,7 @@ usage ()
 	fprintf (stderr, "Usage:\n");
 	fprintf (stderr, "\tbesmtool list [<disk-number>]\n");
 	fprintf (stderr, "\tbesmtool pass [<disk-number>]\n");
+	fprintf (stderr, "\tbesmtool search <disk-number> <pattern>\n");
 	fprintf (stderr, "\tbesmtool erase <disk-number> [<options>...]\n");
 	fprintf (stderr, "\tbesmtool zero <disk-number> [<options>...]\n");
 	fprintf (stderr, "\tbesmtool view <disk-number> [<options>...] [--encoding=g,k,t,i]\n");
@@ -80,7 +81,7 @@ usage ()
 	fprintf (stderr, "\t--length=<nzones>\n");
 
 	fprintf (stderr, "View options:\n");
-	fprintf (stderr, "\t--encoding=g,k,t,i\n");
+	fprintf (stderr, "\t--encoding=g,k,t,i (default g,k)\n");
 	fprintf (stderr, "\t\tg - GOST-10859 encoding\n");
 	fprintf (stderr, "\t\tk - KOI-7 encoding\n");
 	fprintf (stderr, "\t\tt - 'Text' encoding of Dubna monitoring system\n");
@@ -98,7 +99,7 @@ int
 main (int argc, char **argv)
 {
 	unsigned start = 0, length = 0, from_diskno = 0, from_start = 0;
-	char *from_file = 0, *to_file = 0, *from_dir = 0, *view_encoding = 0;
+	char *from_file = 0, *to_file = 0, *from_dir = 0, *view_encoding = "g,k";
 	unsigned diskno;
 	int c;
 
@@ -139,59 +140,69 @@ main (int argc, char **argv)
 			break;
 		}
 	}
-	if (optind == argc-1) {
-		if (strcmp ("list", argv[optind]) == 0) {
+	argc -= optind;
+	argv += optind;
+	switch (argc) {
+	case 1:
+		if (strcmp ("list", argv[0]) == 0) {
 			list_all_disks ();
 			return 0;
 		}
-		if (strcmp ("pass", argv[optind]) == 0) {
+		if (strcmp ("pass", argv[0]) == 0) {
 			passports (2053, start);
 			return 0;
 		}
-		usage ();
-	}
-	if (optind != argc-2)
-		usage ();
+		break;
+	case 2:
+		diskno = strtol (argv[1], 0, 0);
 
-	diskno = strtol (argv[optind+1], 0, 0);
+		if (strcmp ("list", argv[0]) == 0) {
+			list_disk (diskno);
+			return 0;
+		}
+		if (strcmp ("pass", argv[0]) == 0) {
+			passports (diskno, start);
+			return 0;
+		}
+		if (strcmp ("erase", argv[0]) == 0) {
+			erase_disk (diskno, start, length, 1);
+			return 0;
+		}
+		if (strcmp ("zero", argv[0]) == 0) {
+			erase_disk (diskno, start, length, 0);
+			return 0;
+		}
+		if (strcmp ("view", argv[0]) == 0) {
+			view_disk (diskno, start, length, view_encoding);
+			return 0;
+		}
+		if (strcmp ("dump", argv[0]) == 0) {
+			if (to_file)
+				disk_to_file (diskno, start, length, to_file);
+			else
+				dump_disk (diskno, start, length);
+			return 0;
+		}
+		if (strcmp ("write", argv[0]) == 0) {
+			if (from_file)
+				file_to_disk (diskno, start, length,
+					from_file, from_start);
+			else if (from_dir)
+				dir_to_disk (diskno, from_dir);
+			else
+				disk_to_disk (diskno, start, length,
+					from_diskno, from_start);
+			return 0;
+		}
+		break;
+	case 3:
+		diskno = strtol (argv[1], 0, 0);
 
-	if (strcmp ("list", argv[optind]) == 0) {
-		list_disk (diskno);
-		return 0;
-	}
-	if (strcmp ("pass", argv[optind]) == 0) {
-		passports (diskno, start);
-		return 0;
-	}
-	if (strcmp ("erase", argv[optind]) == 0) {
-		erase_disk (diskno, start, length, 1);
-		return 0;
-	}
-	if (strcmp ("zero", argv[optind]) == 0) {
-		erase_disk (diskno, start, length, 0);
-		return 0;
-	}
-	if (strcmp ("view", argv[optind]) == 0) {
-		view_disk (diskno, start, length, view_encoding);
-		return 0;
-	}
-	if (strcmp ("dump", argv[optind]) == 0) {
-		if (to_file)
-			disk_to_file (diskno, start, length, to_file);
-		else
-			dump_disk (diskno, start, length);
-		return 0;
-	}
-	if (strcmp ("write", argv[optind]) == 0) {
-		if (from_file)
-			file_to_disk (diskno, start, length,
-				from_file, from_start);
-		else if (from_dir)
-			dir_to_disk (diskno, from_dir);
-		else
-			disk_to_disk (diskno, start, length,
-				from_diskno, from_start);
-		return 0;
+		if (strcmp ("search", argv[0]) == 0) {
+			search_disk (diskno, argv[2], start, length);
+			return 0;
+		}
+		break;
 	}
 	usage ();
 	return 0;

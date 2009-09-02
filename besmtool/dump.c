@@ -145,8 +145,6 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 	char buf [ZBYTES], prev [48], *p;
 	int show_gost, show_koi7, show_text, show_itm, nwords_per_line, skipping;
 
-	if (! encoding)
-		encoding = "g,k,t";
 	show_gost = (strchr (encoding, 'g') != 0);
 	show_koi7 = (strchr (encoding, 'k') != 0);
 	show_text = (strchr (encoding, 't') != 0);
