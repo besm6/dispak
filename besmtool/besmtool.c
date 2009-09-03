@@ -199,7 +199,7 @@ main (int argc, char **argv)
 		diskno = strtol (argv[1], 0, 0);
 
 		if (strcmp ("search", argv[0]) == 0) {
-			search_disk (diskno, argv[2], start, length);
+			search_disk (diskno, (unsigned char*) argv[2], start, length);
 			return 0;
 		}
 		break;
