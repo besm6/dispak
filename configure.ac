@@ -15,6 +15,7 @@ AC_PROG_YACC
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [sin])
+AM_GNU_GETTEXT_VERSION([0.16])
 AM_GNU_GETTEXT([external])
 
 # Checks for header files.

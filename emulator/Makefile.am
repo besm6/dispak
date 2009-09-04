@@ -1,5 +1,7 @@
-bin_PROGRAMS = besm6
-besm6_SOURCES = main.c cu.c optab.c arith.c debug.y input.c extra.c \
+bin_PROGRAMS = dispak6 besm6
+dispak6_SOURCES = dispak.c cu.c optab.c arith.c debug.y input.c extra.c \
+	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
+besm6_SOURCES = besm6.c cu.c optab.c arith.c debug.y input.c extra.c \
 	disk.c errtxt.c vsinput.c dpout.c encoding.c getopt.c
 AM_CFLAGS = -Wall -g -O3 -ffast-math -fomit-frame-pointer
 LDADD = @LIBINTL@
