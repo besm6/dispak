@@ -27,21 +27,48 @@ convert_gost_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes
 static void
 convert_koi7_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes)
 {
-	while (bytes-- > 0)
-		*to++ =	gost_to_unicode (*from++);
+	unsigned c;
+
+	while (bytes-- > 0) {
+		c = *from++;
+		if (c < 0x80) {
+			c = unicode_to_gost (koi7_to_unicode [c]);
+			c = gost_to_unicode (c);
+		} else
+			c = ' ';
+		*to++ = c;
+	}
 }
 
 static void
 convert_text_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes)
 {
-	while (bytes-- > 0)
-		*to++ =	gost_to_unicode (*from++);
+	unsigned long long word;
+	int i;
+
+	for (; bytes>=6; bytes-=6) {
+		word = 0;
+		for (i=40; i>=0; i-=8)
+			word |= *from++ << i;
+		for (i=42; i>=0; i-=6)
+			*to++ =	gost_to_unicode (
+				text_to_gost [(word >> i) & 077]);
+	}
 }
 
 static void
 view_unicode (unsigned short *buf, int buf_len, int offset)
 {
-	/*TODO*/
+	int i, limit;
+
+	i = (buf_len % 6) ? offset/8*8-16 : offset/6*6-12;
+	if (i < 0)
+		i = 0;
+	limit = i + 64;
+	if (limit > buf_len)
+		limit = buf_len;
+	for (; i<limit; ++i)
+		unicode_putc (buf[i], stdout);
 }
 
 static void
@@ -54,10 +81,10 @@ search (unsigned short *pattern, int pattern_len,
 	for (offset=0; offset<limit; ++offset) {
 		if (memcmp (pattern, buf+offset,
 		    pattern_len * sizeof(*pattern)) == 0) {
-			printf ("%04o.%04o:  ",
-				z, (limit==8192) ? (offset/8) : (offset/6));
+			printf ("(%s) %04o.%04o:  ", encoding, z,
+				(limit==8192) ? (offset/8) : (offset/6));
 			view_unicode (buf, buf_len, offset);
-			printf ("  (%s)\n", encoding);
+			printf ("\n");
 		}
 	}
 }
@@ -70,6 +97,11 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 	unsigned char buf [ZBYTES * 2];
 	unsigned short buf_gost [ZBYTES * 2], buf_koi7 [ZBYTES * 2], buf_text [8192 * 2];
 	unsigned short pattern_unicode [ZBYTES];
+
+	utf8_puts ("Searching for '", stdout);
+	utf8_puts ((char*) pattern, stdout);
+	printf ("' on disk %d/%04o, %04o zones\n", diskno, start,
+		length ? length : MAXZ-start);
 
 	disk = disk_open (diskno, DISK_READ_ONLY);
 	if (! disk) {
