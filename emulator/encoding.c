@@ -1410,12 +1410,10 @@ gost_putc (unsigned char ch, FILE *fout)
 void
 gost_write (unsigned char *line, int n, FILE *fout)
 {
-	const unsigned short *gost_to_unicode = gost_latin ?
-		gost_to_unicode_lat : gost_to_unicode_cyr;
 	unsigned short u;
 
 	while (n-- > 0) {
-		u = gost_to_unicode [*line++];
+		u = gost_to_unicode (*line++);
 		if (! u)
 			u = ' ';
 		unicode_putc (u, fout);

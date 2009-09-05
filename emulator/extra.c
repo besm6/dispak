@@ -1462,11 +1462,11 @@ oporos:
 					ADDR(reg[uir.i_reg] + uir.i_addr));
 			return E_SUCCESS;
 		default:
-/*printf ("e71: unknown op %#o\n", uil.i_opcode & 0360);*/
 			if (uil.i_opcode == 010) {      /* punchcards */
 				return punch(ADDR(reg[uil.i_reg] + uil.i_addr),
 				 ADDR(reg[uir.i_reg] + uir.i_addr));
 			}
+printf ("e71: unknown op %#o\n", uil.i_opcode);
 			return E_UNIMP;
 		}
 		if (uir.i_opcode & 0100)
