@@ -210,6 +210,7 @@ EXTERN uchar    cflags[CORESZ * 2];     /* core flags                   */
 #define C_BPW           4               /* break on write               */
 #define C_STOPPED       8               /* stopped on op33              */
 #define C_NUMBER	16		/* noexec flag			*/
+#define C_NEXT		32		/* breakpoint here once		*/
 /*
  *      "hardware" objects
  */

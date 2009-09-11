@@ -178,10 +178,11 @@ FOREVER
 	ui = uicore[pcm][right];
 	op = optab[ui.i_opcode];
 
-	if (((cf & C_BPT) && !right) | (stepflg == 1) | breakflg) {
+	if ((cf & (C_NEXT|C_BPT) && !right) | (stepflg == 1) | breakflg) {
 dbg:
 		pcm_dbg = pcm;
 		stepflg = breakflg = quitflg = 0;
+		cflags[pcm] &= ~C_NEXT;
 		where();
 		for (cmdflg = 1; cmdflg; command());
 		if (quitflg) STOP;

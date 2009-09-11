@@ -216,11 +216,23 @@ command:        /* void */
 	/*              step (&proc, $2, $3, $4);
 			where ();
 	 */             }
+	|	next
+			{
+			LOAD(wd, pc);
+			if (!right && (wd.l & 03700000) == 03100000 ||
+				right && (wd.r & 03700000) == 03100000) {
+				cflags[pc+1] |= C_NEXT;
+			} else {
+				stepflg = 1;
+			}
+			cmdflg = 0;
+			}
 	;
 
 go:             'g';
 quit:           'q';
 step:           's';
+next:		'n';
 help:           'h';
 file:           'f';
 where:          'w';
