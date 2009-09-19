@@ -172,7 +172,7 @@ FOREVER
 	if (!(cf & C_UNPACKED) && !right)
 		unpack(pcm);
 
-	if (!pcm || (!no_insn_check && (cf & C_NUMBER)))
+	if (!pcm || (!no_insn_check && (convol[pcm] & CV_NUMBER)))
 		ABORT(E_CHECK);
 
 	ui = uicore[pcm][right];
@@ -573,7 +573,7 @@ mtj:
 			goto errchk;
 		case 075:
 			STORE(acc, reg[016]);
-			cflags[reg[016]] &= ~C_NUMBER;
+			convol[reg[016]] &= ~CV_NUMBER;
 			switch (reg[016]) {
 			/* undocumented trick (ВРЕМЕННО ФИРСОВ) */
 			case 0: spec = 1; break;

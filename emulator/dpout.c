@@ -158,7 +158,7 @@ pout_decode (char *outname)
 	done = 0;
 	rstline();
 	for (z=0; ; ++z) {
-		if (disk_readi(disks[OSD_NOMML3].diskh, z, buf,
+            if (disk_readi(disks[OSD_NOMML3].diskh, z, buf, NULL, NULL,
 		    DISK_MODE_LOUD) != DISK_IO_OK)
 			break;
 		decode (fout, buf);

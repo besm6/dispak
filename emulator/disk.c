@@ -23,6 +23,11 @@ static int disk_makezonei(disk_t *, u_int);
 static int disk_writedescri(disk_t *, int);
 static int disk_formcodei(char *);
 
+static  int     disk_readi1(disk_t *disk_descr, u_int zone, char* buf, char* convol, char* cw, u_int mode);
+static  int     disk_writei1(disk_t *disk_descr, u_int zone, char* buf,  char* convol, char* cw, u_int mode);
+static  int     disk_readi2(disk_t *disk_descr, u_int zone, char* buf,  char* convol, char* cw,u_int mode);
+static  int     disk_writei2(disk_t *disk_descr, u_int zone, char* buf,  char* convol, char* cw,u_int mode);
+
 #ifdef synchronous_descriptors      /* slows things down a lot */
 
 #define disk_writedescr(a,b)    disk_writedescri(a,b)
@@ -87,6 +92,7 @@ disk_find_path (char *fname, u_int diskno)
 	}
 }
 
+
 /* opens $DISKDIR/{diskno}, or ./{diskno}, if $DISKDIR is not set   */
 /* to create a new file, do "cat > {diskno}^JDISK^D^D"              */
 
@@ -96,7 +102,7 @@ disk_open(u_int diskno, u_int mode)
 	disk_t *d;
 	char fname[256];
 	u_int f, newmode = 0;
-	int size, i;
+	int size = -1, i;
 	ulong pos;
 
 	if (mode > DISK_READ_TOTAL) {
@@ -143,32 +149,45 @@ disk_open(u_int diskno, u_int mode)
 	d->d_fileno = f;
 	d->d_diskno = diskno;
 
-	d->d_md[0] = calloc(sizeof(md_t), 1);
-	if (!d->d_md[0]) {
-		fprintf(stderr, "disk_open: no memory for %d\n", diskno);
-		disk_close(d);
-		return 0;
+	if (diskno) {
+            static md_t dummy;
+		size = read(f, &dummy, sizeof(md_t));
+		if ((size != 4 && size != sizeof(md_t)) ||
+			memcmp(dummy.md_magic, DISK_MAGIC, 4)) {
+                    /* if the file exists but does not match the old structure,
+                     * assume new structure.
+                     */
+                    d->d_readi = disk_readi2;
+                    d->d_writei = disk_writei2;
+                    d->d_str = Physical;
+		} else {
+                    d->d_md[0] = calloc(sizeof(md_t), 1);
+                    if (!d->d_md[0]) {
+                        fprintf(stderr, "disk_open: no memory for %d\n", diskno);
+                        disk_close(d);
+                        return 0;
+                    }
+                    memcpy(d->d_md[0], &dummy, sizeof(md_t));
+                    d->d_readi = disk_readi1;
+                    d->d_writei = disk_writei1;
+                    d->d_str = Chained;
+                }
+	} else {
+            // Drums use the new structure
+             d->d_readi = disk_readi2;
+             d->d_writei = disk_writei2;
+             d->d_str = Physical;
 	}
 
-	if (diskno) {
-		size = read(f, d->d_md[0], sizeof(md_t));
-		if ((size != 4 && size != sizeof(md_t)) ||
-			memcmp(d->d_md[0]->md_magic, DISK_MAGIC, 4)) {
-			fprintf(stderr, "disk_open: bad disk structure of %d\n", diskno);
-			disk_close(d);
-			return 0;
-		}
-	} else {
-		memcpy(d->d_md[0]->md_magic, DISK_MAGIC, 4);
-		size = 4;
-	}
+	d->d_mode = newmode | mode;
+
+        if (d->d_str == Physical)
+            return d;
 
 	/* force writing the first descriptor */
 
 	if (size == 4 && disk_writedescri(d, 0) != DISK_IO_OK)
 		return 0;
-
-	d->d_mode = newmode | mode;
 
 	i = 0;
 
@@ -210,7 +229,8 @@ disk_close(void *ud)
 		return DISK_IO_FATAL;
 	}
 
-	for (i = 0; i < DESCR_BLOCKS; i++) {
+	if (d->d_str == Chained) {
+            for (i = 0; i < DESCR_BLOCKS; i++) {
 		if (d->d_md[i]) {
 
 #ifndef synchronous_descriptors
@@ -225,6 +245,7 @@ disk_close(void *ud)
 #endif
 			free(d->d_md[i]);
 		}
+            }
 	}
 	close(d->d_fileno);
 	free(d);
@@ -261,7 +282,7 @@ disk_setmode(void *ud, u_int mode)
  * gracefully; mode = DISK_MODE_LOUD returns DISK_IO_NEW
  */
 int
-disk_readi(void *ud, u_int zone, char *buf, u_int mode)
+disk_readi(void *ud, u_int zone, char *buf, char *convol, char *check, u_int mode)
 {
 	disk_t *d = (disk_t *) ud;
 
@@ -275,11 +296,22 @@ disk_readi(void *ud, u_int zone, char *buf, u_int mode)
 		return DISK_IO_ENREAD;
 	}
 
+        return d->d_readi(ud, zone, buf, convol, check, mode);
+}
+
+int disk_readi1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
+{
+
 	if (zone >= DESCR_BLOCKS * BLOCK_ZONES) {
 		fprintf(stderr, "disk_readi: bad zone number %o for disk %d\n",
 			zone, d->d_diskno);
 		return DISK_IO_ENREAD;
 	}
+
+        if (mode == DISK_MODE_PHYS) {
+            zone -= ZONE_OFFSET;
+            mode = DISK_MODE_LOUD;
+        }
 
 	if (disk_positioni(d, zone) == DISK_IO_NEW) {
 		switch (mode) {
@@ -296,15 +328,59 @@ disk_readi(void *ud, u_int zone, char *buf, u_int mode)
 		}
 	}
 
-	if (read(d->d_fileno, buf, ZONE_SIZE) != ZONE_SIZE) {
+	if (buf && read(d->d_fileno, buf, ZONE_SIZE) != ZONE_SIZE) {
 		perror("disk_readi");
 		return DISK_IO_ENREAD;
 	}
+        if (convol) {
+            // 0 means insn, 1 means data
+            memset(convol, 0, 1024);
+        }
+        if (check) {
+            // Faking check words not implemented
+        }
+	return DISK_IO_OK;
+}
+
+static zone_t zone_buf;
+
+int disk_readi2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
+{
+
+        if (mode != DISK_MODE_PHYS) {
+            zone += ZONE_OFFSET;
+        }
+
+        off_t max = lseek(d->d_fileno, 0, SEEK_END);
+
+        off_t cur = lseek(d->d_fileno, zone * sizeof(zone_t), SEEK_SET);
+
+	if (cur >= max) {
+            if (mode == DISK_MODE_LOUD)
+                return DISK_IO_NEW;
+            if (getenv("ZERODRUM") == 0 || d->d_diskno != 0)
+                disk_formcodei(buf);
+            else
+                memset(buf, 0, ZONE_SIZE);
+            return DISK_IO_OK;
+	}
+
+	if (read(d->d_fileno, &zone_buf, sizeof(zone_t)) != sizeof(zone_t)) {
+		perror("disk_readi");
+		return DISK_IO_ENREAD;
+	}
+        if (buf)
+            memcpy(buf, zone_buf.z_data, ZONE_SIZE);
+        if (convol)
+            memcpy(convol, zone_buf.z_convol, 1024);
+        if (check)
+            memcpy(check, zone_buf.z_cwords, sizeof(zone_buf.z_cwords));
+
 	return DISK_IO_OK;
 }
 
 int
-disk_writei(void *ud, u_int zone, char *buf, u_int mode)
+disk_writei(void *ud, u_int zone, char *buf, char *convol, char *check, u_int mode)
 {
 	disk_t *d = (disk_t*) ud;
 
@@ -318,16 +394,28 @@ disk_writei(void *ud, u_int zone, char *buf, u_int mode)
 		return DISK_IO_ENWRITE;
 	}
 
+	if ((d->d_mode & DISK_RW_MODE) == DISK_READ_ONLY) {
+		fprintf(stderr, "disk_writei: disk %d is read only\n", d->d_diskno);
+		return DISK_IO_ENWRITE;
+	}
+
+        return d->d_writei(ud, zone, buf, convol, check, mode);
+}
+
+int
+disk_writei1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
+{
+    // Convolution and check words are ignored
 	if (zone >= DESCR_BLOCKS * BLOCK_ZONES) {
 		fprintf(stderr, "disk_writei: bad zone number %o for disk %d\n",
 			zone, d->d_diskno);
 		return DISK_IO_ENWRITE;
 	}
 
-	if ((d->d_mode & DISK_RW_MODE) == DISK_READ_ONLY) {
-		fprintf(stderr, "disk_writei: disk %d is read only\n", d->d_diskno);
-		return DISK_IO_ENWRITE;
-	}
+        if (mode == DISK_MODE_PHYS) {
+            zone -= ZONE_OFFSET;
+            mode = DISK_MODE_LOUD;
+        }
 
 	if (disk_positioni(d, zone) == DISK_IO_NEW) {
 		switch (mode) {
@@ -345,6 +433,39 @@ disk_writei(void *ud, u_int zone, char *buf, u_int mode)
 		return DISK_IO_ENWRITE;
 	}
 	return DISK_IO_OK;
+}
+
+int
+disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
+{
+    if (mode != DISK_MODE_PHYS) {
+        zone += ZONE_OFFSET;
+    }
+
+    off_t max = lseek(d->d_fileno, 0, SEEK_END);
+
+    off_t cur = lseek(d->d_fileno, zone * sizeof(zone_t), SEEK_SET);
+
+    if (mode == DISK_MODE_LOUD && cur >= max)
+        return DISK_IO_NEW;
+
+    if (buf)
+        memcpy(zone_buf.z_data, buf, ZONE_SIZE);
+    else
+        memset(zone_buf.z_data, 0, ZONE_SIZE);
+    if (convol)
+        memcpy(zone_buf.z_convol, convol, 1024);
+    else
+        memset(zone_buf.z_convol, 0, 1024);
+    if (check)
+        memcpy(zone_buf.z_cwords, check, sizeof(zone_buf.z_cwords));
+    else
+        memset(zone_buf.z_cwords, 0, sizeof(zone_buf.z_cwords));
+    if (write(d->d_fileno, &zone_buf, sizeof(zone_buf)) != sizeof(zone_buf)) {
+        perror("disk_writei");
+        return DISK_IO_ENWRITE;
+    }
+    return DISK_IO_OK;
 }
 
 static int

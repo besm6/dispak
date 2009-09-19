@@ -450,7 +450,7 @@ pout_dump(char *filename)
 		return;
 	}
 
-	for (z = 0; disk_readi(disks[OSD_NOMML3].diskh, z, buf, DISK_MODE_LOUD)
+	for (z = 0; disk_readi(disks[OSD_NOMML3].diskh, z, buf, NULL, NULL, DISK_MODE_LOUD)
 							== DISK_IO_OK; ++z)
 		fwrite(buf, 6144, 1, fp);
 	fwrite((char *) (core + 0160000), 6144, 1, fp);

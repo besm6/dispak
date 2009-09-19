@@ -1015,6 +1015,8 @@ e62(void)
 	switch (reg[016]) {
 	case 0:		/* unconditional termination */
 		return E_TERM;
+	case 0042:	/* flush output stream, but we don't */
+		return E_SUCCESS;
 	case 0044:	/* cancel output stream, but we don't */
 		return E_SUCCESS;
 	case 0053:	/* set extracode intercept mask, we feign sucess */
@@ -1163,7 +1165,8 @@ ddio(void)
 	ushort          sector = 0;
 	uinstr_t        uil, uir;
 	int             r;
-	uchar           buf[6144];
+	static uchar	buf[6144];
+        static uchar	cvbuf[1024];
 
 	LOAD(acc, addr);
 	unpack(addr);
@@ -1201,34 +1204,39 @@ ddio(void)
                } else {
                  sector = (uir.i_addr >> 6) & 3;
                }
-		r = disk_read(disks[u].diskh,
+		r = disk_readi(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
-			(char *)buf);
+                               (char *)buf, cvbuf, NULL, DISK_MODE_QUIET);
 		if (!(uil.i_opcode & 010)) {
 			memcpy(
 				buf + sector * 256 * 6,
 				core + addr + (uil.i_addr & 3) * 256,
 				256 * 6
 			);
-			r = disk_write(disks[u].diskh,
+                        memcpy(
+                               cvbuf + sector * 256,
+                               convol + addr + (uil.i_addr & 3) * 256,
+                               256
+                               );
+			r = disk_writei(disks[u].diskh,
 				(zone + disks[u].offset) & 0xfff,
-				(char *)buf);
+                                        (char *)buf, cvbuf, NULL, DISK_MODE_QUIET);
 
 		}
 	} else if (uil.i_opcode & 010) {
-		int iomode = /* u < 030 || u >= 070 ? DISK_MODE_LOUD : */ DISK_MODE_QUIET;
 		r = disk_readi(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
-			(char *)(core + addr), iomode);
+                               (char *)(core + addr), convol + addr, NULL, DISK_MODE_QUIET);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		if (uil.i_opcode & 1) {
 			/* check words requested */
 			put_check_words(u, zone, addr, 0 != (uir.i_opcode & 0200));
 		}
-	} else
-		r = disk_write(disks[u].diskh,
-			(zone + disks[u].offset) & 0xfff,
-			(char *)(core + addr));
+	} else {
+            r = disk_writei(disks[u].diskh,
+                            (zone + disks[u].offset) & 0xfff,
+                            (char *)(core + addr), convol + addr, NULL, DISK_MODE_QUIET);
+        }
 	if (disks[u].diskno) {
 		disk_close(disks[u].diskh);
 		disks[u].diskh = 0;
@@ -1239,13 +1247,16 @@ ddio(void)
 		memcpy(core + addr + (uil.i_addr & 3) * 256,
 		       buf + sector * 256 * 6,
 		       256 * 6);
+                memcpy(convol + addr + (uil.i_addr & 3) * 256,
+                       cvbuf + sector * 256,
+                       256);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		for (u = addr + (uil.i_addr & 3) * 256;
 		     u < addr + (uil.i_addr & 3) * 256 + 256; ++u)
-			cflags[u] &= ~(C_UNPACKED|C_NUMBER);
+			cflags[u] &= ~C_UNPACKED;
 	} else if (uil.i_opcode & 010)
 		for (u = addr; u < addr + 1024; ++u)
-			cflags[u] &= ~(C_UNPACKED|C_NUMBER);
+			cflags[u] &= ~C_UNPACKED;
 	return E_SUCCESS;
 }
 
@@ -1629,10 +1640,12 @@ resources(void)
 			memcpy(tmp, &core[USRC * 02000], 6144);
 			memcpy(&core[USRC * 02000], &core[UDST * 02000], 6144);
 			memcpy(&core[UDST * 02000], tmp, 6144);
+			memcpy(tmp, &convol[USRC * 02000], 1024);
+			memcpy(&convol[USRC * 02000], &convol[UDST * 02000], 1024);
+			memcpy(&convol[UDST * 02000], tmp, 1024);
 			for (j = 0; j < 02000; j++) {
-				/* a little too generous */
-				cflags[j + USRC * 02000] &= ~(C_UNPACKED|C_NUMBER);
-				cflags[j + UDST * 02000] &= ~(C_UNPACKED|C_NUMBER);
+				cflags[j + USRC * 02000] &= ~C_UNPACKED;
+				cflags[j + UDST * 02000] &= ~C_UNPACKED;
 			}
 		}
 		return E_SUCCESS;

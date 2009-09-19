@@ -137,7 +137,7 @@ e60(void)
 		core[reg[016] + i] = ibw[i].w;
 		cflags[reg[016] + i] &= ~C_UNPACKED;
 		if (!psp.spec)
-			cflags[reg[016] + i] |= C_NUMBER;
+			convol[reg[016] + i] |= CV_NUMBER;
 	}
 
 	if (pos == enda3) {

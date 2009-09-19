@@ -209,8 +209,7 @@ EXTERN uchar    cflags[CORESZ * 2];     /* core flags                   */
 #define C_BPT           2               /* breakpoint here              */
 #define C_BPW           4               /* break on write               */
 #define C_STOPPED       8               /* stopped on op33              */
-#define C_NUMBER	16		/* noexec flag			*/
-#define C_NEXT		32		/* breakpoint here once		*/
+#define C_NEXT		16		/* breakpoint here once		*/
 /*
  *      "hardware" objects
  */
@@ -218,6 +217,9 @@ EXTERN uchar    cflags[CORESZ * 2];     /* core flags                   */
 #define XCODE_ENTRYPT   011
 
 EXTERN word_t   core[CORESZ * 2];       /* main memory                  */
+
+#define CV_NUMBER	1
+EXTERN uchar	convol[CORESZ * 2];	/* convolution of memory */
 
 EXTERN reg_t    reg[NREGS];             /* registers                    */
 
@@ -296,7 +298,7 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 		_cp[4] = _l >> 8; \
 		_cp[5] = _l; \
 		cflags[addr] &= ~C_UNPACKED; \
-		if (spec) cflags[addr] &= ~C_NUMBER; else cflags[addr] |= C_NUMBER; \
+		if (spec) convol[addr] &= ~CV_NUMBER; else convol[addr] |= CV_NUMBER; \
 	} else
 
 #define UNPCK(R)        { \

@@ -230,7 +230,7 @@ disk_to_file (unsigned from_diskno, unsigned from_start, unsigned length,
 
 	limit = length ? (from_start + length) : MAXZ;
 	for (z=from_start; z<limit; ++z) {
-		status = disk_readi (disk, z, buf, DISK_MODE_LOUD);
+		status = disk_readi (disk, z, buf, NULL, NULL, DISK_MODE_LOUD);
 		if (status != DISK_IO_OK) {
 			if (status != DISK_IO_NEW)
 				fprintf (stderr, "Reading %d/%04o failed\n",

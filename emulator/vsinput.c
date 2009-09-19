@@ -256,8 +256,9 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 			psp.lprlim = 0200000 - psp.lprlim * 236;
 
 		} else if (art[0] == GOST_T && art[1] == GOST_E &&
-		    art[2] == GOST_EL) {
-			/* ТЕЛ */
+		    (art[2] == GOST_EL || art[2] == GOST_L)) {
+			/* ТЕЛ
+			 * TEL */
 			psp.tele = 1;
 
 		} else if ((art[0] == GOST_C && art[1] == GOST_PE && art[2] == GOST_E) ||
