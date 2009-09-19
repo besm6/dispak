@@ -167,7 +167,7 @@ disk_open(u_int diskno, u_int mode)
                         disk_close(d);
                         return 0;
                     }
-                    memcpy(d->d_md[0], &dummy, sizeof(md_t));
+                    memcpy(d->d_md[0], &dummy, size);
                     d->d_readi = disk_readi1;
                     d->d_writei = disk_writei1;
                     d->d_str = Chained;
@@ -310,7 +310,8 @@ int disk_readi1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_i
 
         if (mode == DISK_MODE_PHYS) {
             zone -= ZONE_OFFSET;
-            mode = DISK_MODE_LOUD;
+	    zone &= 07777;
+            mode = DISK_MODE_QUIET;
         }
 
 	if (disk_positioni(d, zone) == DISK_IO_NEW) {
@@ -338,6 +339,7 @@ int disk_readi1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_i
         }
         if (check) {
             // Faking check words not implemented
+	   memset(check, 0, 48);
         }
 	return DISK_IO_OK;
 }
@@ -414,7 +416,8 @@ disk_writei1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 
         if (mode == DISK_MODE_PHYS) {
             zone -= ZONE_OFFSET;
-            mode = DISK_MODE_LOUD;
+	    zone &= 07777;
+	    mode = DISK_MODE_QUIET;
         }
 
 	if (disk_positioni(d, zone) == DISK_IO_NEW) {

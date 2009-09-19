@@ -1166,7 +1166,7 @@ ddio(void)
 	uinstr_t        uil, uir;
 	int             r;
 	static uchar	buf[6144];
-        static uchar	cvbuf[1024];
+        static char	cvbuf[1024];
 
 	LOAD(acc, addr);
 	unpack(addr);
@@ -1224,18 +1224,28 @@ ddio(void)
 
 		}
 	} else if (uil.i_opcode & 010) {
+		char cwords[48];
+		int iomode = DISK_MODE_QUIET;
+		if (uil.i_addr & 04000 && disks[u].diskno >= 2048) {
+			/* листовой обмен с диском по КУС - физический номер зоны */
+			iomode = DISK_MODE_PHYS;
+		}
 		r = disk_readi(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
-                               (char *)(core + addr), convol + addr, NULL, DISK_MODE_QUIET);
+                               (char *)(core + addr), (char *)convol + addr, cwords, iomode);
 		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
-		if (uil.i_opcode & 1) {
-			/* check words requested */
+		if (uil.i_opcode & 1 && disks[u].diskno < 2048) {
+			/* check words requested for tape */
 			put_check_words(u, zone, addr, 0 != (uir.i_opcode & 0200));
+		} else if (uil.i_addr & 04000 && disks[u].diskno >= 2048) {
+			/* copy disk check words to requested page */
+			/* what should happen to the zone data? */
+			memcpy((char*)(core + addr), cwords, 48);
 		}
 	} else {
             r = disk_writei(disks[u].diskh,
                             (zone + disks[u].offset) & 0xfff,
-                            (char *)(core + addr), convol + addr, NULL, DISK_MODE_QUIET);
+                            (char *)(core + addr), (char *)convol + addr, NULL, DISK_MODE_QUIET);
         }
 	if (disks[u].diskno) {
 		disk_close(disks[u].diskh);
@@ -1254,9 +1264,13 @@ ddio(void)
 		for (u = addr + (uil.i_addr & 3) * 256;
 		     u < addr + (uil.i_addr & 3) * 256 + 256; ++u)
 			cflags[u] &= ~C_UNPACKED;
-	} else if (uil.i_opcode & 010)
+	} else if (uil.i_opcode & 010) {
 		for (u = addr; u < addr + 1024; ++u)
 			cflags[u] &= ~C_UNPACKED;
+		if (uil.i_opcode & 1)
+			for (u = 010; u < 020; ++u)
+				cflags[u] &= ~C_UNPACKED;
+	}
 	return E_SUCCESS;
 }
 

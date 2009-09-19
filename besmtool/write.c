@@ -80,13 +80,22 @@ dump_zone (int z, unsigned char *buf1, unsigned char *buf2)
  *	биты 48 43, 38 33 28 23 18 13  8 3, - байты 5, 4
  *	биты 47 42, 37 32 27 22 17 12  7 2, - байты 7, 6
  *	биты 46 41, 36 31 26 21 16 11  6 1, - байты 9, 8
+ * Свертка у слова числовая, если в 50-м разряде и левой половине слова
+ * суммарное число единиц нечетное.
  */
+static int popcnt(unsigned char c) {
+   c = (c & 0x55) + ((c & 0xAA) >> 1);
+   c = (c & 0x33) + ((c & 0xCC) >> 2);
+   return (c & 0xF) + (c >> 4);
+}
+
 static void
-repack (unsigned char *from, unsigned char *to)
+repack (unsigned char *from, unsigned char *to, unsigned char *convol)
 {
 	int n;
 
 	for (n=0; n<516; ++n, from+=10) {
+		*convol = (from[1] >> 1) & 1;
 		*to++ = (((from[5] >> 1) & 1) << 7) |	/* бит 48 */
 			(((from[7] >> 1) & 1) << 6) |	/* бит 47 */
 			(((from[9] >> 1) & 1) << 5) |	/* бит 46 */
@@ -95,6 +104,7 @@ repack (unsigned char *from, unsigned char *to)
 			(((from[5] >> 0) & 1) << 2) |	/* бит 43 */
 			(((from[7] >> 0) & 1) << 1) |	/* бит 42 */
 			(((from[9] >> 0) & 1) << 0);	/* бит 41 */
+		*convol ^= popcnt(to[-1]) & 1;
 		*to++ = (((from[0] >> 7) & 1) << 7) |	/* бит 40 */
 			(((from[2] >> 7) & 1) << 6) |	/* бит 39 */
 			(((from[4] >> 7) & 1) << 5) |	/* бит 38 */
@@ -103,6 +113,7 @@ repack (unsigned char *from, unsigned char *to)
 			(((from[0] >> 6) & 1) << 2) |	/* бит 35 */
 			(((from[2] >> 6) & 1) << 1) |	/* бит 34 */
 			(((from[4] >> 6) & 1) << 0);	/* бит 33 */
+		*convol ^= popcnt(to[-1]) & 1;
 		*to++ = (((from[6] >> 6) & 1) << 7) |	/* бит 32 */
 			(((from[8] >> 6) & 1) << 6) |	/* бит 31 */
 			(((from[0] >> 5) & 1) << 5) |	/* бит 30 */
@@ -111,6 +122,7 @@ repack (unsigned char *from, unsigned char *to)
 			(((from[6] >> 5) & 1) << 2) |	/* бит 27 */
 			(((from[8] >> 5) & 1) << 1) |	/* бит 26 */
 			(((from[0] >> 4) & 1) << 0);	/* бит 25 */
+		*convol++ ^= popcnt(to[-1]) & 1;
 		*to++ = (((from[2] >> 4) & 1) << 7) |	/* бит 24 */
 			(((from[4] >> 4) & 1) << 6) |	/* бит 23 */
 			(((from[6] >> 4) & 1) << 5) |	/* бит 22 */
@@ -149,7 +161,10 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 	void *disk;
 	int fd, z;
 	unsigned char raw [5160], buf1 [516*6], buf2 [516*6];
+	unsigned char cvbuf1[516], cvbuf2[516];
 	char buf [ZBYTES];
+	char cvbuf[1024];
+	char check[48];
 	char filename [MAXPATHLEN];
 
 	disk = disk_open (to_diskno, DISK_READ_WRITE);
@@ -170,18 +185,22 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-		repack (raw, buf1);
+		repack (raw, buf1, cvbuf1);
 
 		if (read (fd, raw, sizeof (raw)) != sizeof (raw)) {
 			fprintf (stderr, "%s: read failed\n", filename);
 			break;
 		}
-		repack (raw, buf2);
+		repack (raw, buf2, cvbuf2);
 		close (fd);
 
 		memcpy (buf,            buf1 + 4*6, ZBYTES/2);
 		memcpy (buf + ZBYTES/2, buf2 + 4*6, ZBYTES/2);
-		if (disk_write (disk, (z - 4) & 07777, (char*) buf) != DISK_IO_OK) {
+		memcpy (cvbuf,		cvbuf1 + 4, 512);
+		memcpy (cvbuf + 512,	cvbuf2 + 4, 512);
+		memcpy (check,		buf1, 4*6);
+		memcpy (check + 4*6,	buf2, 4*6);
+		if (disk_writei (disk, z, (char*) buf, cvbuf, check, DISK_MODE_PHYS) != DISK_IO_OK) {
 			fprintf (stderr, "Write to %d/%04o failed\n", to_diskno, z);
 			break;
 		}
