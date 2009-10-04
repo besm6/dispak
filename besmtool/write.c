@@ -83,10 +83,12 @@ dump_zone (int z, unsigned char *buf1, unsigned char *buf2)
  * Свертка у слова числовая, если в 50-м разряде и левой половине слова
  * суммарное число единиц нечетное.
  */
-static int popcnt(unsigned char c) {
-   c = (c & 0x55) + ((c & 0xAA) >> 1);
-   c = (c & 0x33) + ((c & 0xCC) >> 2);
-   return (c & 0xF) + (c >> 4);
+static int
+popcnt (unsigned char c)
+{
+	c = (c & 0x55) + ((c & 0xAA) >> 1);
+	c = (c & 0x33) + ((c & 0xCC) >> 2);
+	return (c & 0xF) + (c >> 4);
 }
 
 static void
@@ -104,7 +106,7 @@ repack (unsigned char *from, unsigned char *to, unsigned char *convol)
 			(((from[5] >> 0) & 1) << 2) |	/* бит 43 */
 			(((from[7] >> 0) & 1) << 1) |	/* бит 42 */
 			(((from[9] >> 0) & 1) << 0);	/* бит 41 */
-		*convol ^= popcnt(to[-1]) & 1;
+		*convol ^= popcnt (to[-1]) & 1;
 		*to++ = (((from[0] >> 7) & 1) << 7) |	/* бит 40 */
 			(((from[2] >> 7) & 1) << 6) |	/* бит 39 */
 			(((from[4] >> 7) & 1) << 5) |	/* бит 38 */
@@ -113,7 +115,7 @@ repack (unsigned char *from, unsigned char *to, unsigned char *convol)
 			(((from[0] >> 6) & 1) << 2) |	/* бит 35 */
 			(((from[2] >> 6) & 1) << 1) |	/* бит 34 */
 			(((from[4] >> 6) & 1) << 0);	/* бит 33 */
-		*convol ^= popcnt(to[-1]) & 1;
+		*convol ^= popcnt (to[-1]) & 1;
 		*to++ = (((from[6] >> 6) & 1) << 7) |	/* бит 32 */
 			(((from[8] >> 6) & 1) << 6) |	/* бит 31 */
 			(((from[0] >> 5) & 1) << 5) |	/* бит 30 */
@@ -122,7 +124,7 @@ repack (unsigned char *from, unsigned char *to, unsigned char *convol)
 			(((from[6] >> 5) & 1) << 2) |	/* бит 27 */
 			(((from[8] >> 5) & 1) << 1) |	/* бит 26 */
 			(((from[0] >> 4) & 1) << 0);	/* бит 25 */
-		*convol++ ^= popcnt(to[-1]) & 1;
+		*convol++ ^= popcnt (to[-1]) & 1;
 		*to++ = (((from[2] >> 4) & 1) << 7) |	/* бит 24 */
 			(((from[4] >> 4) & 1) << 6) |	/* бит 23 */
 			(((from[6] >> 4) & 1) << 5) |	/* бит 22 */
