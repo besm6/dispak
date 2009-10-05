@@ -10,4 +10,5 @@ distclean-local:
 
 log:	.svn
 	svn update
-	if [ -d /usr/share/locale/en_US.UTF-8 ]; then LC_ALL=en_US.UTF-8; else LC_ALL=en_US.utf8; fi && svn log > ChangeLog
+	if [ -d /usr/share/locale/en_US.UTF-8 ]; then export LC_TIME=en_US.UTF-8; \
+	else export LC_TIME=en_US.utf8; fi && svn log > ChangeLog

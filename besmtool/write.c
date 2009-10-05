@@ -51,13 +51,12 @@ file_to_disk (unsigned to_diskno, unsigned to_start, unsigned length,
 /*
  * Отладочная печать зоны.
  */
-#if 0
 void
-dump_zone (int z, unsigned char *buf1, unsigned char *buf2)
+debug_zone (int z, unsigned char *buf1, unsigned char *buf2)
 {
 	int i;
 	void dump_word (unsigned char *data) {
-		printf (" %02x-%02x-%02x-%02x-%02x-%02x", data[0], data[1],
+		printf ("  %02x%02x%02x%02x%02x%02x", data[0], data[1],
 			data[2], data[3], data[4], data[5]);
 	}
 
@@ -69,7 +68,6 @@ dump_zone (int z, unsigned char *buf1, unsigned char *buf2)
 		dump_word (buf2+i);
 	printf ("\n");
 }
-#endif
 
 /*
  * Эмулятор Морозова хранит каждую зону как две половины по 516 слов.
@@ -195,6 +193,7 @@ dir_to_disk (unsigned to_diskno, char *from_dir)
 		}
 		repack (raw, buf2, cvbuf2);
 		close (fd);
+/*debug_zone (z, buf1, buf2);*/
 
 		memcpy (buf,            buf1 + 4*6, ZBYTES/2);
 		memcpy (buf + ZBYTES/2, buf2 + 4*6, ZBYTES/2);
