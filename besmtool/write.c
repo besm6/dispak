@@ -55,17 +55,17 @@ void
 debug_zone (int z, unsigned char *buf1, unsigned char *buf2)
 {
 	int i;
-	void dump_word (unsigned char *data) {
-		printf ("  %02x%02x%02x%02x%02x%02x", data[0], data[1],
-			data[2], data[3], data[4], data[5]);
-	}
 
 	printf ("%4d:", z);
-	for (i=0; i<516*6; i+=6)
-		dump_word (buf1+i);
+	for (i=0; i<516*6; i+=6) {
+		printf ("  %02x%02x%02x%02x%02x%02x", buf1[i+0], buf1[i+1],
+			buf1[i+2], buf1[i+3], buf1[i+4], buf1[i+5]);
+	}
 	printf ("\n     ");
-	for (i=0; i<516*6; i+=6)
-		dump_word (buf2+i);
+	for (i=0; i<516*6; i+=6) {
+		printf ("  %02x%02x%02x%02x%02x%02x", buf2[i+0], buf2[i+1],
+			buf2[i+2], buf2[i+3], buf2[i+4], buf2[i+5]);
+	}
 	printf ("\n");
 }
 
