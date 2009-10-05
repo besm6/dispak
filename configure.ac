@@ -7,7 +7,7 @@ AM_INIT_AUTOMAKE(besm6, 2.5, no-define)
 AC_CONFIG_SRCDIR([emulator/extra.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile emulator/Makefile po/Makefile.in])
-AC_CONFIG_FILES([besmtool/Makefile sbor/emd-to-simh/Makefile])
+AC_CONFIG_FILES([besmtool/Makefile sbor/emd2simh/Makefile])
 
 # Checks for programs.
 AC_PROG_CC

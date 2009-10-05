@@ -1,4 +1,4 @@
-SUBDIRS = . emulator besmtool examples po sbor/emd-to-simh
+SUBDIRS = . emulator besmtool examples po sbor/emd2simh
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = config.rpath m4/ChangeLog
 
