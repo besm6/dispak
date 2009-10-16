@@ -286,6 +286,7 @@ disk_readi(void *ud, u_int zone, char *buf, char *convol, char *check, u_int mod
 {
 	disk_t *d = (disk_t *) ud;
 
+	fprintf(stderr, "%d zone %o\n", d->d_diskno, zone);
 	if (! d || d->d_magic != DESCR_MAGIC) {
 		fprintf(stderr, "disk_readi: bad descriptor\n");
 		return DISK_IO_FATAL;
@@ -371,13 +372,25 @@ int disk_readi2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_i
 		perror("disk_readi");
 		return DISK_IO_ENREAD;
 	}
-        if (buf)
-            memcpy(buf, zone_buf.z_data, ZONE_SIZE);
-        if (convol)
-            memcpy(convol, zone_buf.z_convol, 1024);
-        if (check)
-            memcpy(check, zone_buf.z_cwords, sizeof(zone_buf.z_cwords));
-
+        if (buf) {
+		int i, j;
+		for (i = 0; i < 1024; ++i) {
+			for (j = 0; j < 48; j += 8)
+				*buf++ = zone_buf.z_data[i] >> (40-j); 
+		}
+	}
+        if (convol) {
+		int i;
+		for (i = 0; i < 1024; ++i)
+			convol[i] = ((zone_buf.z_data[i] >> 48) ^ 1) & 1;
+	}
+        if (check) {
+		int i, j;
+		for (i = 0; i < 8; ++i) {
+			for (j = 0; j < 48; j += 8)
+				*check++ = zone_buf.z_cwords[i] >> (40-j); 
+		}
+	}
 	return DISK_IO_OK;
 }
 
@@ -441,6 +454,9 @@ disk_writei1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 int
 disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
 {
+    int i;
+    unsigned char * b = buf;
+    unsigned char * c = check;
     if (mode != DISK_MODE_PHYS) {
         zone += ZONE_OFFSET;
     }
@@ -452,18 +468,46 @@ disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
     if (mode == DISK_MODE_LOUD && cur >= max)
         return DISK_IO_NEW;
 
-    if (buf)
-        memcpy(zone_buf.z_data, buf, ZONE_SIZE);
-    else
-        memset(zone_buf.z_data, 0, ZONE_SIZE);
-    if (convol)
-        memcpy(zone_buf.z_convol, convol, 1024);
-    else
-        memset(zone_buf.z_convol, 0, 1024);
-    if (check)
-        memcpy(zone_buf.z_cwords, check, sizeof(zone_buf.z_cwords));
-    else
-        memset(zone_buf.z_cwords, 0, sizeof(zone_buf.z_cwords));
+    if (cur < max) {
+	if (read(d->d_fileno, &zone_buf.z_cwords, sizeof(zone_buf.z_cwords)) != sizeof(zone_buf.z_cwords)) {
+        perror("disk_writei (cwords)");
+        return DISK_IO_ENWRITE;
+	}
+    lseek(d->d_fileno, -sizeof(zone_buf.z_cwords), SEEK_CUR);
+    }
+
+    memset(zone_buf.z_data, 0, sizeof (zone_buf.z_data));
+    if (buf) {
+	for (i = 0; i < 1024; ++i, b+=6) {
+		zone_buf.z_data[i] = (uint64_t) b[0] << 40;
+		zone_buf.z_data[i] |= (uint64_t) b[1] << 32;
+		zone_buf.z_data[i] |= (uint64_t) b[2] << 24;
+		zone_buf.z_data[i] |= (uint64_t) b[3] << 16;
+		zone_buf.z_data[i] |= (uint64_t) b[4] << 8;
+		zone_buf.z_data[i] |= (uint64_t) b[5];
+	}
+    } 
+    for (i = 0; i < 1024; ++i) {
+	zone_buf.z_data[i] |= (convol && convol[i] ? 2LL : 1LL) << 48;
+    }
+    if (check) {
+	for (i = 0; i < 8; ++i, c+=6) {
+                zone_buf.z_cwords[i] = (uint64_t) c[0] << 40;
+                zone_buf.z_cwords[i] |= (uint64_t) c[1] << 32;
+                zone_buf.z_cwords[i] |= (uint64_t) c[2] << 24;
+                zone_buf.z_cwords[i] |= (uint64_t) c[3] << 16;
+                zone_buf.z_cwords[i] |= (uint64_t) c[4] << 8;
+                zone_buf.z_cwords[i] |= (uint64_t) c[5];
+	}
+    } else {
+	uint64_t csum = 0;
+	for (i = 0; i < 1024; ++i) {
+		csum += zone_buf.z_data[i] & ((1LL<<48)-1);
+		csum = (csum & ((1LL<<48)-1)) + (csum >> 48);
+	}
+	zone_buf.z_cwords[3] = csum | (2ll << 48);
+	zone_buf.z_cwords[7] = csum | (2ll << 48);
+    }
     if (write(d->d_fileno, &zone_buf, sizeof(zone_buf)) != sizeof(zone_buf)) {
         perror("disk_writei");
         return DISK_IO_ENWRITE;

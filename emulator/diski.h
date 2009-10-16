@@ -44,9 +44,8 @@ typedef struct disk {
  * with data/insn convolution bits and control words (8 per zone).
  */
 typedef struct zone {
-	u_char z_data[ZONE_SIZE];
-	u_char z_convol[1024];	/* 1 convolution byte per word */
-	u_char z_cwords[6*8];
+	uint64_t z_cwords[8];
+	uint64_t z_data[1024];
 } zone_t;
 
 #define getlong(x)  (((x)[0] << 24) | ((x)[1] << 16) | ((x)[2] << 8) | (x)[3])
