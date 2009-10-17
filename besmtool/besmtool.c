@@ -9,6 +9,7 @@
  *
  * Options:
  * 	--start=<zone>
+ *	--last=<zone>
  *	--length=<nzones>
  *
  * Write options:
@@ -34,6 +35,7 @@
 
 enum {
 	OPT_START,
+	OPT_LAST,
 	OPT_LENGTH,
 	OPT_FROM_FILE,
 	OPT_FROM_DISK,
@@ -49,6 +51,7 @@ static struct option longopts[] = {
 	{ "help",		0,	0,	'h'		},
 	{ "version",		0,	0,	'V'		},
 	{ "start",		1,	0,	OPT_START	},
+	{ "last",		1,	0,	OPT_LAST	},
 	{ "length",		1,	0,	OPT_LENGTH	},
 	{ "from-file",		1,	0,	OPT_FROM_FILE	},
 	{ "from-disk",		1,	0,	OPT_FROM_DISK	},
@@ -78,6 +81,7 @@ usage ()
 
 	fprintf (stderr, "Options:\n");
 	fprintf (stderr, "\t--start=<zone>\n");
+	fprintf (stderr, "\t--last=<zone>\n");
 	fprintf (stderr, "\t--length=<nzones>\n");
 
 	fprintf (stderr, "View options:\n");
@@ -98,7 +102,7 @@ usage ()
 int
 main (int argc, char **argv)
 {
-	unsigned start = 0, length = 0, from_diskno = 0, from_start = 0;
+	unsigned start = 0, length = 0, last = -1, from_diskno = 0, from_start = 0;
 	char *from_file = 0, *to_file = 0, *from_dir = 0, *view_encoding = "g,k";
 	unsigned diskno;
 	int c;
@@ -116,6 +120,9 @@ main (int argc, char **argv)
 			return 0;
 		case OPT_START:
 			start = strtol (optarg, 0, 0);
+			break;
+		case OPT_LAST:
+			last = strtol (optarg, 0, 0);
 			break;
 		case OPT_LENGTH:
 			length = strtol (optarg, 0, 0);
@@ -142,6 +149,8 @@ main (int argc, char **argv)
 	}
 	argc -= optind;
 	argv += optind;
+	if (last >= start && ! length)
+		length = 1 + last - start;
 	switch (argc) {
 	case 1:
 		if (strcmp ("list", argv[0]) == 0) {

@@ -286,7 +286,7 @@ disk_readi(void *ud, u_int zone, char *buf, char *convol, char *check, u_int mod
 {
 	disk_t *d = (disk_t *) ud;
 
-	fprintf(stderr, "%d zone %o\n", d->d_diskno, zone);
+/*	fprintf(stderr, "%d zone %o\n", d->d_diskno, zone);*/
 	if (! d || d->d_magic != DESCR_MAGIC) {
 		fprintf(stderr, "disk_readi: bad descriptor\n");
 		return DISK_IO_FATAL;
@@ -376,7 +376,7 @@ int disk_readi2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_i
 		int i, j;
 		for (i = 0; i < 1024; ++i) {
 			for (j = 0; j < 48; j += 8)
-				*buf++ = zone_buf.z_data[i] >> (40-j); 
+				*buf++ = zone_buf.z_data[i] >> (40-j);
 		}
 	}
         if (convol) {
@@ -388,7 +388,7 @@ int disk_readi2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_i
 		int i, j;
 		for (i = 0; i < 8; ++i) {
 			for (j = 0; j < 48; j += 8)
-				*check++ = zone_buf.z_cwords[i] >> (40-j); 
+				*check++ = zone_buf.z_cwords[i] >> (40-j);
 		}
 	}
 	return DISK_IO_OK;
@@ -486,7 +486,7 @@ disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 		zone_buf.z_data[i] |= (uint64_t) b[4] << 8;
 		zone_buf.z_data[i] |= (uint64_t) b[5];
 	}
-    } 
+    }
     for (i = 0; i < 1024; ++i) {
 	zone_buf.z_data[i] |= (convol && convol[i] ? 2LL : 1LL) << 48;
     }
