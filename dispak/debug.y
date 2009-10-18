@@ -219,8 +219,8 @@ command:        /* void */
 	|	next
 			{
 			LOAD(wd, pc);
-			if (!right && (wd.l & 03700000) == 03100000 ||
-				right && (wd.r & 03700000) == 03100000) {
+			if ((! right && (wd.l & 03700000) == 03100000) ||
+			    (right && (wd.r & 03700000) == 03100000)) {
 				cflags[pc+1] |= C_NEXT;
 			} else {
 				stepflg = 1;
