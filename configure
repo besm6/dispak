@@ -643,6 +643,10 @@ LIBOBJS
 EGREP
 GREP
 CPP
+HAVE_LIBSDL_FALSE
+HAVE_LIBSDL_TRUE
+HAVE_READLINE_FALSE
+HAVE_READLINE_TRUE
 POSUB
 LTLIBINTL
 LIBINTL
@@ -2357,7 +2361,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers config.h"
 
-ac_config_files="$ac_config_files Makefile dispak/Makefile po/Makefile.in"
+ac_config_files="$ac_config_files Makefile dispak/Makefile simh/Makefile po/Makefile.in"
 
 ac_config_files="$ac_config_files besmtool/Makefile sbor/emd2simh/Makefile"
 
@@ -3659,6 +3663,156 @@ if test "x$ac_cv_lib_sunmath_isinf" = x""yes; then
 _ACEOF
 
   LIBS="-lsunmath $LIBS"
+
+fi
+
+
+{ $as_echo "$as_me:$LINENO: checking for readline in -lreadline" >&5
+$as_echo_n "checking for readline in -lreadline... " >&6; }
+if test "${ac_cv_lib_readline_readline+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lreadline  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char readline ();
+int
+main ()
+{
+return readline ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_readline_readline=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_readline_readline=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_readline_readline" >&5
+$as_echo "$ac_cv_lib_readline_readline" >&6; }
+if test "x$ac_cv_lib_readline_readline" = x""yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBREADLINE 1
+_ACEOF
+
+  LIBS="-lreadline $LIBS"
+
+fi
+
+
+{ $as_echo "$as_me:$LINENO: checking for TTF_Init in -lSDL_ttf" >&5
+$as_echo_n "checking for TTF_Init in -lSDL_ttf... " >&6; }
+if test "${ac_cv_lib_SDL_ttf_TTF_Init+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lSDL_ttf  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char TTF_Init ();
+int
+main ()
+{
+return TTF_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 $as_test_x conftest$ac_exeext
+       }; then
+  ac_cv_lib_SDL_ttf_TTF_Init=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_SDL_ttf_TTF_Init=no
+fi
+
+rm -rf conftest.dSYM
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:$LINENO: result: $ac_cv_lib_SDL_ttf_TTF_Init" >&5
+$as_echo "$ac_cv_lib_SDL_ttf_TTF_Init" >&6; }
+if test "x$ac_cv_lib_SDL_ttf_TTF_Init" = x""yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSDL_TTF 1
+_ACEOF
+
+  LIBS="-lSDL_ttf $LIBS"
 
 fi
 
@@ -5683,6 +5837,22 @@ _ACEOF
 
 
 
+
+ if test ":$ac_cv_lib_readline_readline" = ":yes"; then
+  HAVE_READLINE_TRUE=
+  HAVE_READLINE_FALSE='#'
+else
+  HAVE_READLINE_TRUE='#'
+  HAVE_READLINE_FALSE=
+fi
+
+ if test ":$ac_cv_lib_SDL_ttf_TTF_Init" = ":yes"; then
+  HAVE_LIBSDL_TRUE=
+  HAVE_LIBSDL_FALSE='#'
+else
+  HAVE_LIBSDL_TRUE='#'
+  HAVE_LIBSDL_FALSE=
+fi
 
 
 # Checks for header files.
@@ -8257,6 +8427,20 @@ $as_echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${HAVE_READLINE_TRUE}" && test -z "${HAVE_READLINE_FALSE}"; then
+  { { $as_echo "$as_me:$LINENO: error: conditional \"HAVE_READLINE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+$as_echo "$as_me: error: conditional \"HAVE_READLINE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${HAVE_LIBSDL_TRUE}" && test -z "${HAVE_LIBSDL_FALSE}"; then
+  { { $as_echo "$as_me:$LINENO: error: conditional \"HAVE_LIBSDL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+$as_echo "$as_me: error: conditional \"HAVE_LIBSDL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
 
 : ${CONFIG_STATUS=./config.status}
@@ -8776,6 +8960,7 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "dispak/Makefile") CONFIG_FILES="$CONFIG_FILES dispak/Makefile" ;;
+    "simh/Makefile") CONFIG_FILES="$CONFIG_FILES simh/Makefile" ;;
     "po/Makefile.in") CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
     "besmtool/Makefile") CONFIG_FILES="$CONFIG_FILES besmtool/Makefile" ;;
     "sbor/emd2simh/Makefile") CONFIG_FILES="$CONFIG_FILES sbor/emd2simh/Makefile" ;;

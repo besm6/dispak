@@ -1,4 +1,4 @@
-SUBDIRS = . dispak besmtool examples po sbor/emd2simh
+SUBDIRS = . dispak simh besmtool examples po sbor/emd2simh
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = config.rpath m4/ChangeLog
 

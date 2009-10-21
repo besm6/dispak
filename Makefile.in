@@ -185,7 +185,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = . dispak besmtool examples po sbor/emd2simh
+SUBDIRS = . dispak simh besmtool examples po sbor/emd2simh
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = config.rpath m4/ChangeLog
 all: config.h

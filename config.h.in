@@ -34,6 +34,12 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define to 1 if you have the `readline' library (-lreadline). */
+#undef HAVE_LIBREADLINE
+
+/* Define to 1 if you have the `SDL_ttf' library (-lSDL_ttf). */
+#undef HAVE_LIBSDL_TTF
+
 /* Define to 1 if you have the `sunmath' library (-lsunmath). */
 #undef HAVE_LIBSUNMATH
 
