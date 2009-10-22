@@ -14,8 +14,13 @@ AC_PROG_CC
 AC_PROG_YACC
 
 # Checks for libraries.
+if [ -d /opt/local ]; then
+	CFLAGS="$CFLAGS -I/opt/local/include"
+	LDFLAGS="$LDFLAGS -L/opt/local/lib"
+fi
 AC_CHECK_LIB([m], [sin])
 AC_CHECK_LIB([sunmath], [isinf])
+AC_CHECK_LIB([rt], [clock_getres])
 AC_CHECK_LIB([readline], [readline])
 AC_CHECK_LIB([SDL_ttf], [TTF_Init])
 AM_GNU_GETTEXT_VERSION([0.16])
