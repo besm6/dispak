@@ -14,7 +14,7 @@ AC_PROG_CC
 AC_PROG_YACC
 
 # Checks for libraries.
-if [ -d /opt/local ]; then
+if test -d /opt/local; then
 	CFLAGS="$CFLAGS -I/opt/local/include"
 	LDFLAGS="$LDFLAGS -L/opt/local/lib"
 fi
