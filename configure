@@ -4052,12 +4052,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_readline_readline" >&5
 $as_echo "$ac_cv_lib_readline_readline" >&6; }
 if test "x$ac_cv_lib_readline_readline" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBREADLINE 1
-_ACEOF
-
-  LIBS="-lreadline $LIBS"
-
+  READLINE_LIB=-lreadline
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for TTF_Init in -lSDL_ttf" >&5

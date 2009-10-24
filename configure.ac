@@ -21,7 +21,7 @@ fi
 AC_CHECK_LIB([m], [sin])
 AC_CHECK_LIB([sunmath], [isinf])
 AC_CHECK_LIB([rt], [clock_getres])
-AC_CHECK_LIB([readline], [readline])
+AC_CHECK_LIB([readline], [readline], [READLINE_LIB=-lreadline])
 AC_CHECK_LIB([SDL_ttf], [TTF_Init])
 AM_GNU_GETTEXT_VERSION([0.16])
 AM_GNU_GETTEXT([external])
