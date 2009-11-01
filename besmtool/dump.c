@@ -3,15 +3,70 @@
 #include "disk.h"
 #include "encoding.h"
 
+const char *opname_short_bemsh [64] = {
+	"зп",	"зпм",	"рег",	"счм",	"сл",	"вч",	"вчоб",	"вчаб",
+	"сч",	"и",	"нтж",	"слц",	"знак",	"или",	"дел",	"умн",
+	"сбр",	"рзб",	"чед",	"нед",  "слп",  "вчп",  "сд",	"рж",
+	"счрж",	"счмр",	"э32",	"увв",	"слпа",	"вчпа",	"сда",	"ржа",
+	"уи",	"уим",	"счи",	"счим", "уии",	"сли",  "э46",	"э47",
+	"э50",	"э51",	"э52",	"э53",	"э54",	"э55",	"э56",	"э57",
+	"э60",	"э61",  "э62",  "э63",  "э64",  "э65",  "э66",  "э67",
+	"э70",	"э71",	"э72",	"э73",	"э74",	"э75",	"э76",	"э77",
+};
+
+static const char *opname_long_bemsh [16] = {
+	"э20",	"э21",	"мода",	"мод",	"уиа",	"слиа",	"по",	"пе",
+	"пб",	"пв",	"выпр",	"стоп",	"пио",	"пино",	"э36",	"цикл",
+};
+
+/*
+ * Печать машинной инструкции с мнемоникой.
+ */
 static void
-print_command (unsigned cmd)
+sprint_command (char *str, unsigned cmd)
 {
-	if (cmd & 0x80000)
-		printf ("%02o %02o %05o", cmd >> 20,
-			(cmd >> 15) & 037, cmd & 077777);
+	int reg, opcode, addr;
+
+	reg = (cmd >> 20) & 017;
+	if (cmd & 02000000) {
+		opcode = (cmd >> 12) & 0370;
+		addr = cmd & 077777;
+	} else {
+		opcode = (cmd >> 12) & 077;
+		addr = cmd & 07777;
+		if (cmd & 01000000)
+			addr |= 070000;
+	}
+	if (opcode & 0200)
+		strcpy (str, opname_long_bemsh [(opcode >> 3) & 017]);
 	else
-		printf ("%02o %03o %04o", cmd >> 20,
-			(cmd >> 12) & 0177, cmd & 07777);
+		strcpy (str, opname_short_bemsh [opcode]);
+	str += strlen (str);
+	if (addr) {
+		if (addr >= 077700)
+			sprintf (str, " -%o", (addr ^ 077777) + 1);
+		else
+			sprintf (str, " %o", addr);
+		str += strlen (str);
+	}
+	if (reg) {
+		if (! addr)
+			*str++ = ' ';
+		sprintf (str, "(%o)", reg);
+	}
+}
+
+/*
+ * Печать пробелов, дополняющих заданную строку UTF-8 до нужной ширины.
+ */
+static void
+print_spaces (const char *str, int width)
+{
+	for (; *str; str++)
+		if (! (*str & 0x80) || (*str & 0xc0) == 0xc0)
+			--width;
+	while (width-- > 0)
+		putchar (' ');
 }
 
 static void
@@ -19,18 +74,21 @@ dump_zone (unsigned zone, unsigned char *buf)
 {
 	unsigned addr, left, right;
 	unsigned char *cp;
+	char str [40];
 
 	addr = 0;
 	for (cp = buf; cp < buf + ZBYTES; cp += 6, ++addr) {
 		left = (cp[0] << 16) | (cp[1] << 8) | cp[2];
 		right = (cp[3] << 16) | (cp[4] << 8) | cp[5];
 
-		printf ("%04o.%04o:  ", zone, addr & 01777);
-		print_command (left);
-		fputs ("  ", stdout);
-		print_command (right);
-		printf ("  %04o %04o %04o %04o\n",
+		printf ("%04o.%04o:  %04o %04o %04o %04o  ",
+			zone, addr & 01777,
 			left >> 12, left & 07777, right >> 12, right & 07777);
+		sprint_command (str, left);
+		printf ("%s ", str);
+		print_spaces (str, 15);
+		sprint_command (str, right);
+		printf ("%s\n", str);
 	}
 }
 
