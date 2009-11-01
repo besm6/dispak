@@ -208,6 +208,35 @@ dbg:
 	} else
 		addr = ui.i_addr;
 
+	if (trace >= 2) {
+		char str [40] = "";
+		LOAD(enreg, XADDR(addr + reg[ui.i_reg]));
+		fprintf(stderr, "%05o: %-4s", abpc, op.o_name);
+		if (addr >= 077700) {
+			if (ui.i_reg)
+				sprintf (str, "-%o(%o)", (addr ^ 077777) + 1, ui.i_reg);
+			else
+				sprintf (str, "-%o", (addr ^ 077777) + 1);
+		} else if (addr) {
+			if (ui.i_reg)
+				sprintf (str, "%o(%o)", addr, ui.i_reg);
+			else
+				sprintf (str, "%o", addr);
+		} else {
+			if (ui.i_reg) {
+				sprintf (str, "(%o)", ui.i_reg);
+			}
+		}
+		fprintf(stderr, "%-16s (=%08o%08o) acc=%08o%08o",
+			str, (uint)enreg.l, (uint)enreg.r,
+			(uint)acc.l, (uint)acc.r);
+		if (ui.i_reg)
+			fprintf(stderr, " r[%o]=%05o",
+				ui.i_reg, reg[ui.i_reg]);
+		fprintf(stderr, "\n");
+		fflush(stderr);
+	}
+
 	switch (op.o_inline) {
 	case I_ATX:
 		STORE(acc, XADDR(addr + reg[ui.i_reg]));
@@ -490,11 +519,11 @@ mtj:
 		reg[016] = ADDR(addr + reg[ui.i_reg]);
 		reg[TRAPNREG] = ui.i_opcode - 050;
 		stopwatch();
-		if (trace && (ui.i_opcode != 075 || reg[016] < 2)) {
+		if (trace == 1 && (ui.i_opcode != 075 || reg[016] < 2)) {
 			/* Do not trace e75, it's too verbose. */
 			LOAD(enreg, reg[016] | (supmode & sup_mmap));
-			fprintf(stderr, "%05o:%03o.%05o(%08o%08o) %08o%08o\n",
-				abpc, ui.i_opcode, reg[016], (uint)enreg.l, (uint)enreg.r,
+			fprintf(stderr, "%05o: %-4s%-5o (=%08o%08o) acc=%08o%08o\n",
+				abpc, op.o_name, reg[016], (uint)enreg.l, (uint)enreg.r,
 				(uint)acc.l, (uint)acc.r);
 			fflush(stderr);
 		}
