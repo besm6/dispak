@@ -1083,12 +1083,9 @@ e63(void)
 	case 3:
 		return E_SUCCESS;
 	case 4:
-		/* время до конца решения задачи в виде
-		 * отрицательного целого по 2 мсек. */
 		gettimeofday(&ct, NULL);
-		acc.l = 00377777;
-		acc.r = 077777777 & (-3600 * 50 +
-			(uint) ((TIMEDIFF(start_time, ct) - excuse) * 50));
+		acc.l = 0;
+		acc.r = (uint) (TIMEDIFF(start_time, ct) - excuse) * 50;
 		return E_SUCCESS;
 	default:
 		if (reg[016] > 7)
@@ -1315,14 +1312,36 @@ ttout(uchar flags, ushort a1, ushort a2)
 		case 0136:
 			putchar('?');
 			break;
-		case 0143:
+		case 0141:
+		case 0142:
 			/* zero-width space */
+			usleep (100000);
 			break;
 		case 0146:
 		case 0170:
 			/* non-destructive backspace */
 			/* assuming ANSI compatibility */
 			fputs("\033[D", stdout);
+			break;
+		case 0171:
+			/* move right - assuming ANSI compatibility */
+			fputs("\033[C", stdout);
+			break;
+		case 0176:
+			/* move up - assuming ANSI compatibility */
+			fputs("\033[A", stdout);
+			break;
+		case 0177:
+			/* move down - assuming ANSI compatibility */
+			fputs("\033[B", stdout);
+			break;
+		case 0162:
+			/* erase */
+			fputs("\033[H\033[J", stdout);
+			break;
+		case 0167:
+			/* home */
+			fputs("\033[H", stdout);
 			break;
 		case 021:
 			if (flags == 0220) {
@@ -1339,6 +1358,7 @@ ttout(uchar flags, ushort a1, ushort a2)
 			}
 			break;
 		}
+		fflush(stdout);
 		++sp;
 	}
 done:

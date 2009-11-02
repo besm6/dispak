@@ -240,11 +240,17 @@ dbg:
 	switch (op.o_inline) {
 	case I_ATX:
 		STORE(acc, XADDR(addr + reg[ui.i_reg]));
+		if (trace >= 2)
+			fprintf(stderr, "       %05o: store %08o%08o\n",
+				XADDR(addr + reg[ui.i_reg]), acc.l, acc.r);
 		if (!addr && (ui.i_reg == STACKREG))
 			reg[STACKREG] = ADDR(reg[STACKREG] + 1);
 		NEXT;
 	case I_STX:
 		STORE(acc, XADDR(addr + reg[ui.i_reg]));
+		if (trace >= 2)
+			fprintf(stderr, "       %05o: store %08o%08o\n",
+				XADDR(addr + reg[ui.i_reg]), acc.l, acc.r);
 		STK_POP;
 		break;
 	case I_XTS: /* Major ISA change: swapping next 2 lines */
