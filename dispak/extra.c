@@ -1294,6 +1294,8 @@ ttout(uchar flags, ushort a1, ushort a2)
 	}
 	while ((sp - start < E71BUFSZ) && (sp - start < (a2 - a1 + 1) * 6)) {
 		if (flags & 1) {
+			if (*sp == 0)
+				break;
 			/* bit 37 means raw I/O */
 			putchar(*sp & 0x7f);
 		} else
