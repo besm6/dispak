@@ -1081,9 +1081,12 @@ e63(void)
 	case 3:
 		return E_SUCCESS;
 	case 4:
+		/* время до конца решения задачи в виде
+		 * отрицательного целого по 2 мсек. */
 		gettimeofday(&ct, NULL);
-		acc.l = 0;
-		acc.r = (uint) (TIMEDIFF(start_time, ct) - excuse) * 50;
+		acc.l = 00377777;
+		acc.r = 077777777 & (-3600 * 50 +
+			(uint) ((TIMEDIFF(start_time, ct) - excuse) * 50));
 		return E_SUCCESS;
 	default:
 		if (reg[016] > 7)
