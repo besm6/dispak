@@ -1023,6 +1023,8 @@ e62(void)
 		acc.l = 0;
 		acc.r = 077777;
 		return E_SUCCESS;
+	case 0055:	/* unknown */
+		return E_SUCCESS;
 	case 0102:	/* stop reading from terminal */
 		return E_SUCCESS;
 	case 0103:	/* get logical console number by physical */
