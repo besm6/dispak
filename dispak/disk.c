@@ -11,8 +11,12 @@
  * See the accompanying file "COPYING" for more details.
  */
 #include <sys/stat.h>
+#include <sys/time.h>
 #include "defs.h"
+#include <time.h>
 #include "diski.h"
+
+extern uint64_t userid();
 
 #define PATH_DEFAULT "/.besm6:/usr/local/share/besm6"
 
@@ -452,6 +456,40 @@ disk_writei1(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 	return DISK_IO_OK;
 }
 
+/* Time since midnight is 0.02 sec ticks */
+uint ticks_since_midnight() {
+	struct tm       *d;
+#if defined (__linux) || ! defined (CLOCK_REALTIME)
+	struct timeval t;
+	gettimeofday (&t, NULL);
+#else
+	struct timespec t;
+	clock_gettime (CLOCK_REALTIME, &t);
+#endif
+	d = localtime (&t.tv_sec);
+	return ((d->tm_hour * 60 + d->tm_min) * 60 + d->tm_sec) * 50 +
+#if defined (__linux) || ! defined (CLOCK_REALTIME)
+		t.tv_usec / 20000;
+#else
+		t.tv_nsec / 20000000;
+#endif
+}
+
+
+/* Returns DDMMY in BCD */
+static int date_for_cwords() {
+	time_t t;
+	struct tm * d;
+	time(&t);
+	d = localtime(&t);
+	++d->tm_mon;
+	return (d->tm_mday / 10) << 13 |
+		(d->tm_mday % 10) << 9 |
+		(d->tm_mon / 10) << 8  |
+		(d->tm_mon % 10) << 4 |
+		(d->tm_year % 10);
+}
+
 int
 disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int mode)
 {
@@ -490,6 +528,7 @@ disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 			zone_buf.z_data[i] |= (uint64_t) b[5];
 		}
 	}
+	uint64_t uid = userid();
 	for (i = 0; i < 1024; ++i) {
 		zone_buf.z_data[i] |= (convol && convol[i] ? 2LL : 1LL) << 48;
 	}
@@ -504,12 +543,26 @@ disk_writei2(disk_t *d, u_int zone, char *buf, char *convol, char *check, u_int 
 		}
 	} else {
 		uint64_t csum = 0;
+		uint64_t coarse_time = ticks_since_midnight() >> 15;
+
 		for (i = 0; i < 1024; ++i) {
 			csum += zone_buf.z_data[i] & ((1LL<<48)-1);
 			csum = (csum & ((1LL<<48)-1)) + (csum >> 48);
 		}
+
+		/* 30 - номер устройства, 1 - номер машины */
+		zone_buf.z_cwords[0] = (uint64_t) zone << 37 | coarse_time << 27 |
+		030 << 21 | date_for_cwords() << 6 | 1 << 3 | 2ll << 48;
+		/* 013 в 48-40 разрядах - код формата служ. слов (см. РУКАВА) */
+		/* 12-1 разряды - контрольная сумма "сектора" - не используются */
+		zone_buf.z_cwords[1] = 01370707LL << 24 | d->d_diskno << 12 | (2ll << 48);
+		zone_buf.z_cwords[2] = uid | (2ll << 48);
 		zone_buf.z_cwords[3] = csum | (2ll << 48);
-		zone_buf.z_cwords[7] = csum | (2ll << 48);
+		/* Вторая полузона - нечетный номер дорожки */
+		zone_buf.z_cwords[4] = zone_buf.z_cwords[0] | 1LL << 36;
+		zone_buf.z_cwords[5] = zone_buf.z_cwords[1];
+		zone_buf.z_cwords[6] = zone_buf.z_cwords[2];
+		zone_buf.z_cwords[7] = zone_buf.z_cwords[3];
 	}
 	if (write(d->d_fileno, &zone_buf, sizeof(zone_buf)) != sizeof(zone_buf)) {
 		perror("disk_writei");

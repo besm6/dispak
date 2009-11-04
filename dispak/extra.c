@@ -737,21 +737,7 @@ e53(void)
 {
 	switch (reg[016]) {
 	case 010: {	/* get time since midnight */
-		struct tm       *d;
-#if defined (__linux) || ! defined (CLOCK_REALTIME)
-		struct timeval t;
-		gettimeofday (&t, NULL);
-#else
-		struct timespec t;
-		clock_gettime (CLOCK_REALTIME, &t);
-#endif
-		d = localtime (&t.tv_sec);
-		acc.r = ((d->tm_hour * 60 + d->tm_min) * 60 + d->tm_sec) * 50 +
-#if defined (__linux) || ! defined (CLOCK_REALTIME)
-				t.tv_usec / 20000;
-#else
-				t.tv_nsec / 20000000;
-#endif
+		acc.r = ticks_since_midnight();
 		acc.l = 0;
 		return E_SUCCESS;
 	}
@@ -810,6 +796,10 @@ int
 e51(void)
 {
 	return elfun(reg[016] ? EF_COS : EF_SIN);
+}
+
+uint64_t userid() {
+	return (uint64_t) user.l << 24 | user.r;
 }
 
 int
@@ -1023,7 +1013,9 @@ e62(void)
 		acc.l = 0;
 		acc.r = 077777;
 		return E_SUCCESS;
-	case 0055:	/* unknown */
+	case 0055:	/* get error catcher address */
+		acc.l = 0;
+		acc.r = 040000000;
 		return E_SUCCESS;
 	case 0102:	/* stop reading from terminal */
 		return E_SUCCESS;
@@ -1293,8 +1285,17 @@ ttout(uchar flags, ushort a1, ushort a2)
 		if (flags & 1) {
 			if (*sp == 0)
 				break;
-			/* bit 37 means raw I/O */
-			putchar(*sp & 0x7f);
+			/* bit 37 means raw I/O, but convert control chars to ANSI escapes */
+			switch (*sp &0x7f) {
+			case '\037': fputs("\033[H\033[J", stdout); break;	// clrscr
+			case '\014': fputs("\033[H", stdout); break;		// home
+			case '\031': fputs("\033[A", stdout); break;		// up
+			case '\032': fputs("\033[B", stdout); break;		// down
+			case '\030': fputs("\033[C", stdout); break;		// right
+			case '\010': fputs("\033[D", stdout); break;		// left
+			default:
+				putchar(*sp & 0x7f);
+			}
 		} else
 		switch (*sp) {
 		case GOST_END_OF_INFORMATION:
@@ -1425,6 +1426,7 @@ int punch(ushort a1, ushort a2)
 			if (punch_binary)
 				fputc(*sp, fd);
 			else if (bytecnt % 6) {
+#if 1
 				fputc(*sp & 0x80 ? 'O' : '.', fd);
 				fputc(*sp & 0x40 ? 'O' : '.', fd);
 				fputc(*sp & 0x20 ? 'O' : '.', fd);
@@ -1433,6 +1435,17 @@ int punch(ushort a1, ushort a2)
 				fputc(*sp & 0x04 ? 'O' : '.', fd);
 				fputc(*sp & 0x02 ? 'O' : '.', fd);
 				fputc(*sp & 0x01 ? 'O' : '.', fd);
+#else
+				int curcnt = bytecnt % 144;
+				fprintf(fd, *sp & 0x80 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x40 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x20 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x10 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x08 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x04 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x02 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+				fprintf(fd, *sp & 0x01 ? "\342\226\213" : "%c", curcnt < 24 ? ' ' : '0' + curcnt/12-2);
+#endif
 			}
 		}
 		sp++;

@@ -192,6 +192,10 @@ main (int argc, char **argv)
 				dump_disk (diskno, start, length);
 			return 0;
 		}
+		if (strcmp ("check", argv[0]) == 0) {
+			check_disk (diskno, start, length);
+			return 0;
+		}
 		if (strcmp ("write", argv[0]) == 0) {
 			if (from_file)
 				file_to_disk (diskno, start, length,
@@ -215,4 +219,8 @@ main (int argc, char **argv)
 	}
 	usage ();
 	return 0;
+}
+
+unsigned long long userid() {
+	return 0x419912345678LL;
 }

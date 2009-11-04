@@ -401,6 +401,8 @@ extern void     stopwatch(void), startwatch(void);
 extern uchar    eraise(uint newev);
 extern void     alrm_handler(int sig);
 extern uint     to_2_10(uint src);
+extern uint	ticks_since_midnight();
+extern uint64_t	userid();
 
 /*
  *      error codes
