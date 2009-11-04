@@ -84,6 +84,7 @@ dump_zone (unsigned zone, unsigned char *buf)
 		printf ("%04o.%04o:  %04o %04o %04o %04o  ",
 			zone, addr & 01777,
 			left >> 12, left & 07777, right >> 12, right & 07777);
+		printf ("%06x %06x  ", left, right);
 		sprint_command (str, left);
 		printf ("%s ", str);
 		print_spaces (str, 15);
@@ -151,11 +152,11 @@ check_zone (unsigned diskno, unsigned zone, unsigned char *buf, unsigned char *c
 	if ((cw[0] | 1LL << 36) != cw[4])
 		printf("Words 0-4 mismatch\n");
 	if (cw[1] != cw[5])
-		printf("Words 1-5 mismatch\n"); 
+		printf("Words 1-5 mismatch\n");
 	if (cw[2] != cw[6])
-		printf("Words 2-6 mismatch\n"); 
+		printf("Words 2-6 mismatch\n");
 	if (cw[3] != cw[7])
-		printf("Words 3-7 mismatch\n"); 
+		printf("Words 3-7 mismatch\n");
 
 	for (i = 0; i < 1024; ++i) {
 		csum += get_word (buf + 6*i);
@@ -220,7 +221,7 @@ check_disk (unsigned diskno, unsigned start, unsigned length)
 		check_zone (diskno, z, (unsigned char*) buf, (unsigned char *) cwords);
 	}
 }
-		
+
 static void
 print_gost_char (unsigned char ch)
 {
