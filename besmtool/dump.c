@@ -117,7 +117,8 @@ dump_disk (unsigned diskno, unsigned start, unsigned length)
 }
 
 unsigned long long
-get_word (unsigned char *buf) {
+get_word (unsigned char *buf)
+{
 	unsigned long long word;
 	word = (unsigned long long) buf[0] << 40;
 	word |= (unsigned long long) buf[1] << 32;
@@ -139,8 +140,9 @@ get_word (unsigned char *buf) {
  * слово 5 = слово 1, слово 6 = слово 2, слово 7 = слово 3
  */
 static void
-check_zone (unsigned diskno, unsigned zone, unsigned char *buf, unsigned char *cwords) {
-	unsigned long long csum = 0, word;
+check_zone (unsigned diskno, unsigned zone, unsigned char *buf, unsigned char *cwords)
+{
+	unsigned long long csum = 0;
 	unsigned long long cw[8];
 	int i;
 	unsigned field;
