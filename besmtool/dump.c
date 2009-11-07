@@ -304,6 +304,27 @@ view_line (unsigned char *p, int nwords,
 	putchar ('\n');
 }
 
+void print_cosy_word (unsigned char * p)
+{
+	int i;
+	for (i = 0; i < 6; ++i) {
+		switch (p[i]) {
+		case ' ' ... 0177:
+			print_iso_char(p[i]);
+			break;
+		case '\n':
+			putchar('\n');
+			return;
+		case 0201 ... 0377:
+			printf("%*c", p[i]-0200, ' ');
+			break;
+		default:
+			putchar('`');
+			break;
+		}
+	}
+}
+
 void
 view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 {
@@ -311,12 +332,15 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 	unsigned limit, z, addr;
 	char buf [ZBYTES], prev [48], *p;
 	int show_gost, show_upp, show_koi7, show_text, show_itm, nwords_per_line, skipping;
+	int show_file;
 
 	show_gost = (strchr (encoding, 'g') != 0);
 	show_upp = (strchr (encoding, 'u') != 0);
 	show_koi7 = (strchr (encoding, 'k') != 0);
 	show_text = (strchr (encoding, 't') != 0);
 	show_itm = (strchr (encoding, 'i') != 0);
+	show_file = (strchr (encoding, 'f') != 0);
+
 	nwords_per_line = 2;
 	switch (show_upp + show_gost + show_koi7 + show_text + show_itm) {
 	case 0:
@@ -329,6 +353,9 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 		nwords_per_line = 4;
 		break;
 	}
+
+	if (show_file)
+		nwords_per_line = 1;
 
 	disk = disk_open (diskno, DISK_READ_ONLY);
 	if (! disk) {
@@ -346,7 +373,9 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 			utf8_puts ("\n", stdout);
 		addr = 0;
 		for (p = buf; p < buf + ZBYTES; p += 6*nwords_per_line) {
-			if (memcmp (p, prev, 6*nwords_per_line) != 0) {
+			if (show_file) {				
+				print_cosy_word (p);
+			} else if (memcmp (p, prev, 6*nwords_per_line) != 0) {
 				printf ("%04o.%04o:", z, addr & 01777);
 				view_line ((unsigned char*) p, nwords_per_line,
 					show_gost+show_upp*2, show_koi7, show_text, show_itm);
