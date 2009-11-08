@@ -186,7 +186,7 @@ d_6_12:
 				nextc();
 			}
 		SKIP_SP();
-		if (edit && ch == GOST_ZE) {
+		if (edit && (ch == GOST_ZE || ch == GOST_R)) {
 			uchar   *spass, pname[2];
 
 			nextc();
@@ -344,7 +344,8 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 					psp.vol[psp.nvol].wr = 2;
 					++cp;
 				} else if (cp[0] == GOST_MINUS &&
-				    cp[1] == GOST_ZE && cp[2] == GOST_PE) {
+				    ((cp[1] == GOST_ZE && cp[2] == GOST_PE) ||
+				    (cp[1] == GOST_W && cp[2] == GOST_R))) {
 					psp.vol[psp.nvol].wr = 1;
 					cp += 3;
 				} else if (cp[0] == GOST_MINUS &&
