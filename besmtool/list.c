@@ -122,13 +122,6 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 	convert_gost_to_unicode (buf_gost, buf, ZBYTES);
 	convert_koi7_to_unicode (buf_koi7, buf, ZBYTES);
 	convert_text_to_unicode (buf_text, buf, ZBYTES);
-	if (z+1 == limit) {
-		/* Searching in 1 zone. */
-		search (pattern_unicode, pattern_len, buf_gost, ZBYTES, z, "GOST");
-		search (pattern_unicode, pattern_len, buf_koi7, ZBYTES, z, "KOI7");
-		search (pattern_unicode, pattern_len, buf_text, 8192, z, "TEXT");
-		return;
-	}
 	/* Searching in every 2 zones. */
 	while (z < limit-1) {
 		if (disk_read (disk, z+1, (char*) buf+ZBYTES) != DISK_IO_OK)
@@ -141,9 +134,13 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 		search (pattern_unicode, pattern_len, buf_koi7, ZBYTES*2, z, "KOI7");
 		search (pattern_unicode, pattern_len, buf_text, 8192*2, z, "TEXT");
 
-		memcpy (buf_gost, buf_gost+ZBYTES, ZBYTES);
-		memcpy (buf_koi7, buf_koi7+ZBYTES, ZBYTES);
-		memcpy (buf_text, buf_text+8192, 8192);
+		memcpy (buf_gost, buf_gost+ZBYTES, ZBYTES*sizeof(unsigned short));
+		memcpy (buf_koi7, buf_koi7+ZBYTES, ZBYTES*sizeof(unsigned short));
+		memcpy (buf_text, buf_text+8192, 8192*sizeof(unsigned short));
 		++z;
 	}
+	/* Searching in last zone. */
+	search (pattern_unicode, pattern_len, buf_gost, ZBYTES, z, "GOST");
+	search (pattern_unicode, pattern_len, buf_koi7, ZBYTES, z, "KOI7");
+	search (pattern_unicode, pattern_len, buf_text, 8192, z, "TEXT");
 }
