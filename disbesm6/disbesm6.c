@@ -15,7 +15,8 @@
 #define OPCODE_BRANCH		6	/* ПО, ПЕ, ПИО, ПИНО, ЦИКЛ */
 #define OPCODE_CALL		7	/* ПВ */
 #define OPCODE_IMM64		8	/* e.g. СДА */
-#define OPCODE_ILLEGAL		9
+#define OPCODE_IRET		9	/* ВЫПР */
+#define OPCODE_ILLEGAL		10
 /*
  * BESM-6 instruction subsets.
  */
@@ -105,7 +106,7 @@ struct opcode {
   { "пе",	0x0b8000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "пб",	0x0c0000, 0x0f8000, OPCODE_JUMP,	BASIC },
   { "пв",	0x0c8000, 0x0f8000, OPCODE_CALL,	BASIC },
-  { "выпр",	0x0d0000, 0x0f8000, OPCODE_IMM2,	PRIV },
+  { "выпр",	0x0d0000, 0x0f8000, OPCODE_IRET,	PRIV },
   { "стоп",	0x0d8000, 0x0f8000, OPCODE_IMM2,	PRIV },
   { "пио",	0x0e0000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "пино",	0x0e8000, 0x0f8000, OPCODE_BRANCH,	BASIC },
@@ -128,12 +129,19 @@ typedef unsigned int uint32;
 
 /* Symbol table, dynamically allocated. */
 struct nlist {
-	unsigned char	*n_name;
+	char		*n_name;
 	uint32		n_type;
 	uint32		n_value;
 } *stab;
 int stabindex, stablen;
 static struct nlist dummy = { "", 0, 0 };
+
+#define W_DATA		1
+#define W_CODE		2
+#define W_STARTBB	4
+
+uint32 reachable[32768];
+uint used = 0;
 
 /*
  * Add a name to symbol table.
@@ -160,6 +168,8 @@ addsym (char *name, int type, uint32 val)
 	stab[stabindex].n_name = strdup(name);
 	stab[stabindex].n_type = type;
 	stab[stabindex].n_value = val;
+	if (type & W_CODE)
+		reachable[used++] = val;
 	++stabindex;
 }
 
@@ -175,7 +185,7 @@ prsym (uint32 addr)
 	printed = 0;
 	for (p=stab; p<stab+stabindex; ++p) {
 		if (p->n_value == addr) {
-			printf ("%.6s", p->n_name);
+			printf ("%s", p->n_name);
 			++printed;
 		}
 	}
@@ -206,10 +216,6 @@ findsym (uint32 addr)
 
 uint64 memory[32768];
 uint32 mflags[32768];
-
-#define W_DATA		1
-#define W_CODE		2
-#define W_STARTBB	4
 
 /*
  * Read 48-bit word at current file position.
@@ -259,7 +265,7 @@ prreg (int reg)
 }
 
 void
-praddr (uint32 address, uint32 rel)
+praddr (uint32 address, uint32 rel, int explicit0)
 {
 	struct nlist *sym;
 	int offset;
@@ -283,7 +289,7 @@ praddr (uint32 address, uint32 rel)
 
 	sym = findsym (address);
 	if (sym != &dummy) {
-		printf (" %.8s", sym->n_name);
+		printf ("%.8s", sym->n_name);
 		if (address == sym->n_value) {
 			return;
 		}
@@ -295,9 +301,10 @@ praddr (uint32 address, uint32 rel)
 			offset = - offset;
 		}
 		printf ("%d", offset);
-	} else {
+	} else if (address) {
 		printf ("'%o'", address);
-	}
+	} else if (explicit0)
+		putchar('0');
 }
 
 /*
@@ -322,6 +329,7 @@ prcode (uint32 memaddr, uint32 opcode)
 	case OPCODE_STR2:
 	case OPCODE_IMM2:
 	case OPCODE_JUMP:
+	case OPCODE_IRET:
 	case OPCODE_BRANCH:
 	case OPCODE_CALL:
 		printf ("%02o %02o %05o ", opcode >> 20, (opcode >> 15) & 037, opcode & 077777);
@@ -338,9 +346,9 @@ prcode (uint32 memaddr, uint32 opcode)
  * Return 0 on error.
  */
 void
-properand (uint32 reg, uint32 offset, uint32 argrel)
+properand (uint32 reg, uint32 offset, uint32 argrel, int explicit0)
 {
-	praddr (offset, argrel);
+	praddr (offset, argrel, explicit0);
 	if (reg) {
 		printf ("(");
 		prreg (reg);
@@ -374,15 +382,20 @@ prinsn (uint32 memaddr, uint32 opcode)
 	case OPCODE_STR1:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
-		properand (reg, arg1, relcode);
+		properand (reg, arg1, relcode, 0);
 		break;
 	case OPCODE_STR2:
+		printf (op[i].name);
+		printf (AFTER_INSTRUCTION);
+		properand (reg, arg2, relcode, 1);
+		break;
 	case OPCODE_BRANCH:
 	case OPCODE_JUMP:
+	case OPCODE_IRET:
 	case OPCODE_CALL:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
-		properand (reg, arg2, relcode);
+		properand (reg, arg2, relcode, 0);
 		break;
 	case OPCODE_IMM:
 		printf (op[i].name);
@@ -393,6 +406,7 @@ prinsn (uint32 memaddr, uint32 opcode)
 			prreg (reg);
 			putchar (')');
 		}
+		break;
 	case OPCODE_IMM64:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
@@ -427,8 +441,6 @@ prinsn (uint32 memaddr, uint32 opcode)
 
 void analyze (uint32 entry, uint32 addr, uint32 limit)
 {
-	uint32 reachable[32768];
-	uint used = 0;
 	reachable[used++] = entry;
 	int i;
 	while (used) {
@@ -466,6 +478,8 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 		case OPCODE_ILLEGAL:
 			mflags[cur] |= W_DATA;
 			continue;	// to the next word
+		case OPCODE_IRET:
+			continue;
 		default:
 			break;
 		}
@@ -495,6 +509,8 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 		case OPCODE_ILLEGAL:
 			mflags[cur] |= W_DATA;
 			continue;
+		case OPCODE_IRET:
+			continue;
 		case OPCODE_STR1:
 			mflags[arg1] |= W_DATA;	// safe?
 			/* fall thru */
@@ -513,6 +529,8 @@ prsection (uint32 addr, uint32 limit)
 	int bss = 0;
 
 	while (addr < limit) {
+		if ((mflags[addr] & (W_CODE|W_DATA)) == (W_CODE|W_DATA))
+			printf("* next insn used as data\n");
 		if (mflags[addr] & W_CODE) {
 			if (bss) {
 				printf("%5o            \tпам\t%o\n", addr-bss, bss);
