@@ -7,7 +7,7 @@ AM_INIT_AUTOMAKE(besm6, 2.5, no-define)
 AC_CONFIG_SRCDIR([dispak/extra.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile dispak/Makefile simh/Makefile po/Makefile.in])
-AC_CONFIG_FILES([besmtool/Makefile sbor/emd2simh/Makefile])
+AC_CONFIG_FILES([besmtool/Makefile sbor/emd2simh/Makefile disbesm6/Makefile])
 
 # Checks for programs.
 AC_PROG_CC
