@@ -528,10 +528,10 @@ a1done:
 				    for (c = 0; c < 24; ++c)
 					if ((i = dump(W_DATA, w[c])))
 					    return i;
-#if 0
-/* broken by vak */
 				} else if (s[0] == GOST_LEFT_QUOTATION) {
-                                    FILE *f = fopen((char*) s+1, "r");
+				    static char punch_in[] = "punch.inX";
+				    punch_in[8] = '0' + s[1];
+                                    FILE *f = fopen(punch_in, "r");
                                     uchar p[120];
                                     if (!f) {
                                         inperr(_("МАССИВ ПУСТ"));
@@ -548,7 +548,6 @@ a1done:
                                                 return i;
                                     }
                                     fclose(f);
-#endif
                                 } else {
                                     for (i = 0; s[i] != GOST_NEWLINE; ++i) {
                                         c = s[i];
