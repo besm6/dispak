@@ -141,7 +141,7 @@ static struct nlist dummy = { "", 0, 0 };
 #define W_STARTBB	4
 
 uint32 reachable[32768];
-uint used = 0;
+uint32 used = 0;
 
 /*
  * Add a name to symbol table.
