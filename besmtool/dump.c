@@ -269,7 +269,7 @@ print_iso_char (unsigned char ch)
 
 static void
 view_line (unsigned char *p, int nwords,
-	int show_gost, int show_koi7, int show_text, int show_itm)
+	int show_gost, int show_koi7, int show_text, int show_itm, int show_bemsh)
 {
 	int i;
 
@@ -301,6 +301,22 @@ view_line (unsigned char *p, int nwords,
 		for (i=0; i<6*nwords; ++i)
 			print_itm_char (p[i]);
 	}
+	if (show_bemsh) {
+		fputs ("  ", stdout);
+		for (i=0; i<6*nwords; ++i) {
+			switch (p[i]) {
+			case 0100 ... 0137:
+				print_iso_char (p[i] - 040);
+				break;
+			case 0240 ... 0337:
+				print_iso_char (p[i] - 0140);
+				break;
+			default:
+				putchar('`');
+				break;
+			}
+		}
+	}
 	putchar ('\n');
 }
 
@@ -331,7 +347,7 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 	void *disk;
 	unsigned limit, z, addr;
 	char buf [ZBYTES], prev [48], *p;
-	int show_gost, show_upp, show_koi7, show_text, show_itm, nwords_per_line, skipping;
+	int show_gost, show_upp, show_koi7, show_text, show_itm, show_bemsh, nwords_per_line, skipping;
 	int show_file;
 
 	show_gost = (strchr (encoding, 'g') != 0);
@@ -339,6 +355,7 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 	show_koi7 = (strchr (encoding, 'k') != 0);
 	show_text = (strchr (encoding, 't') != 0);
 	show_itm = (strchr (encoding, 'i') != 0);
+	show_bemsh = (strchr (encoding, 'b') != 0);
 	show_file = (strchr (encoding, 'f') != 0);
 
 	nwords_per_line = 2;
@@ -378,7 +395,7 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 			} else if (memcmp (p, prev, 6*nwords_per_line) != 0) {
 				printf ("%04o.%04o:", z, addr & 01777);
 				view_line ((unsigned char*) p, nwords_per_line,
-					show_gost+show_upp*2, show_koi7, show_text, show_itm);
+					show_gost+show_upp*2, show_koi7, show_text, show_itm, show_bemsh);
 				skipping = 0;
 				memcpy (prev, p, 6*nwords_per_line);
 			} else {

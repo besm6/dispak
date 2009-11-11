@@ -149,6 +149,10 @@ uint32 used = 0;
 void
 addsym (char *name, int type, uint32 val)
 {
+	if (type & W_CODE)
+		reachable[used++] = val;
+	if (!name)
+		return;
 	if (stabindex >= stablen) {
 		if (! stablen) {
 			stablen = 100;
@@ -168,8 +172,6 @@ addsym (char *name, int type, uint32 val)
 	stab[stabindex].n_name = strdup(name);
 	stab[stabindex].n_type = type;
 	stab[stabindex].n_value = val;
-	if (type & W_CODE)
-		reachable[used++] = val;
 	++stabindex;
 }
 
@@ -372,7 +374,8 @@ prinsn (uint32 memaddr, uint32 opcode)
 	case OPCODE_REG:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
-		prreg (opcode & 037);
+		if (opcode & 037)
+			prreg (opcode & 037);
 		if (reg) {
 			putchar ('(');
 			prreg (opcode >> 20);
@@ -444,7 +447,7 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 	reachable[used++] = entry;
 	int i;
 	while (used) {
-		uint32 cur = reachable[--used];
+		uint32 cur = reachable[--used] & 077777;
 		uint32 opcode, arg1, arg2, reg;
 		if (mflags[cur] & W_CODE)
 			continue;
@@ -530,10 +533,12 @@ prsection (uint32 addr, uint32 limit)
 
 	while (addr < limit) {
 		if ((mflags[addr] & (W_CODE|W_DATA)) == (W_CODE|W_DATA))
-			printf("* next insn used as data\n");
+			printf ("* next insn used as data\n");
 		if (mflags[addr] & W_CODE) {
 			if (bss) {
-				printf("%5o            \tпам\t%o\n", addr-bss, bss);
+				printf ("%5o            ", addr-bss);
+				prsym (addr-bss);
+				printf ("\tпам\t%d\n", bss);
 				bss = 0;
 			}
 			printf ("%5o%c", addr, mflags[addr] & W_STARTBB ? ':' : ' ');
@@ -554,11 +559,14 @@ prsection (uint32 addr, uint32 limit)
 				continue;
 			}
 			if (bss) {
-				printf("%5o            \tпам\t%o\n", addr-bss, bss);
+				printf ("%5o            ", addr-bss);
+				prsym (addr-bss);
+				printf ("\tпам\t%d\n", bss);
 				bss = 0;
 			}
-			printf ("%5o ", addr);
-			printf("           \tконд\tв'%016llo'\n", memory[addr]);
+			printf ("%5o            ", addr);
+			prsym (addr);
+			printf ("\tконд\tв'%016llo'\n", memory[addr]);
 		}
 		++addr;
 	}
@@ -578,7 +586,10 @@ readsymtab (char *fname)
 			fclose (textfd);
 			return;
 		}
-		addsym(name, type, addr);
+		if (!strcmp(name, "-"))
+			addsym(NULL, type, addr);
+		else
+			addsym(name, type, addr);
 	}
 	addsym("", 0, 32768);
 }
