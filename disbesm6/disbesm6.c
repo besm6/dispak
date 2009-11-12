@@ -122,7 +122,7 @@ struct opcode {
 FILE *textfd, *relfd;
 int rflag, bflag;
 unsigned int relcode;
-unsigned int baseaddr = 0, entryaddr;
+unsigned int baseaddr = 0, codelen = 0, entryaddr;
 
 typedef unsigned long long uint64;
 typedef unsigned int uint32;
@@ -142,6 +142,7 @@ static struct nlist dummy = { "", 0, 0 };
 
 uint32 reachable[32768];
 uint32 used = 0;
+uint32 basereg = 0;
 
 /*
  * Add a name to symbol table.
@@ -463,19 +464,25 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 		switch (op[i].type) {
 		case OPCODE_CALL:
 			reachable[used++] = cur+1;
-			reachable[used++] = arg2;
-			mflags[arg2] |= W_STARTBB;
-			break;
-		case OPCODE_JUMP:
-			if (reg == 0) {
+			if (arg2 >= addr && arg2 < limit) {
 				reachable[used++] = arg2;
 				mflags[arg2] |= W_STARTBB;
 			}
+			continue;
+		case OPCODE_JUMP:
+			if (reg == 0 || reg == basereg) {
+				if (arg2 >= addr && arg2 < limit) {
+					reachable[used++] = arg2;
+					mflags[arg2] |= W_STARTBB;
+				}
+			}
 			continue;	// to the next word
 		case OPCODE_BRANCH:
-			if (reg == 0) {
-				reachable[used++] = arg2;
-				mflags[arg2] |= W_STARTBB;
+			if (reg == 0 || reg == basereg) {
+				if (arg2 >= addr && arg2 < limit) {
+					reachable[used++] = arg2;
+					mflags[arg2] |= W_STARTBB;
+				}
 			}
 			break;
 		case OPCODE_ILLEGAL:
@@ -497,16 +504,20 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 		switch (op[i].type) {
 		case OPCODE_CALL:
 			reachable[used++] = cur+1;
-			reachable[used++] = arg2;
-			mflags[arg2] |= W_STARTBB;
-			break;
-		case OPCODE_BRANCH:
-			reachable[used++] = cur+1;
-			/* fall thru */
-		case OPCODE_JUMP:
-			if (reg == 0) {
+			if (arg2 >= addr && arg2 < limit) {
 				reachable[used++] = arg2;
 				mflags[arg2] |= W_STARTBB;
+			}
+			break;
+		case OPCODE_BRANCH:
+				reachable[used++] = cur+1;
+			/* fall thru */
+		case OPCODE_JUMP:
+			if (reg == basereg) {
+				if (arg2 >= addr && arg2 < limit) {
+					reachable[used++] = arg2;
+					mflags[arg2] |= W_STARTBB;
+				}
 			}
 			break;
 		case OPCODE_ILLEGAL:
@@ -608,17 +619,18 @@ disbin (char *fname)
 	stat (fname, &st);
 	rflag = 0;
 	addr = baseaddr;
+	codelen = st.st_size / 6;
 
 	printf ("         File: %s\n", fname);
 	printf ("         Type: Binary\n");
-	printf ("         Code: %d (%#o) words\n", (int) st.st_size, (int) st.st_size / 6);
+	printf ("         Code: %d (%#o) words\n", (int) st.st_size, codelen);
 	printf ("      Address: %#o\n", baseaddr);
 	printf ("\n");
 	while (!feof(textfd)) {
 		memory[addr++] = freadw (textfd);
 	}
-	analyze (entryaddr, baseaddr, baseaddr + (int) st.st_size / 6);
-	prsection (baseaddr, baseaddr + (int) st.st_size / 6);
+	analyze (entryaddr, baseaddr, baseaddr + codelen);
+	prsection (baseaddr, baseaddr + codelen);
 	fclose (textfd);
 }
 
@@ -649,6 +661,14 @@ main (int argc, char **argv)
 					baseaddr += cp[1] - '0';
 					++cp;
 				}
+				break;
+			case 'B':	/* -BN: base register */
+				basereg = 0;
+				while (cp[1] >= '0' && cp[1] <= '7') {
+                                        basereg <<= 3;
+                                        basereg += cp[1] - '0';
+                                        ++cp;
+                                }
 				break;
 			case 'e':       /* -eN: entry address */
 				entryaddr = 0;
