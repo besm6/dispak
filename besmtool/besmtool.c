@@ -102,8 +102,8 @@ usage ()
 int
 main (int argc, char **argv)
 {
-	unsigned start = 0, length = 0, from_diskno = 0, from_start = 0;
-	int last = -1;
+	unsigned length = 0, from_diskno = 0, from_start = 0;
+	int start = 0, last = -1;
 	char *from_file = 0, *to_file = 0, *from_dir = 0, *view_encoding = "g,k";
 	unsigned diskno;
 	int c;
