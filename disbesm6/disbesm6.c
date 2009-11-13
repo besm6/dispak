@@ -128,7 +128,7 @@ struct opcode {
 FILE *textfd, *relfd;
 int rflag, bflag;
 unsigned int relcode;
-unsigned int baseaddr = 0, codelen = 0, entryaddr;
+unsigned int loadaddr, baseaddr, basereg, codelen = 0, entryaddr;
 
 typedef unsigned long long uint64;
 typedef unsigned int uint32;
@@ -659,7 +659,8 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
 void analyze (uint32 entry, uint32 addr, uint32 limit)
 {
 	add_actpoint (entry);
-	int i;
+	if (basereg)
+		reachable->regvals[basereg] = baseaddr;
 	while (reachable) {
 		actpoint_t * cur = reachable;
 		reachable = cur->next;
@@ -770,19 +771,19 @@ disbin (char *fname)
 	}
 	stat (fname, &st);
 	rflag = 0;
-	addr = baseaddr;
+	addr = loadaddr;
 	codelen = st.st_size / 6;
 
 	printf ("         File: %s\n", fname);
 	printf ("         Type: Binary\n");
 	printf ("         Code: %d (%#o) words\n", (int) st.st_size, codelen);
-	printf ("      Address: %#o\n", baseaddr);
+	printf ("      Address: %#o\n", loadaddr);
 	printf ("\n");
 	while (!feof(textfd)) {
 		memory[addr++] = freadw (textfd);
 	}
-	analyze (entryaddr, baseaddr, baseaddr + codelen);
-	prsection (baseaddr, baseaddr + codelen);
+	analyze (entryaddr, loadaddr, loadaddr + codelen);
+	prsection (loadaddr, loadaddr + codelen);
 	fclose (textfd);
 }
 
@@ -806,11 +807,11 @@ main (int argc, char **argv)
 			case 'b':	/* -b: disassemble binary file */
 				bflag++;
 				break;
-			case 'a':       /* -aN: base address */
-				baseaddr = 0;
+			case 'a':       /* -aN: load address */
+				loadaddr = 0;
 				while (cp[1] >= '0' && cp[1] <= '7') {
-					baseaddr <<= 3;
-					baseaddr += cp[1] - '0';
+					loadaddr <<= 3;
+					loadaddr += cp[1] - '0';
 					++cp;
 				}
 				break;
@@ -821,6 +822,29 @@ main (int argc, char **argv)
 					entryaddr += cp[1] - '0';
 					++cp;
 				}
+				break;
+			case 'R':	/* -RN=x: forced base reg/addr */
+				basereg = baseaddr = 0;
+				while (cp[1] >= '0' && cp[1] <= '7') {
+                                        basereg <<= 3;
+                                        basereg += cp[1] - '0';
+                                        ++cp;
+                                }
+				if (basereg == 0 || basereg > 017) {
+					fprintf(stderr, "Bad base reg %o, need 1 <= R <= 017\n", basereg);
+					exit(1);
+				}
+				if (cp[1] != '=') {
+					fprintf(stderr, "Bad format for base reg, need -RN=x\n");
+					exit(1);
+				}
+				++cp;
+				while (cp[1] >= '0' && cp[1] <= '7') {
+                                        baseaddr <<= 3;
+                                        baseaddr += cp[1] - '0';
+                                        ++cp;
+                                }
+				baseaddr = ADDR(baseaddr);
 				break;
 			case 'n':
 				readsymtab(cp+1);
