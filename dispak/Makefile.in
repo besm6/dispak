@@ -508,7 +508,8 @@ all-local: ../disks/2099
 install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2053 \
 	${datadir}/besm6/2148 ${datadir}/besm6/2153 ${datadir}/besm6/2113 \
 	${datadir}/besm6/2248 ${datadir}/besm6/4001 ${datadir}/besm6/4002 \
-	${datadir}/besm6/4003 ${datadir}/besm6/2099
+	${datadir}/besm6/4003 ${datadir}/besm6/2099 \
+	${datadir}/besm6/2063 ${datadir}/besm6/2086
 
 ${datadir}/besm6/2048: ../disks/sbor2048.bin
 	${install_sh_DATA} $< ${datadir}/besm6/
@@ -548,6 +549,14 @@ ${datadir}/besm6/4003: ../disks/tape3.bin
 
 ${datadir}/besm6/2099: ../disks/2099
 	${install_sh_DATA} $< $@
+
+${datadir}/besm6/2063: ../disks/krab2063.bin
+	${install_sh_DATA} $< ${datadir}/besm6/
+	ln -s -f `basename $<` $@
+
+${datadir}/besm6/2086: ../disks/krab2086.bin
+	${install_sh_DATA} $< ${datadir}/besm6/
+	ln -s -f `basename $<` $@
 
 clean-local:
 	-rm -rf *~ debug.c ../disks/ibuf/[0-9][0-9][0-9]
