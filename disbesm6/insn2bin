@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+open (F, ">$ARGV[0]") || die "Usage: insn file.exe < octal_insn_dump\n";
+
+while (<STDIN>) {
+
+($reg, $op, $addr) = /(\d+) +(\d+) +(\d+)/;
+$reg = oct($reg);
+$flag = substr($op, 0, 1);
+$op = $flag == 2 || $flag == 3  ? oct($op) << 3 : oct($op);
+$addr = oct($addr);
+
+$insn = $reg << 20 | $op << 12 | $addr;
+
+print F chr($insn >> 16), chr(($insn >> 8) & 0xff), chr($insn & 0xff);
+
+}
+
+exit 0

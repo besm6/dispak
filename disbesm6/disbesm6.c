@@ -6,17 +6,22 @@
 /*
  * BESM-6 opcode types.
  */
-#define OPCODE_STR1		0	/* short addr */
-#define OPCODE_STR2		1	/* long addr */
-#define OPCODE_IMM		2	/* e.g. РЕГ, РЖА */
-#define OPCODE_REG		3	/* e.g. УИ */
-#define OPCODE_IMM2		4	/* e.g. СТОП */
-#define OPCODE_JUMP		5	/* ПБ */
-#define OPCODE_BRANCH		6	/* ПО, ПЕ, ПИО, ПИНО, ЦИКЛ */
-#define OPCODE_CALL		7	/* ПВ */
-#define OPCODE_IMM64		8	/* e.g. СДА */
-#define OPCODE_IRET		9	/* ВЫПР */
-#define OPCODE_ILLEGAL		10
+typedef enum {
+OPCODE_ILLEGAL,
+OPCODE_STR1,		/* short addr */
+OPCODE_STR2,		/* long addr */
+OPCODE_IMM,		/* e.g. РЕГ, РЖА */
+OPCODE_REG1,		/* e.g. УИ */
+OPCODE_IMM2,		/* e.g. СТОП */
+OPCODE_JUMP,		/* ПБ */
+OPCODE_BRANCH,		/* ПО, ПЕ, ПИО, ПИНО, ЦИКЛ */
+OPCODE_CALL,		/* ПВ */
+OPCODE_IMM64,		/* e.g. СДА */
+OPCODE_IRET,		/* ВЫПР */
+OPCODE_ADDRMOD,		/* МОДА, МОД */
+OPCODE_REG2,		/* УИА, СЛИА */
+} opcode_e;
+
 /*
  * BESM-6 instruction subsets.
  */
@@ -26,7 +31,7 @@
 
 struct opcode {
 	const char *name;
-	int opcode;
+	opcode_e opcode;
 	int mask;
 	int type;
 	int extension;
@@ -64,12 +69,12 @@ struct opcode {
   { "вчпа",	0x01d000, 0x0bf000, OPCODE_IMM64,	BASIC },
   { "сда",	0x01e000, 0x0bf000, OPCODE_IMM64,	BASIC },
   { "ржа",	0x01f000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "уи",	0x020000, 0x0bf000, OPCODE_REG,		BASIC },
-  { "уим",	0x021000, 0x0bf000, OPCODE_REG,		BASIC },
-  { "счи",	0x022000, 0x0bf000, OPCODE_REG,		BASIC },
-  { "счим",	0x023000, 0x0bf000, OPCODE_REG,		BASIC },
-  { "уии",	0x024000, 0x0bf000, OPCODE_REG,		BASIC },
-  { "сли",	0x025000, 0x0bf000, OPCODE_REG,		BASIC },
+  { "уи",	0x020000, 0x0bf000, OPCODE_REG1,	BASIC },
+  { "уим",	0x021000, 0x0bf000, OPCODE_REG1,	BASIC },
+  { "счи",	0x022000, 0x0bf000, OPCODE_REG1,	BASIC },
+  { "счим",	0x023000, 0x0bf000, OPCODE_REG1,	BASIC },
+  { "уии",	0x024000, 0x0bf000, OPCODE_REG1,	BASIC },
+  { "сли",	0x025000, 0x0bf000, OPCODE_REG1,	BASIC },
 /*  { "Э46",	0x026000, 0x0bf000, OPCODE_IMM,		BASIC },
   { "Э47",	0x027000, 0x0bf000, OPCODE_IMM,		BASIC },*/
   { "Э50",	0x028000, 0x0bf000, OPCODE_IMM,		BASIC },
@@ -98,10 +103,10 @@ struct opcode {
   { "Э77",	0x03f000, 0x0bf000, OPCODE_IMM,		BASIC },
 /*  { "э20",	0x080000, 0x0f8000, OPCODE_STR2,	BASIC },
   { "э21",	0x088000, 0x0f8000, OPCODE_STR2,	BASIC },*/
-  { "мода",	0x090000, 0x0f8000, OPCODE_STR2,	BASIC },
-  { "мод",	0x098000, 0x0f8000, OPCODE_STR2,	BASIC },
-  { "уиа",	0x0a0000, 0x0f8000, OPCODE_STR2,	BASIC },
-  { "слиа",	0x0a8000, 0x0f8000, OPCODE_STR2,	BASIC },
+  { "мода",	0x090000, 0x0f8000, OPCODE_ADDRMOD,	BASIC },
+  { "мод",	0x098000, 0x0f8000, OPCODE_ADDRMOD,	BASIC },
+  { "уиа",	0x0a0000, 0x0f8000, OPCODE_REG2,	BASIC },
+  { "слиа",	0x0a8000, 0x0f8000, OPCODE_REG2,	BASIC },
   { "по",	0x0b0000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "пе",	0x0b8000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "пб",	0x0c0000, 0x0f8000, OPCODE_JUMP,	BASIC },
@@ -110,7 +115,7 @@ struct opcode {
   { "стоп",	0x0d8000, 0x0f8000, OPCODE_IMM2,	PRIV },
   { "пио",	0x0e0000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "пино",	0x0e8000, 0x0f8000, OPCODE_BRANCH,	BASIC },
-/*  { "э36",	0x0f0000, 0x0f8000, OPCODE_STR2,	BASIC },*/
+  { "пио36",	0x0f0000, 0x0f8000, OPCODE_BRANCH,	BASIC },
   { "цикл",	0x0f8000, 0x0f8000, OPCODE_BRANCH,	BASIC },
 /* This entry MUST be last; it is a "catch-all" entry that will match when no
  * other opcode entry matches during disassembly.
@@ -118,6 +123,7 @@ struct opcode {
   { "",		0x0000, 0x0000, OPCODE_ILLEGAL,		NONE },
 };
 #define AFTER_INSTRUCTION "\t"
+#define ADDR(x) ((x) & 077777)
 
 FILE *textfd, *relfd;
 int rflag, bflag;
@@ -140,9 +146,32 @@ static struct nlist dummy = { "", 0, 0 };
 #define W_CODE		2
 #define W_STARTBB	4
 
-uint32 reachable[32768];
-uint32 used = 0;
-uint32 basereg = 0;
+typedef struct actpoint_t {
+	int addr, addrmod;
+	int regvals[16];
+	struct actpoint_t * next;
+} actpoint_t;
+
+actpoint_t * reachable = 0;
+
+void add_actpoint (int addr) {
+	actpoint_t * old = reachable;
+	reachable = malloc (sizeof (actpoint_t));
+	memset (&reachable->regvals[1], 0xff, sizeof(int)*15);
+	reachable->regvals[0] = 0;
+	reachable->addr = addr;
+	reachable->addrmod = 0;
+	reachable->next = old;
+}
+
+void copy_actpoint (actpoint_t * cur, int addr) {
+	actpoint_t * old = reachable;
+	reachable = malloc (sizeof (actpoint_t));
+	memcpy (reachable, cur, sizeof(actpoint_t));
+	reachable->addr = addr;
+	reachable->addrmod = 0;
+	reachable->next = old;
+}
 
 /*
  * Add a name to symbol table.
@@ -151,7 +180,7 @@ void
 addsym (char *name, int type, uint32 val)
 {
 	if (type & W_CODE)
-		reachable[used++] = val;
+		add_actpoint(val);
 	if (!name)
 		return;
 	if (stabindex >= stablen) {
@@ -326,9 +355,11 @@ prcode (uint32 memaddr, uint32 opcode)
 	case OPCODE_STR1:
 	case OPCODE_IMM:
 	case OPCODE_IMM64:
-	case OPCODE_REG:
+	case OPCODE_REG1:
 		printf ("%02o %03o %04o ", opcode >> 20, (opcode >> 12) & 0177, opcode & 07777);
 		break;
+	case OPCODE_REG2:
+	case OPCODE_ADDRMOD:
 	case OPCODE_STR2:
 	case OPCODE_IMM2:
 	case OPCODE_JUMP:
@@ -372,7 +403,7 @@ prinsn (uint32 memaddr, uint32 opcode)
 		if ((opcode & op[i].mask) == op[i].opcode)
 			break;
 	switch (op[i].type) {
-	case OPCODE_REG:
+	case OPCODE_REG1:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
 		if (opcode & 037)
@@ -388,10 +419,12 @@ prinsn (uint32 memaddr, uint32 opcode)
 		printf (AFTER_INSTRUCTION);
 		properand (reg, arg1, relcode, 0);
 		break;
+	case OPCODE_REG2:
 	case OPCODE_STR2:
+	case OPCODE_ADDRMOD:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
-		properand (reg, arg2, relcode, 1);
+		properand (reg, arg2, relcode, op[i].type == OPCODE_REG2);
 		break;
 	case OPCODE_BRANCH:
 	case OPCODE_JUMP:
@@ -443,94 +476,213 @@ prinsn (uint32 memaddr, uint32 opcode)
 	}
 }
 
+void analyze_call (actpoint_t * cur, int reg, int arg, int addr, int limit)
+{
+	if (arg != -1 && arg >= addr && arg < limit) {
+		copy_actpoint (cur, arg);
+		if (reg)
+			reachable->regvals[reg] = cur->addr+1;
+		mflags[arg] |= W_STARTBB;
+	}
+	copy_actpoint (cur, cur->addr + 1);
+	// Assuming no tricks are played; usually does not hurt,
+	// used in Pascal-Autocode
+	if (reg)
+		reachable->regvals[reg] = cur->addr + 1;
+}
+
+void analyze_jump (actpoint_t * cur, int reg, int arg, int addr, int limit)
+{
+	if (arg != -1 && cur->regvals[reg] != -1) {
+		arg = ADDR(arg + cur->regvals[reg]);
+		if (arg >= addr && arg < limit) {
+			copy_actpoint (cur, arg);
+			mflags[arg] |= W_STARTBB;
+		}
+	}
+}
+
+void analyze_branch (actpoint_t * cur, int opcode, int reg, int arg, int addr, int limit) {
+	if (arg == -1)
+		return;
+	if (opcode >= 0x0e0000) {
+		if (arg >= addr && arg < limit) {
+			copy_actpoint (cur, arg);
+			mflags[arg] |= W_STARTBB;
+		}
+	} else if (cur->regvals[reg] != -1) {
+		arg = ADDR(arg + cur->regvals[reg]);
+		if (arg >= addr && arg < limit) {
+			copy_actpoint (cur, arg);
+			mflags[arg] |= W_STARTBB;
+		}
+	}
+}
+
+void analyze_regop1 (actpoint_t * cur, int opcode, int reg, int arg)
+{
+	if (arg == -1)
+		return;
+
+	switch (opcode) {
+	case 0x021000:	// уим
+#if 0
+		// No use tracking the stack ptr usage of M17
+		if (cur->regvals[017] != -1) {
+			--cur->regvals[017];
+		}
+#endif
+		// fall through
+	case 0x020000:	// уи
+		if (cur->regvals[reg] == -1)
+			break;
+		arg += cur->regvals[reg];
+		arg &= 037;	// potentially incorrect for user programs
+		if (arg != 0 && arg <= 15) {
+			// ACC value not tracked yet
+			cur->regvals[arg] = -1;
+		}
+		break;
+	case 0x022000:	// счи
+		// ACC value not tracked yet
+		break;
+	case 0x023000:	// счим
+#if 0
+		if (cur->regvals[017] != -1) {
+                        ++cur->regvals[017];
+                }
+#endif
+		break;
+	case 0x024000:	// уии
+		arg &= 037;
+		if (arg != 0 && arg <= 15) {
+                        cur->regvals[arg] = cur->regvals[reg];
+                }
+		break;
+	case 0x025000:	// сли
+		arg &= 037;
+		if (arg != 0 && arg <= 15 && cur->regvals[arg] != -1) {
+			if (cur->regvals[reg] == -1) {
+				cur->regvals[arg] = -1;
+			} else {
+                        	cur->regvals[arg] += cur->regvals[reg];
+				cur->regvals[reg] &= 077777;
+			}
+                }
+		break;
+	}
+}
+
+void analyze_regop2 (actpoint_t * cur, int opcode, int reg, int arg)
+{
+	switch (opcode) {
+	case 0x0a0000:	// уиа
+		if (reg)
+			cur->regvals[reg] = arg;
+		break;
+	case 0x0a8000:	// слиа
+		if (reg && cur->regvals[reg] != -1) {
+			cur->regvals[reg] = arg == -1 ? -1 :
+				ADDR(cur->regvals[reg] + arg);
+		}
+		break;
+	}
+}
+
+void analyze_addrmod (actpoint_t * cur, int opcode, int reg, int arg)
+{
+	switch (opcode) {
+	case 0x090000:	// мода
+		if (cur->regvals[reg] != -1)
+			cur->addrmod = arg == -1 ? -1 :
+				ADDR(cur->regvals[reg] + arg);
+		else
+			cur->addrmod = -1;
+		break;
+	case 0x098000:	// мод
+		// Memory contents are not tracked
+		cur->addrmod = -1;
+		break;
+	}
+}
+
+// Returns whether the control may pass to the next instruction
+int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
+	int opcode, arg1, arg2, reg, i;
+	if (right) 
+		opcode = memory[cur->addr] & 0xffffff;
+	else
+		opcode = memory[cur->addr] >> 24;
+	for (i=0; op[i].mask; i++)
+               	if ((opcode & op[i].mask) == op[i].opcode)
+                       	break;
+	if (cur->addrmod == -1) {
+		arg1 = arg2 = -1;
+	} else {
+		arg1 = ADDR((opcode & 07777) + (opcode & 0x040000 ? 070000 : 0) + cur->addrmod);
+        	arg2 = ADDR(opcode + cur->addrmod);
+	}
+	cur->addrmod = 0;
+	reg = opcode >> 20;
+	switch (op[i].type) {
+	case OPCODE_CALL:
+		// Deals with passing control to the next instruction within
+		analyze_call (cur, reg, arg2, addr, limit);
+		return 0;
+	case OPCODE_JUMP:
+		analyze_jump (cur, reg, arg2, addr, limit);
+		return 0;
+	case OPCODE_BRANCH:
+		analyze_branch (cur, op[i].opcode, reg, arg2, addr, limit);
+		return 1;
+	case OPCODE_ILLEGAL:
+		mflags[cur->addr] |= W_DATA;
+		return 0;
+	case OPCODE_IRET:
+		// Usually tranfers control outside of the program being disassembled
+		return 0;
+	case OPCODE_REG1:
+		analyze_regop1 (cur, op[i].opcode, reg, arg1);
+		return 1;
+	case OPCODE_REG2:
+		analyze_regop2 (cur, op[i].opcode, reg, arg2);
+		return 1;
+	case OPCODE_ADDRMOD:
+		analyze_addrmod (cur, op[i].opcode, reg, arg2);
+		return 1;
+	default:
+		return 1;
+	}
+}
+
+/* Basic blocks are followed as far as possible first */
 void analyze (uint32 entry, uint32 addr, uint32 limit)
 {
-	reachable[used++] = entry;
+	add_actpoint (entry);
 	int i;
-	while (used) {
-		uint32 cur = reachable[--used] & 077777;
-		uint32 opcode, arg1, arg2, reg;
-		if (mflags[cur] & W_CODE)
+	while (reachable) {
+		actpoint_t * cur = reachable;
+		reachable = cur->next;
+		int opcode, arg1, arg2, reg;
+		if (mflags[cur->addr] & W_CODE) {
+			free (cur);
 			continue;
-		mflags[cur] |= W_CODE;
+		}
+		mflags[cur->addr] |= W_CODE;
 		/* Left insn */
-		opcode = memory[cur] >> 24;
-		for (i=0; op[i].mask; i++)
-                	if ((opcode & op[i].mask) == op[i].opcode)
-                        	break;
-		arg1 = (opcode & 07777) + (opcode & 0x040000 ? 070000 : 0);
-	        arg2 = opcode & 077777;
-		reg = opcode >> 20;
-		switch (op[i].type) {
-		case OPCODE_CALL:
-			reachable[used++] = cur+1;
-			if (arg2 >= addr && arg2 < limit) {
-				reachable[used++] = arg2;
-				mflags[arg2] |= W_STARTBB;
-			}
+		if (! analyze_insn (cur, 0, addr, limit)) {
+			free (cur);
 			continue;
-		case OPCODE_JUMP:
-			if (reg == 0 || reg == basereg) {
-				if (arg2 >= addr && arg2 < limit) {
-					reachable[used++] = arg2;
-					mflags[arg2] |= W_STARTBB;
-				}
-			}
-			continue;	// to the next word
-		case OPCODE_BRANCH:
-			if (reg == 0 || reg == basereg) {
-				if (arg2 >= addr && arg2 < limit) {
-					reachable[used++] = arg2;
-					mflags[arg2] |= W_STARTBB;
-				}
-			}
-			break;
-		case OPCODE_ILLEGAL:
-			mflags[cur] |= W_DATA;
-			continue;	// to the next word
-		case OPCODE_IRET:
-			continue;
-		default:
-			break;
 		}
 		/* Right insn */
-		opcode = memory[cur] & 0xffffff;
-		arg1 = (opcode & 07777) + (opcode & 0x040000 ? 070000 : 0);
-	        arg2 = opcode & 077777;
-		reg = opcode >> 20;
-		for (i=0; op[i].mask; i++)
-                	if ((opcode & op[i].mask) == op[i].opcode)
-                        	break;
-		switch (op[i].type) {
-		case OPCODE_CALL:
-			reachable[used++] = cur+1;
-			if (arg2 >= addr && arg2 < limit) {
-				reachable[used++] = arg2;
-				mflags[arg2] |= W_STARTBB;
-			}
-			break;
-		case OPCODE_BRANCH:
-				reachable[used++] = cur+1;
-			/* fall thru */
-		case OPCODE_JUMP:
-			if (reg == basereg) {
-				if (arg2 >= addr && arg2 < limit) {
-					reachable[used++] = arg2;
-					mflags[arg2] |= W_STARTBB;
-				}
-			}
-			break;
-		case OPCODE_ILLEGAL:
-			mflags[cur] |= W_DATA;
-			continue;
-		case OPCODE_IRET:
-			continue;
-		case OPCODE_STR1:
-			mflags[arg1] |= W_DATA;	// safe?
-			/* fall thru */
-		default:
-			reachable[used++] = cur+1;
-			break;
+		if (analyze_insn (cur, 1, addr, limit)) {
+			// Put 'cur' back with the next address
+			cur->next = reachable;
+			reachable = cur;
+			++cur->addr;
+			cur->addr &= 077777; 
+		} else {
+			free (cur);
 		}
 	}
 }
@@ -661,14 +813,6 @@ main (int argc, char **argv)
 					baseaddr += cp[1] - '0';
 					++cp;
 				}
-				break;
-			case 'B':	/* -BN: base register */
-				basereg = 0;
-				while (cp[1] >= '0' && cp[1] <= '7') {
-                                        basereg <<= 3;
-                                        basereg += cp[1] - '0';
-                                        ++cp;
-                                }
 				break;
 			case 'e':       /* -eN: entry address */
 				entryaddr = 0;
