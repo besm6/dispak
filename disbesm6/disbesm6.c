@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include "encoding.h"
 
 /*
  * BESM-6 opcode types.
@@ -20,6 +21,8 @@ OPCODE_IMM64,		/* e.g. СДА */
 OPCODE_IRET,		/* ВЫПР */
 OPCODE_ADDRMOD,		/* МОДА, МОД */
 OPCODE_REG2,		/* УИА, СЛИА */
+OPCODE_IMMEX,		/* Э50, ... */
+OPCODE_ADDREX,		/* Э64, Э70, ... */
 } opcode_e;
 
 /*
@@ -77,30 +80,30 @@ struct opcode {
   { "сли",	0x025000, 0x0bf000, OPCODE_REG1,	BASIC },
 /*  { "Э46",	0x026000, 0x0bf000, OPCODE_IMM,		BASIC },
   { "Э47",	0x027000, 0x0bf000, OPCODE_IMM,		BASIC },*/
-  { "Э50",	0x028000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э51",	0x029000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э52",	0x02a000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э53",	0x02b000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э54",	0x02c000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э55",	0x02d000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э56",	0x02e000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э57",	0x02f000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э60",	0x030000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э61",	0x031000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э62",	0x032000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э63",	0x033000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э64",	0x034000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э65",	0x035000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э66",	0x036000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э67",	0x037000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э70",	0x038000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э71",	0x039000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э72",	0x03a000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э73",	0x03b000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э74",	0x03c000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э75",	0x03d000, 0x0bf000, OPCODE_STR1,	BASIC },
-  { "Э76",	0x03e000, 0x0bf000, OPCODE_IMM,		BASIC },
-  { "Э77",	0x03f000, 0x0bf000, OPCODE_IMM,		BASIC },
+  { "Э50",	0x028000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э51",	0x029000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э52",	0x02a000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э53",	0x02b000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э54",	0x02c000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э55",	0x02d000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э56",	0x02e000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э57",	0x02f000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э60",	0x030000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э61",	0x031000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э62",	0x032000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э63",	0x033000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э64",	0x034000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э65",	0x035000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э66",	0x036000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э67",	0x037000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э70",	0x038000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э71",	0x039000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э72",	0x03a000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э73",	0x03b000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э74",	0x03c000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э75",	0x03d000, 0x0bf000, OPCODE_ADDREX,	BASIC },
+  { "Э76",	0x03e000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э77",	0x03f000, 0x0bf000, OPCODE_IMMEX,	BASIC },
 /*  { "э20",	0x080000, 0x0f8000, OPCODE_STR2,	BASIC },
   { "э21",	0x088000, 0x0f8000, OPCODE_STR2,	BASIC },*/
   { "мода",	0x090000, 0x0f8000, OPCODE_ADDRMOD,	BASIC },
@@ -145,6 +148,9 @@ static struct nlist dummy = { "", 0, 0 };
 #define W_DATA		1
 #define W_CODE		2
 #define W_STARTBB	4
+#define W_NORIGHT	8
+#define W_GOST		16
+#define W_DONE		(1<<31)
 
 typedef struct actpoint_t {
 	int addr, addrmod;
@@ -208,19 +214,25 @@ addsym (char *name, int type, uint32 val)
 /*
  * Print all symbols located at the address.
  */
-void
+int
 prsym (uint32 addr)
 {
 	struct nlist *p;
 	int printed;
+	int flags = 0;
 
 	printed = 0;
 	for (p=stab; p<stab+stabindex; ++p) {
 		if (p->n_value == addr) {
+			if (printed) {
+				printf("\tноп\n\t\t\t");
+			}
 			printf ("%s", p->n_name);
 			++printed;
+			flags |= p->n_type;
 		}
 	}
+	return flags;
 }
 
 /*
@@ -244,6 +256,16 @@ findsym (uint32 addr)
 	if (last == 0)
 		return &dummy;
 	return last;
+}
+
+void prequs ()
+{
+	struct nlist *p;
+	for (p=stab; p<stab+stabindex; ++p) {
+		if (p->n_type || !*p->n_name)
+			continue;
+		printf ("\t\t\t%s\tэкв\t'%o'\n", p->n_name, p->n_value);
+	}
 }
 
 uint64 memory[32768];
@@ -297,7 +319,7 @@ prreg (int reg)
 }
 
 void
-praddr (uint32 address, uint32 rel, int explicit0)
+praddr (uint32 address, uint32 rel, int explicit0, int indexed)
 {
 	struct nlist *sym;
 	int offset;
@@ -320,8 +342,12 @@ praddr (uint32 address, uint32 rel, int explicit0)
 #endif
 
 	sym = findsym (address);
+	// As we don't distinguish index regs and stack/frame regs yet,
+	// we avoid using data syms along with any regs
+	if ((sym->n_type & W_DATA) && indexed)
+		sym = &dummy;
 	if (sym != &dummy) {
-		printf ("%.8s", sym->n_name);
+		printf ("%s", sym->n_name);
 		if (address == sym->n_value) {
 			return;
 		}
@@ -334,7 +360,7 @@ praddr (uint32 address, uint32 rel, int explicit0)
 		}
 		printf ("%d", offset);
 	} else if (address) {
-		printf ("'%o'", address);
+		printf (address < 64 ? "%d" : "'%o'", address);
 	} else if (explicit0)
 		putchar('0');
 }
@@ -353,7 +379,9 @@ prcode (uint32 memaddr, uint32 opcode)
 			break;
 	switch (op[i].type) {
 	case OPCODE_STR1:
+	case OPCODE_ADDREX:
 	case OPCODE_IMM:
+	case OPCODE_IMMEX:
 	case OPCODE_IMM64:
 	case OPCODE_REG1:
 		printf ("%02o %03o %04o ", opcode >> 20, (opcode >> 12) & 0177, opcode & 07777);
@@ -382,7 +410,7 @@ prcode (uint32 memaddr, uint32 opcode)
 void
 properand (uint32 reg, uint32 offset, uint32 argrel, int explicit0)
 {
-	praddr (offset, argrel, explicit0);
+	praddr (offset, argrel, explicit0, reg != 0 && !explicit0);
 	if (reg) {
 		printf ("(");
 		prreg (reg);
@@ -414,6 +442,7 @@ prinsn (uint32 memaddr, uint32 opcode)
 			putchar (')');
 		}
 		break;
+	case OPCODE_ADDREX:
 	case OPCODE_STR1:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
@@ -434,6 +463,7 @@ prinsn (uint32 memaddr, uint32 opcode)
 		printf (AFTER_INSTRUCTION);
 		properand (reg, arg2, relcode, 0);
 		break;
+	case OPCODE_IMMEX:
 	case OPCODE_IMM:
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
@@ -448,8 +478,10 @@ prinsn (uint32 memaddr, uint32 opcode)
 		printf (op[i].name);
 		printf (AFTER_INSTRUCTION);
 		arg1 &= 0177;
-		printf ("64");
-		if (arg1 -= 64) printf ("%+d", arg1);
+		if (arg1) {
+			printf ("64");
+			if (arg1 -= 64) printf ("%+d", arg1);
+		}
 		if (reg) {
 			putchar ('(');
 			prreg (reg);
@@ -474,6 +506,32 @@ prinsn (uint32 memaddr, uint32 opcode)
 	default:
 		printf ("???");
 	}
+}
+
+void prconst (uint32 addr, uint32 limit)
+{
+	int flags = 0;
+	do {
+		printf ("%5o            ", addr);
+		putchar ('\t');
+		flags |= prsym (addr);
+		printf ("\tконд\t");
+		if (flags & W_GOST)  {
+			int i;
+			printf("п'");
+			for (i = 0; i < 6; ++i) {
+				int ch = (memory[addr] >> (40-8*i)) & 0xff;
+				if (ch < 0140)
+					gost_putc (ch, stdout);
+				else
+					printf("'%03o'", ch);
+			}
+			printf("'\n");
+		} else {
+			printf ("в'%016llo'\n", memory[addr]);
+		}
+		mflags[addr] |= W_DONE;
+	} while ((mflags[++addr] & (W_CODE|W_DATA)) == 0 && addr < limit);
 }
 
 void analyze_call (actpoint_t * cur, int reg, int arg, int addr, int limit)
@@ -600,6 +658,8 @@ void analyze_addrmod (actpoint_t * cur, int opcode, int reg, int arg)
 			cur->addrmod = -1;
 		break;
 	case 0x098000:	// мод
+		if (arg != -1 && cur->regvals[reg] != -1)
+			mflags[ADDR(cur->regvals[reg] + arg)] |= W_DATA;
 		// Memory contents are not tracked
 		cur->addrmod = -1;
 		break;
@@ -627,16 +687,20 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
 	switch (op[i].type) {
 	case OPCODE_CALL:
 		// Deals with passing control to the next instruction within
+		if (!right)
+			mflags[cur->addr] |= W_NORIGHT;
 		analyze_call (cur, reg, arg2, addr, limit);
 		return 0;
 	case OPCODE_JUMP:
+		if (!right)
+			mflags[cur->addr] |= W_NORIGHT;
 		analyze_jump (cur, reg, arg2, addr, limit);
 		return 0;
 	case OPCODE_BRANCH:
 		analyze_branch (cur, op[i].opcode, reg, arg2, addr, limit);
 		return 1;
 	case OPCODE_ILLEGAL:
-		mflags[cur->addr] |= W_DATA;
+		// mflags[cur->addr] |= W_DATA;
 		return 0;
 	case OPCODE_IRET:
 		// Usually tranfers control outside of the program being disassembled
@@ -650,6 +714,19 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
 	case OPCODE_ADDRMOD:
 		analyze_addrmod (cur, op[i].opcode, reg, arg2);
 		return 1;
+	case OPCODE_STR1:
+		if (cur->regvals[reg] != -1 && arg1 != -1)
+			mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
+		return 1;
+	case OPCODE_ADDREX:
+		if (cur->regvals[reg] != -1 && arg1 != -1)
+			mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
+		// fall through
+	case OPCODE_IMMEX:
+		cur->regvals[016] = -1;
+		if (!right)
+			mflags[cur->addr] |= W_NORIGHT;
+		return 1;
 	default:
 		return 1;
 	}
@@ -659,12 +736,12 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
 void analyze (uint32 entry, uint32 addr, uint32 limit)
 {
 	add_actpoint (entry);
+	addsym ("START", W_CODE, entry);
 	if (basereg)
 		reachable->regvals[basereg] = baseaddr;
 	while (reachable) {
 		actpoint_t * cur = reachable;
 		reachable = cur->next;
-		int opcode, arg1, arg2, reg;
 		if (mflags[cur->addr] & W_CODE) {
 			free (cur);
 			continue;
@@ -688,51 +765,54 @@ void analyze (uint32 entry, uint32 addr, uint32 limit)
 	}
 }
 
+void prbss (uint32 addr, uint32 limit)
+{
+	int bss = 1;
+	while (addr + bss < limit && memory[addr+bss] == 0) {
+		mflags[addr+bss] |= W_DONE;
+		++bss;
+	}
+	printf ("%5o            \t", addr);
+	prsym (addr);
+	printf ("\tпам\t%d\n", bss);
+}
+
 void
 prsection (uint32 addr, uint32 limit)
 {
 	uint64 opcode;
 
-	int bss = 0;
-
-	while (addr < limit) {
+	for (; addr < limit; ++addr) {
+		if (mflags[addr] & W_DONE)
+			continue;
 		if ((mflags[addr] & (W_CODE|W_DATA)) == (W_CODE|W_DATA))
 			printf ("* next insn used as data\n");
 		if (mflags[addr] & W_CODE) {
-			if (bss) {
-				printf ("%5o            ", addr-bss);
-				prsym (addr-bss);
-				printf ("\tпам\t%d\n", bss);
-				bss = 0;
-			}
 			printf ("%5o%c", addr, mflags[addr] & W_STARTBB ? ':' : ' ');
 			opcode = memory[addr];
 			prcode (addr, opcode >> 24);
+			putchar ('\t');
 			prsym (addr);
 			putchar ('\t');
 			prinsn (addr, opcode >> 24);
-			printf ("\n      ");
-			prcode (addr, opcode & 0xffffff);
-			putchar ('\t');
-			prinsn (addr, opcode & 0xffffff);
-			putchar ('\n');
+			printf ("\n");
+			// Do not print the non-insn part of a word
+			// if it looks like a placeholder
+			opcode &= 0xffffff;
+			if (! (mflags[addr] & W_NORIGHT) ||
+				(opcode != 0 && opcode != 02200000)) {
+				printf("      ");
+				prcode (addr, opcode);
+				putchar ('\t');
+				putchar ('\t');
+				prinsn (addr, opcode);
+				putchar ('\n');
+			}
+		} else if (memory[addr] == 0) {
+				prbss (addr, limit);
 		} else {
-			if (memory[addr] == 0) {
-				bss++;
-				addr++;
-				continue;
-			}
-			if (bss) {
-				printf ("%5o            ", addr-bss);
-				prsym (addr-bss);
-				printf ("\tпам\t%d\n", bss);
-				bss = 0;
-			}
-			printf ("%5o            ", addr);
-			prsym (addr);
-			printf ("\tконд\tв'%016llo'\n", memory[addr]);
+			prconst (addr, limit);
 		}
-		++addr;
 	}
 }
 
@@ -744,8 +824,8 @@ readsymtab (char *fname)
 	char name[64];
 
 	FILE * fsym = fopen(fname, "r");
-	while (!feof(fsym)) {
-		if (fscanf(fsym, "%o %d %6333s\n", &addr, &type, name) != 3) {
+	while (fsym && !feof(fsym)) {
+		if (fscanf(fsym, "%o %d %63s\n", &addr, &type, name) != 3) {
 			fprintf (stderr, "dis: error reading symbol table\n");
 			fclose (textfd);
 			return;
@@ -756,6 +836,30 @@ readsymtab (char *fname)
 			addsym(name, type, addr);
 	}
 	addsym("", 0, 32768);
+	addsym("", 0, 0);
+}
+
+void make_syms(uint32 addr, uint32 limit)
+{
+	while (addr < limit) {
+		struct nlist * sym;
+		if (mflags[addr] & W_STARTBB) {
+			sym = findsym(addr);
+			if (sym->n_value != addr) {
+				char buf[8];
+				sprintf(buf, "A%05o", addr);
+				addsym(buf, W_CODE, addr);
+			}
+		} else if (mflags[addr] & W_DATA) {
+			sym = findsym(addr);
+			if (sym->n_value != addr) {
+				char buf[8];
+				sprintf(buf, "D%05o", addr);
+				addsym(buf, W_DATA, addr);
+			}
+		}
+		++addr;
+	}
 }
 
 void
@@ -782,8 +886,12 @@ disbin (char *fname)
 	while (!feof(textfd)) {
 		memory[addr++] = freadw (textfd);
 	}
+	printf("\t\t\t\tСТАРТ\t'%o'\n", loadaddr);
+	prequs ();
 	analyze (entryaddr, loadaddr, loadaddr + codelen);
+	make_syms(loadaddr, loadaddr + codelen);
 	prsection (loadaddr, loadaddr + codelen);
+	printf("\t\t\t\tФИНИШ\n");
 	fclose (textfd);
 }
 
@@ -792,6 +900,7 @@ main (int argc, char **argv)
 {
 	register char *cp;
 
+	utf8_puts (" ", stdout);
 	bflag = 1;
 	while(--argc) {
 		++argv;
