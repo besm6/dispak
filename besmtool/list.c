@@ -44,15 +44,17 @@ static void
 convert_text_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes)
 {
 	unsigned long long word;
-	int i;
+	int i, text, gost;
 
 	for (; bytes>=6; bytes-=6) {
 		word = 0;
-		for (i=40; i>=0; i-=8)
-			word |= *from++ << i;
-		for (i=42; i>=0; i-=6)
-			*to++ =	gost_to_unicode (
-				text_to_gost [(word >> i) & 077]);
+		for (i=40; i>=0; i-=8, from++)
+			word |= (unsigned long long) *from << i;
+		for (i=42; i>=0; i-=6, to++) {
+			text = (word >> i) & 077;
+			gost = text_to_gost [text];
+			*to = gost_to_unicode (gost);
+		}
 	}
 }
 
