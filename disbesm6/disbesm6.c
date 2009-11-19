@@ -319,7 +319,8 @@ prreg (int reg)
 }
 
 void
-praddr (uint32 address, uint32 rel, int explicit0, int indexed)
+praddr (uint32 address, uint32 rel, int explicit0,
+	int data_offset_as_number, int offset_as_number)
 {
 	struct nlist *sym;
 	int offset;
@@ -344,8 +345,10 @@ praddr (uint32 address, uint32 rel, int explicit0, int indexed)
 	sym = findsym (address);
 	// As we don't distinguish index regs and stack/frame regs yet,
 	// we avoid using data syms along with any regs
-	if ((sym->n_type & W_DATA) && indexed)
+	if (offset_as_number ||
+		((sym->n_type & W_DATA) && data_offset_as_number)) {
 		sym = &dummy;
+	}
 	if (sym != &dummy) {
 		printf ("%s", sym->n_name);
 		if (address == sym->n_value) {
@@ -410,7 +413,9 @@ prcode (uint32 memaddr, uint32 opcode)
 void
 properand (uint32 reg, uint32 offset, uint32 argrel, int explicit0)
 {
-	praddr (offset, argrel, explicit0, reg != 0 && !explicit0);
+	int data_offset_as_number = reg != 0 && !explicit0;
+	int offset_as_number = reg == 017;
+	praddr (offset, argrel, explicit0, data_offset_as_number, offset_as_number);
 	if (reg) {
 		printf ("(");
 		prreg (reg);
@@ -512,19 +517,27 @@ void prconst (uint32 addr, uint32 limit)
 {
 	int flags = 0;
 	do {
-		printf ("%5o            ", addr);
+		unsigned char bytes[6];
+		int i;
+		int good_gost = 1;
+		printf ("%5o %016llo", addr, memory[addr]);
 		putchar ('\t');
 		flags |= prsym (addr);
 		printf ("\tконд\t");
-		if (flags & W_GOST)  {
+		
+		for (i = 0; i < 6; ++i) {
+			bytes[i] = (memory[addr] >> (40-8*i)) & 0xff;
+			if (bytes[i] >= 0140)
+				good_gost = 0;
+		}
+		if (flags & W_GOST || good_gost)  {
 			int i;
 			printf("п'");
 			for (i = 0; i < 6; ++i) {
-				int ch = (memory[addr] >> (40-8*i)) & 0xff;
-				if (ch < 0140)
-					gost_putc (ch, stdout);
+				if (bytes[i] < 0140)
+					gost_putc (bytes[i], stdout);
 				else
-					printf("'%03o'", ch);
+					printf("'%03o'", bytes[i]);
 			}
 			printf("'\n");
 		} else {
@@ -883,7 +896,7 @@ disbin (char *fname)
 	printf ("         Code: %d (%#o) words\n", (int) st.st_size, codelen);
 	printf ("      Address: %#o\n", loadaddr);
 	printf ("\n");
-	while (!feof(textfd)) {
+	while (!feof(textfd) && addr < 0100000) {
 		memory[addr++] = freadw (textfd);
 	}
 	printf("\t\t\t\tСТАРТ\t'%o'\n", loadaddr);

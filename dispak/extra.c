@@ -1017,6 +1017,8 @@ e62(void)
 		acc.l = 0;
 		acc.r = 040000000;
 		return E_SUCCESS;
+	case 0076:	/* drop incognito */
+		return E_SUCCESS;
 	case 0102:	/* stop reading from terminal */
 		return E_SUCCESS;
 	case 0103:	/* get logical console number by physical */
