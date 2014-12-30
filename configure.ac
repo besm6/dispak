@@ -22,10 +22,16 @@ AC_CHECK_LIB([m], [sin])
 AC_CHECK_LIB([sunmath], [isinf])
 AC_CHECK_LIB([rt], [clock_getres])
 AC_CHECK_LIB([readline], [readline], [READLINE_LIB=-lreadline])
+AC_CHECK_LIB([SDL2_ttf], [TTF_Init])
+
+if test ":$ac_cv_lib_SDL2_ttf_TTF_Init" != ":yes" ; then
 AC_CHECK_LIB([SDL_ttf], [TTF_Init])
+fi
+
 AM_GNU_GETTEXT_VERSION([0.16])
 AM_GNU_GETTEXT([external])
 AM_CONDITIONAL(HAVE_READLINE, test ":$ac_cv_lib_readline_readline" = ":yes")
+AM_CONDITIONAL(HAVE_LIBSDL2, test ":$ac_cv_lib_SDL2_ttf_TTF_Init" = ":yes")
 AM_CONDITIONAL(HAVE_LIBSDL, test ":$ac_cv_lib_SDL_ttf_TTF_Init" = ":yes")
 
 # Checks for header files.
