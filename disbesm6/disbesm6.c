@@ -23,6 +23,7 @@ OPCODE_ADDRMOD,		/* МОДА, МОД */
 OPCODE_REG2,		/* УИА, СЛИА */
 OPCODE_IMMEX,		/* Э50, ... */
 OPCODE_ADDREX,		/* Э64, Э70, ... */
+OPCODE_DEFAULT
 } opcode_e;
 
 /*
@@ -150,6 +151,7 @@ static struct nlist dummy = { "", 0, 0 };
 #define W_STARTBB	4
 #define W_NORIGHT	8
 #define W_GOST		16
+#define W_UNSET         32
 #define W_DONE		(1<<31)
 
 typedef struct actpoint_t {
@@ -161,22 +163,22 @@ typedef struct actpoint_t {
 actpoint_t * reachable = 0;
 
 void add_actpoint (int addr) {
-	actpoint_t * old = reachable;
-	reachable = malloc (sizeof (actpoint_t));
-	memset (&reachable->regvals[1], 0xff, sizeof(int)*15);
-	reachable->regvals[0] = 0;
-	reachable->addr = addr;
-	reachable->addrmod = 0;
-	reachable->next = old;
+    actpoint_t * old = reachable;
+    reachable = malloc (sizeof (actpoint_t));
+    memset (&reachable->regvals[1], 0xff, sizeof(int)*15);
+    reachable->regvals[0] = 0;
+    reachable->addr = addr;
+    reachable->addrmod = 0;
+    reachable->next = old;
 }
 
 void copy_actpoint (actpoint_t * cur, int addr) {
-	actpoint_t * old = reachable;
-	reachable = malloc (sizeof (actpoint_t));
-	memcpy (reachable, cur, sizeof(actpoint_t));
-	reachable->addr = addr;
-	reachable->addrmod = 0;
-	reachable->next = old;
+    actpoint_t * old = reachable;
+    reachable = malloc (sizeof (actpoint_t));
+    memcpy (reachable, cur, sizeof(actpoint_t));
+    reachable->addr = addr;
+    reachable->addrmod = 0;
+    reachable->next = old;
 }
 
 /*
@@ -185,30 +187,30 @@ void copy_actpoint (actpoint_t * cur, int addr) {
 void
 addsym (char *name, int type, uint32 val)
 {
-	if (type & W_CODE)
-		add_actpoint(val);
-	if (!name)
-		return;
-	if (stabindex >= stablen) {
-		if (! stablen) {
-			stablen = 100;
-			stab = (struct nlist*) malloc (stablen *
-				sizeof (struct nlist));
-		} else {
-			stablen += 100;
-			stab = (struct nlist*) realloc (stab,
-				stablen * sizeof (struct nlist));
-		}
-		if (! stab) {
-			fprintf (stderr, "disbesm6: out of memory on %.8s\n",
-				name);
-			exit(2);
-		}
-	}
-	stab[stabindex].n_name = strdup(name);
-	stab[stabindex].n_type = type;
-	stab[stabindex].n_value = val;
-	++stabindex;
+    if (type & W_CODE)
+        add_actpoint(val);
+    if (!name & !(type & W_UNSET))
+        return;
+    if (stabindex >= stablen) {
+        if (! stablen) {
+            stablen = 100;
+            stab = (struct nlist*) malloc (stablen *
+                                           sizeof (struct nlist));
+        } else {
+            stablen += 100;
+            stab = (struct nlist*) realloc (stab,
+                                            stablen * sizeof (struct nlist));
+        }
+        if (! stab) {
+            fprintf (stderr, "disbesm6: out of memory on %.8s\n",
+                     name);
+            exit(2);
+        }
+    }
+    stab[stabindex].n_name = name ? strdup(name) : 0;
+    stab[stabindex].n_type = type;
+    stab[stabindex].n_value = val;
+    ++stabindex;
 }
 
 /*
@@ -217,22 +219,24 @@ addsym (char *name, int type, uint32 val)
 int
 prsym (uint32 addr)
 {
-	struct nlist *p;
-	int printed;
-	int flags = 0;
+    struct nlist *p;
+    int printed;
+    int flags = 0;
 
-	printed = 0;
-	for (p=stab; p<stab+stabindex; ++p) {
-		if (p->n_value == addr) {
-			if (printed) {
-				printf("\tноп\n\t\t\t");
-			}
-			printf ("%s", p->n_name);
-			++printed;
-			flags |= p->n_type;
-		}
-	}
-	return flags;
+    printed = 0;
+    for (p=stab; p<stab+stabindex; ++p) {
+        if (p->n_value == addr) {
+            flags |= p->n_type;
+            if (!(flags & W_UNSET)) {
+                if (printed) {
+                    printf("\tноп\n\t\t\t");
+                }
+                printf ("%s", p->n_name);
+                ++printed;
+            }
+        }
+    }
+    return flags;
 }
 
 /*
@@ -241,31 +245,31 @@ prsym (uint32 addr)
 struct nlist *
 findsym (uint32 addr)
 {
-	struct nlist *p, *last;
-	const int fuzz = 64;
-	int leastfuzz = fuzz+1;
+    struct nlist *p, *last;
+    const int fuzz = 64;
+    int leastfuzz = fuzz+1;
 
-	last = 0;
-	for (p=stab; p<stab+stabindex; ++p) {
-		if ((int)p->n_value < (int)addr-fuzz || (int)p->n_value > (int)addr+fuzz ||
-		    abs(p->n_value-addr) >= leastfuzz)
-			continue;
-		last = p;
-		leastfuzz = abs(p->n_value-addr);
-	}
-	if (last == 0)
-		return &dummy;
-	return last;
+    last = &dummy;
+    for (p=stab; p<stab+stabindex; ++p) {
+        if ((int)p->n_value < (int)addr-fuzz || (int)p->n_value > (int)addr+fuzz ||
+            abs(p->n_value-addr) >= leastfuzz)
+            continue;
+        last = p;
+        leastfuzz = abs(p->n_value-addr);
+    }
+    if (last->n_type & W_UNSET)
+        return &dummy;
+    return last;
 }
 
 void prequs ()
 {
-	struct nlist *p;
-	for (p=stab; p<stab+stabindex; ++p) {
-		if (p->n_type || !*p->n_name)
-			continue;
-		printf ("\t\t\t%s\tэкв\t'%o'\n", p->n_name, p->n_value);
-	}
+    struct nlist *p;
+    for (p=stab; p<stab+stabindex; ++p) {
+        if (p->n_type || !*p->n_name)
+            continue;
+        printf ("\t\t\t%s\tэкв\t'%o'\n", p->n_name, p->n_value);
+    }
 }
 
 uint64 memory[32768];
@@ -277,13 +281,13 @@ uint32 mflags[32768];
 uint64
 freadw (FILE *fd)
 {
-	uint64 val = 0;
-	int i;
-	for (i = 0; i < 6; ++i) {
-		val <<= 8;
-		val |= getc (fd);
-	}
-	return val;
+    uint64 val = 0;
+    int i;
+    for (i = 0; i < 6; ++i) {
+        val <<= 8;
+        val |= getc (fd);
+    }
+    return val;
 }
 
 /*
@@ -293,19 +297,19 @@ void
 prrel (uint32 r)
 {
 #if 0
-	if (r == A_RABS) {
-		printf ("  ");
-		return;
-	}
-	putchar ((r & A_RPCREL) ? '.' : '=');
-	switch (r & A_RMASK) {
-	default:      printf ("?");  break;
-	case A_RABS:  printf ("a");  break;
-	case A_RTEXT: printf ("t");  break;
-	case A_RDATA: printf ("d");  break;
-	case A_RBSS:  printf ("b");  break;
-	case A_REXT:  printf ("%d", A_RINDEX (r));
-	}
+    if (r == A_RABS) {
+        printf ("  ");
+        return;
+    }
+    putchar ((r & A_RPCREL) ? '.' : '=');
+    switch (r & A_RMASK) {
+    default:      printf ("?");  break;
+    case A_RABS:  printf ("a");  break;
+    case A_RTEXT: printf ("t");  break;
+    case A_RDATA: printf ("d");  break;
+    case A_RBSS:  printf ("b");  break;
+    case A_REXT:  printf ("%d", A_RINDEX (r));
+    }
 #endif
 }
 
@@ -315,57 +319,62 @@ prrel (uint32 r)
 void
 prreg (int reg)
 {
-	printf ("М%o", reg);
+    printf ("М%o", reg);
 }
 
 void
 praddr (uint32 address, uint32 rel, int explicit0,
 	int data_offset_as_number, int offset_as_number)
 {
-	struct nlist *sym;
-	int offset;
+    struct nlist *sym;
+    int offset;
 
 #if 0
-	if ((rel & A_RMASK) == A_REXT) {
-		sym = stab + A_RINDEX (rel);
-		name = "???";
-		if (sym >= stab && sym < stab + stabindex)
-			name = sym->n_name;
+    if ((rel & A_RMASK) == A_REXT) {
+        sym = stab + A_RINDEX (rel);
+        name = "???";
+        if (sym >= stab && sym < stab + stabindex)
+            name = sym->n_name;
 
-		if (address == 0)
-			printf ("<%.8s>", name);
-		else if (address < 8)
-			printf ("<%.8s+%d>", name, address);
-		else
-			printf ("<%.8s+%#o>", name, address);
-		return;
-	}
+        if (address == 0)
+            printf ("<%.8s>", name);
+        else if (address < 8)
+            printf ("<%.8s+%d>", name, address);
+        else
+            printf ("<%.8s+%#o>", name, address);
+        return;
+    }
 #endif
 
-	sym = findsym (address);
-	// As we don't distinguish index regs and stack/frame regs yet,
-	// we avoid using data syms along with any regs
-	if (offset_as_number ||
-		((sym->n_type & W_DATA) && data_offset_as_number)) {
-		sym = &dummy;
-	}
-	if (sym != &dummy) {
-		printf ("%s", sym->n_name);
-		if (address == sym->n_value) {
-			return;
-		}
-		offset = address - sym->n_value;
-		if (offset >= 0) {
-			printf ("+");
-		} else {
-			printf ("-");
-			offset = - offset;
-		}
-		printf ("%d", offset);
-	} else if (address) {
-		printf (address < 64 ? "%d" : "'%o'", address);
-	} else if (explicit0)
-		putchar('0');
+    sym = findsym (address);
+    // As we don't distinguish index regs and stack/frame regs yet,
+    // we avoid using data syms along with any regs
+    if (offset_as_number ||
+        ((sym->n_type & W_DATA) && data_offset_as_number)) {
+        sym = &dummy;
+    }
+    if (sym != &dummy) {
+        printf ("%s", sym->n_name);
+        if (address == sym->n_value) {
+            return;
+        }
+        offset = address - sym->n_value;
+        if (offset >= 0) {
+            printf ("+");
+        } else {
+            printf ("-");
+            offset = - offset;
+        }
+        printf ("%d", offset);
+    } else if (address) {
+        if (address < 0100)
+            printf ("%d", address);
+        else if (address >= 077700)
+            printf("%d", address-0100000);
+        else
+            printf("'%o'", address);
+    } else if (explicit0)
+        putchar('0');
 }
 
 /*
@@ -375,35 +384,35 @@ praddr (uint32 address, uint32 rel, int explicit0,
 void
 prcode (uint32 memaddr, uint32 opcode)
 {
-	int i;
+    int i;
 
-	for (i=0; op[i].mask; i++)
-		if ((opcode & op[i].mask) == op[i].opcode)
-			break;
-	switch (op[i].type) {
-	case OPCODE_STR1:
-	case OPCODE_ADDREX:
-	case OPCODE_IMM:
-	case OPCODE_IMMEX:
-	case OPCODE_IMM64:
-	case OPCODE_REG1:
-		printf ("%02o %03o %04o ", opcode >> 20, (opcode >> 12) & 0177, opcode & 07777);
-		break;
-	case OPCODE_REG2:
-	case OPCODE_ADDRMOD:
-	case OPCODE_STR2:
-	case OPCODE_IMM2:
-	case OPCODE_JUMP:
-	case OPCODE_IRET:
-	case OPCODE_BRANCH:
-	case OPCODE_CALL:
-		printf ("%02o %02o %05o ", opcode >> 20, (opcode >> 15) & 037, opcode & 077777);
-		break;
-	default:
-		printf("%08o  ", opcode);
-	}
-	if (rflag)
-		prrel (relcode);
+    for (i=0; op[i].mask; i++)
+        if ((opcode & op[i].mask) == op[i].opcode)
+            break;
+    switch (op[i].type) {
+    case OPCODE_STR1:
+    case OPCODE_ADDREX:
+    case OPCODE_IMM:
+    case OPCODE_IMMEX:
+    case OPCODE_IMM64:
+    case OPCODE_REG1:
+        printf ("%02o %03o %04o ", opcode >> 20, (opcode >> 12) & 0177, opcode & 07777);
+        break;
+    case OPCODE_REG2:
+    case OPCODE_ADDRMOD:
+    case OPCODE_STR2:
+    case OPCODE_IMM2:
+    case OPCODE_JUMP:
+    case OPCODE_IRET:
+    case OPCODE_BRANCH:
+    case OPCODE_CALL:
+        printf ("%02o %02o %05o ", opcode >> 20, (opcode >> 15) & 037, opcode & 077777);
+        break;
+    default:
+        printf("%08o  ", opcode);
+    }
+    if (rflag)
+        prrel (relcode);
 }
 
 /*
@@ -413,570 +422,582 @@ prcode (uint32 memaddr, uint32 opcode)
 void
 properand (uint32 reg, uint32 offset, uint32 argrel, int explicit0)
 {
-	int data_offset_as_number = reg != 0 && !explicit0;
-	int offset_as_number = reg == 017;
-	praddr (offset, argrel, explicit0, data_offset_as_number, offset_as_number);
-	if (reg) {
-		printf ("(");
-		prreg (reg);
-		printf (")");
-	}
+    int data_offset_as_number = 0;
+    int offset_as_number = reg != 0 && (offset < 0100 || offset >= 077700);
+    praddr (offset, argrel, explicit0, data_offset_as_number, offset_as_number);
+    if (reg) {
+        printf ("(");
+        prreg (reg);
+        printf (")");
+    }
 }
 
 void
 prinsn (uint32 memaddr, uint32 opcode)
 {
-	int i;
+    int i;
 
-	int reg = opcode >> 20;
-	int arg1 = (opcode & 07777) + (opcode & 0x040000 ? 070000 : 0);
-	int arg2 = opcode & 077777;
+    int reg = opcode >> 20;
+    int arg1 = (opcode & 07777) + (opcode & 0x040000 ? 070000 : 0);
+    int arg2 = opcode & 077777;
 
-	for (i=0; op[i].mask; i++)
-		if ((opcode & op[i].mask) == op[i].opcode)
-			break;
-	switch (op[i].type) {
-	case OPCODE_REG1:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		if (opcode & 037)
-			prreg (opcode & 037);
-		if (reg) {
-			putchar ('(');
-			prreg (opcode >> 20);
-			putchar (')');
-		}
-		break;
-	case OPCODE_ADDREX:
-	case OPCODE_STR1:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		properand (reg, arg1, relcode, 0);
-		break;
-	case OPCODE_REG2:
-	case OPCODE_STR2:
-	case OPCODE_ADDRMOD:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		properand (reg, arg2, relcode, op[i].type == OPCODE_REG2);
-		break;
-	case OPCODE_BRANCH:
-	case OPCODE_JUMP:
-	case OPCODE_IRET:
-	case OPCODE_CALL:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		properand (reg, arg2, relcode, 0);
-		break;
-	case OPCODE_IMMEX:
-	case OPCODE_IMM:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		if (arg1) printf ("'%o'", arg1);
-		if (reg) {
-			putchar ('(');
-			prreg (reg);
-			putchar (')');
-		}
-		break;
-	case OPCODE_IMM64:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		arg1 &= 0177;
-		if (arg1) {
-			printf ("64");
-			if (arg1 -= 64) printf ("%+d", arg1);
-		}
-		if (reg) {
-			putchar ('(');
-			prreg (reg);
-			putchar (')');
-		}
-		break;
-	case OPCODE_IMM2:
-		printf (op[i].name);
-		printf (AFTER_INSTRUCTION);
-		if (arg2) printf ("%d", arg2);
-		if (reg) {
-			putchar ('(');
-			prreg (reg);
-			putchar (')');
-		}
-		break;
-	case OPCODE_ILLEGAL:
-		printf ("конк");
-		printf (AFTER_INSTRUCTION);
-		printf ("в'%08o'", opcode);
-		break;
-	default:
-		printf ("???");
-	}
+    for (i=0; op[i].mask; i++)
+        if ((opcode & op[i].mask) == op[i].opcode)
+            break;
+    opcode_e type = op[i].type;
+    if (op[i].opcode == 0xa0000 && reg == 0) {
+        type = OPCODE_IMM;
+    }
+    switch (type) {
+    case OPCODE_REG1:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        if (opcode & 037)
+            prreg (opcode & 037);
+        if (reg) {
+            putchar ('(');
+            prreg (opcode >> 20);
+            putchar (')');
+        }
+        break;
+    case OPCODE_ADDREX:
+    case OPCODE_STR1:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        properand (reg, arg1, relcode, 0);
+        break;
+    case OPCODE_REG2:
+    case OPCODE_STR2:
+    case OPCODE_ADDRMOD:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        properand (reg, arg2, relcode, op[i].type == OPCODE_REG2);
+        break;
+    case OPCODE_BRANCH:
+    case OPCODE_JUMP:
+    case OPCODE_IRET:
+    case OPCODE_CALL:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        properand (reg, arg2, relcode, 0);
+        break;
+    case OPCODE_IMMEX:
+    case OPCODE_IMM:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        if (arg1) printf ("'%o'", arg1);
+        if (reg) {
+            putchar ('(');
+            prreg (reg);
+            putchar (')');
+        }
+        break;
+    case OPCODE_IMM64:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        arg1 &= 0177;
+        if (arg1) {
+            printf ("64");
+            if (arg1 -= 64) printf ("%+d", arg1);
+        }
+        if (reg) {
+            putchar ('(');
+            prreg (reg);
+            putchar (')');
+        }
+        break;
+    case OPCODE_IMM2:
+        fputs (op[i].name, stdout);
+        printf (AFTER_INSTRUCTION);
+        if (arg2) printf ("%d", arg2);
+        if (reg) {
+            putchar ('(');
+            prreg (reg);
+            putchar (')');
+        }
+        break;
+    case OPCODE_ILLEGAL:
+        printf ("конк");
+        printf (AFTER_INSTRUCTION);
+        printf ("в'%08o'", opcode);
+        break;
+    default:
+        printf ("???");
+    }
 }
 
 void prconst (uint32 addr, uint32 limit)
 {
-	int flags = 0;
-	do {
-		unsigned char bytes[6];
-		int i;
-		int good_gost = 1;
-		printf ("%5o %016llo", addr, memory[addr]);
-		putchar ('\t');
-		flags |= prsym (addr);
-		printf ("\tконд\t");
-		
-		for (i = 0; i < 6; ++i) {
-			bytes[i] = (memory[addr] >> (40-8*i)) & 0xff;
-			if (bytes[i] >= 0140)
-				good_gost = 0;
-		}
-		if (flags & W_GOST || good_gost)  {
-			int i;
-			printf("п'");
-			for (i = 0; i < 6; ++i) {
-				if (bytes[i] < 0140)
-					gost_putc (bytes[i], stdout);
-				else
-					printf("'%03o'", bytes[i]);
-			}
-			printf("'\n");
-		} else {
-			printf ("в'%016llo'\n", memory[addr]);
-		}
-		mflags[addr] |= W_DONE;
-	} while ((mflags[++addr] & (W_CODE|W_DATA)) == 0 && addr < limit);
+    int flags = 0;
+    do {
+        unsigned char bytes[6];
+        int i;
+        int good_gost = 1;
+        printf ("%5o %016llo", addr, memory[addr]);
+        putchar ('\t');
+        flags |= prsym (addr);
+        printf ("\tконд\t");
+
+        for (i = 0; i < 6; ++i) {
+            bytes[i] = (memory[addr] >> (40-8*i)) & 0xff;
+            if (bytes[i] >= 0140)
+                good_gost = 0;
+        }
+        if (flags & W_GOST || good_gost)  {
+            int i;
+            printf("п'");
+            for (i = 0; i < 6; ++i) {
+                if (bytes[i] < 0140)
+                    gost_putc (bytes[i], stdout);
+                else
+                    printf("'%03o'", bytes[i]);
+            }
+            printf("'\n");
+        } else {
+            printf ("в'%016llo'\n", memory[addr]);
+        }
+        mflags[addr] |= W_DONE;
+    } while ((mflags[++addr] & (W_CODE|W_DATA)) == 0 &&
+             addr < limit && memory[addr] != 0);
 }
 
 void analyze_call (actpoint_t * cur, int reg, int arg, int addr, int limit)
 {
-	if (arg != -1 && arg >= addr && arg < limit) {
-		copy_actpoint (cur, arg);
-		if (reg)
-			reachable->regvals[reg] = cur->addr+1;
-		mflags[arg] |= W_STARTBB;
-	}
-	copy_actpoint (cur, cur->addr + 1);
-	// Assuming no tricks are played; usually does not hurt,
-	// used in Pascal-Autocode
-	if (reg)
-		reachable->regvals[reg] = cur->addr + 1;
+    if (arg != -1 && arg >= addr && arg < limit) {
+        copy_actpoint (cur, arg);
+        if (reg)
+            reachable->regvals[reg] = cur->addr+1;
+        mflags[arg] |= W_STARTBB;
+    }
+    copy_actpoint (cur, cur->addr + 1);
+    // Assuming no tricks are played; usually does not hurt,
+    // used in Pascal-Autocode
+    if (reg)
+        reachable->regvals[reg] = cur->addr + 1;
 }
 
 void analyze_jump (actpoint_t * cur, int reg, int arg, int addr, int limit)
 {
-	if (arg != -1 && cur->regvals[reg] != -1) {
-		arg = ADDR(arg + cur->regvals[reg]);
-		if (arg >= addr && arg < limit) {
-			copy_actpoint (cur, arg);
-			mflags[arg] |= W_STARTBB;
-		}
-	}
+    if (arg != -1 && cur->regvals[reg] != -1) {
+        arg = ADDR(arg + cur->regvals[reg]);
+        if (arg >= addr && arg < limit) {
+            copy_actpoint (cur, arg);
+            mflags[arg] |= W_STARTBB;
+        }
+    }
 }
 
 void analyze_branch (actpoint_t * cur, int opcode, int reg, int arg, int addr, int limit) {
-	if (arg == -1)
-		return;
-	if (opcode >= 0x0e0000) {
-		if (arg >= addr && arg < limit) {
-			copy_actpoint (cur, arg);
-			mflags[arg] |= W_STARTBB;
-		}
-	} else if (cur->regvals[reg] != -1) {
-		arg = ADDR(arg + cur->regvals[reg]);
-		if (arg >= addr && arg < limit) {
-			copy_actpoint (cur, arg);
-			mflags[arg] |= W_STARTBB;
-		}
-	}
+    if (arg == -1)
+        return;
+    if (opcode >= 0x0e0000) {
+        if (arg >= addr && arg < limit) {
+            copy_actpoint (cur, arg);
+            mflags[arg] |= W_STARTBB;
+        }
+    } else if (cur->regvals[reg] != -1) {
+        arg = ADDR(arg + cur->regvals[reg]);
+        if (arg >= addr && arg < limit) {
+            copy_actpoint (cur, arg);
+            mflags[arg] |= W_STARTBB;
+        }
+    }
 }
 
 void analyze_regop1 (actpoint_t * cur, int opcode, int reg, int arg)
 {
-	if (arg == -1)
-		return;
+    if (arg == -1)
+        return;
 
-	switch (opcode) {
-	case 0x021000:	// уим
+    switch (opcode) {
+    case 0x021000:	// уим
 #if 0
-		// No use tracking the stack ptr usage of M17
-		if (cur->regvals[017] != -1) {
-			--cur->regvals[017];
-		}
+        // No use tracking the stack ptr usage of M17
+        if (cur->regvals[017] != -1) {
+            --cur->regvals[017];
+        }
 #endif
-		// fall through
-	case 0x020000:	// уи
-		if (cur->regvals[reg] == -1)
-			break;
-		arg += cur->regvals[reg];
-		arg &= 037;	// potentially incorrect for user programs
-		if (arg != 0 && arg <= 15) {
-			// ACC value not tracked yet
-			cur->regvals[arg] = -1;
-		}
-		break;
-	case 0x022000:	// счи
-		// ACC value not tracked yet
-		break;
-	case 0x023000:	// счим
+        // fall through
+    case 0x020000:	// уи
+        if (cur->regvals[reg] == -1)
+            break;
+        arg += cur->regvals[reg];
+        arg &= 037;	// potentially incorrect for user programs
+        if (arg != 0 && arg <= 15) {
+            // ACC value not tracked yet
+            cur->regvals[arg] = -1;
+        }
+        break;
+    case 0x022000:	// счи
+        // ACC value not tracked yet
+        break;
+    case 0x023000:	// счим
 #if 0
-		if (cur->regvals[017] != -1) {
-                        ++cur->regvals[017];
-                }
+        if (cur->regvals[017] != -1) {
+            ++cur->regvals[017];
+        }
 #endif
-		break;
-	case 0x024000:	// уии
-		arg &= 037;
-		if (arg != 0 && arg <= 15) {
-                        cur->regvals[arg] = cur->regvals[reg];
-                }
-		break;
-	case 0x025000:	// сли
-		arg &= 037;
-		if (arg != 0 && arg <= 15 && cur->regvals[arg] != -1) {
-			if (cur->regvals[reg] == -1) {
-				cur->regvals[arg] = -1;
-			} else {
-                        	cur->regvals[arg] += cur->regvals[reg];
-				cur->regvals[reg] &= 077777;
-			}
-                }
-		break;
-	}
+        break;
+    case 0x024000:	// уии
+        arg &= 037;
+        if (arg != 0 && arg <= 15) {
+            cur->regvals[arg] = cur->regvals[reg];
+        }
+        break;
+    case 0x025000:	// сли
+        arg &= 037;
+        if (arg != 0 && arg <= 15 && cur->regvals[arg] != -1) {
+            if (cur->regvals[reg] == -1) {
+                cur->regvals[arg] = -1;
+            } else {
+                cur->regvals[arg] += cur->regvals[reg];
+                cur->regvals[reg] &= 077777;
+            }
+        }
+        break;
+    }
 }
 
 void analyze_regop2 (actpoint_t * cur, int opcode, int reg, int arg)
 {
-	switch (opcode) {
-	case 0x0a0000:	// уиа
-		if (reg)
-			cur->regvals[reg] = arg;
-		break;
-	case 0x0a8000:	// слиа
-		if (reg && cur->regvals[reg] != -1) {
-			cur->regvals[reg] = arg == -1 ? -1 :
-				ADDR(cur->regvals[reg] + arg);
-		}
-		break;
-	}
+    switch (opcode) {
+    case 0x0a0000:	// уиа
+        if (reg)
+            cur->regvals[reg] = arg;
+        break;
+    case 0x0a8000:	// слиа
+        if (reg && cur->regvals[reg] != -1) {
+            cur->regvals[reg] = arg == -1 ? -1 :
+                ADDR(cur->regvals[reg] + arg);
+        }
+        break;
+    }
 }
 
 void analyze_addrmod (actpoint_t * cur, int opcode, int reg, int arg)
 {
-	switch (opcode) {
-	case 0x090000:	// мода
-		if (cur->regvals[reg] != -1)
-			cur->addrmod = arg == -1 ? -1 :
-				ADDR(cur->regvals[reg] + arg);
-		else
-			cur->addrmod = -1;
+    switch (opcode) {
+    case 0x090000:	// мода
+        if (cur->regvals[reg] != -1)
+            cur->addrmod = arg == -1 ? -1 :
+                ADDR(cur->regvals[reg] + arg);
+        else
+            cur->addrmod = -1;
 		break;
-	case 0x098000:	// мод
-		if (arg != -1 && cur->regvals[reg] != -1)
-			mflags[ADDR(cur->regvals[reg] + arg)] |= W_DATA;
-		// Memory contents are not tracked
-		cur->addrmod = -1;
-		break;
-	}
+    case 0x098000:	// мод
+        if (arg != -1 && cur->regvals[reg] != -1)
+            mflags[ADDR(cur->regvals[reg] + arg)] |= W_DATA;
+        // Memory contents are not tracked
+        cur->addrmod = -1;
+        break;
+    }
 }
 
 // Returns whether the control may pass to the next instruction
 int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
-	int opcode, arg1, arg2, reg, i;
-	if (right) 
-		opcode = memory[cur->addr] & 0xffffff;
-	else
-		opcode = memory[cur->addr] >> 24;
-	for (i=0; op[i].mask; i++)
-               	if ((opcode & op[i].mask) == op[i].opcode)
-                       	break;
-	if (cur->addrmod == -1) {
-		arg1 = arg2 = -1;
-	} else {
-		arg1 = ADDR((opcode & 07777) + (opcode & 0x040000 ? 070000 : 0) + cur->addrmod);
-        	arg2 = ADDR(opcode + cur->addrmod);
-	}
-	cur->addrmod = 0;
-	reg = opcode >> 20;
-	switch (op[i].type) {
-	case OPCODE_CALL:
-		// Deals with passing control to the next instruction within
-		if (!right)
-			mflags[cur->addr] |= W_NORIGHT;
-		analyze_call (cur, reg, arg2, addr, limit);
-		return 0;
-	case OPCODE_JUMP:
-		if (!right)
-			mflags[cur->addr] |= W_NORIGHT;
-		analyze_jump (cur, reg, arg2, addr, limit);
-		return 0;
-	case OPCODE_BRANCH:
-		analyze_branch (cur, op[i].opcode, reg, arg2, addr, limit);
-		return 1;
-	case OPCODE_ILLEGAL:
-		// mflags[cur->addr] |= W_DATA;
-		return 0;
-	case OPCODE_IRET:
-		// Usually tranfers control outside of the program being disassembled
-		return 0;
-	case OPCODE_REG1:
-		analyze_regop1 (cur, op[i].opcode, reg, arg1);
-		return 1;
-	case OPCODE_REG2:
-		analyze_regop2 (cur, op[i].opcode, reg, arg2);
-		return 1;
-	case OPCODE_ADDRMOD:
-		analyze_addrmod (cur, op[i].opcode, reg, arg2);
-		return 1;
-	case OPCODE_STR1:
-		if (cur->regvals[reg] != -1 && arg1 != -1)
-			mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
-		return 1;
-	case OPCODE_ADDREX:
-		if (cur->regvals[reg] != -1 && arg1 != -1)
-			mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
-		// fall through
-	case OPCODE_IMMEX:
-		cur->regvals[016] = -1;
-		if (!right)
-			mflags[cur->addr] |= W_NORIGHT;
-		return 1;
-	default:
-		return 1;
-	}
+    int opcode, arg1, arg2, reg, i;
+    if (cur->addr < addr || cur->addr > limit)
+        return 0;
+    if (right) 
+        opcode = memory[cur->addr] & 0xffffff;
+    else
+        opcode = memory[cur->addr] >> 24;
+    for (i=0; op[i].mask; i++)
+        if ((opcode & op[i].mask) == op[i].opcode)
+            break;
+    if (cur->addrmod == -1) {
+        arg1 = arg2 = -1;
+    } else {
+        arg1 = ADDR((opcode & 07777) + (opcode & 0x040000 ? 070000 : 0) + cur->addrmod);
+        arg2 = ADDR(opcode + cur->addrmod);
+    }
+    cur->addrmod = 0;
+    reg = opcode >> 20;
+    switch (op[i].type) {
+    case OPCODE_CALL:
+        // Deals with passing control to the next instruction within
+        if (!right)
+            mflags[cur->addr] |= W_NORIGHT;
+        analyze_call (cur, reg, arg2, addr, limit);
+        return 0;
+    case OPCODE_JUMP:
+        if (!right)
+            mflags[cur->addr] |= W_NORIGHT;
+        analyze_jump (cur, reg, arg2, addr, limit);
+        return 0;
+    case OPCODE_BRANCH:
+        analyze_branch (cur, op[i].opcode, reg, arg2, addr, limit);
+        return 1;
+    case OPCODE_ILLEGAL:
+        // mflags[cur->addr] |= W_DATA;
+        return 0;
+    case OPCODE_IRET:
+        // Usually tranfers control outside of the program being disassembled
+        if (!right)
+            mflags[cur->addr] |= W_NORIGHT;
+        return 0;
+    case OPCODE_REG1:
+        analyze_regop1 (cur, op[i].opcode, reg, arg1);
+        return 1;
+    case OPCODE_REG2:
+        analyze_regop2 (cur, op[i].opcode, reg, arg2);
+        return 1;
+    case OPCODE_ADDRMOD:
+        analyze_addrmod (cur, op[i].opcode, reg, arg2);
+        return 1;
+    case OPCODE_STR1:
+        if (cur->regvals[reg] != -1 && arg1 != -1)
+            mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
+        return 1;
+    case OPCODE_ADDREX:
+        if (cur->regvals[reg] != -1 && arg1 != -1)
+            mflags[ADDR(arg1 + cur->regvals[reg])] |= W_DATA;
+        // fall through
+    case OPCODE_IMMEX:
+        cur->regvals[016] = -1;
+        if (!right)
+            mflags[cur->addr] |= W_NORIGHT;
+        return 1;
+    default:
+        return 1;
+    }
 }
 
 /* Basic blocks are followed as far as possible first */
 void analyze (uint32 entry, uint32 addr, uint32 limit)
 {
-	add_actpoint (entry);
-	addsym ("START", W_CODE, entry);
-	if (basereg)
-		reachable->regvals[basereg] = baseaddr;
-	while (reachable) {
-		actpoint_t * cur = reachable;
-		reachable = cur->next;
-		if (mflags[cur->addr] & W_CODE) {
-			free (cur);
-			continue;
-		}
-		mflags[cur->addr] |= W_CODE;
-		/* Left insn */
-		if (! analyze_insn (cur, 0, addr, limit)) {
-			free (cur);
-			continue;
-		}
-		/* Right insn */
-		if (analyze_insn (cur, 1, addr, limit)) {
-			// Put 'cur' back with the next address
-			cur->next = reachable;
-			reachable = cur;
-			++cur->addr;
-			cur->addr &= 077777; 
-		} else {
-			free (cur);
-		}
-	}
+    add_actpoint (entry);
+    addsym ("START", W_CODE, entry);
+    if (basereg)
+        reachable->regvals[basereg] = baseaddr;
+    while (reachable) {
+        actpoint_t * cur = reachable;
+        reachable = cur->next;
+        if (mflags[cur->addr] & W_CODE) {
+            free (cur);
+            continue;
+        }
+        mflags[cur->addr] |= W_CODE;
+        /* Left insn */
+        if (! analyze_insn (cur, 0, addr, limit)) {
+            free (cur);
+            continue;
+        }
+        /* Right insn */
+        if (analyze_insn (cur, 1, addr, limit)) {
+            // Put 'cur' back with the next address
+            if (++cur->addr == 0100000) {
+                // Loss of control
+                free (cur);
+            } else {
+                cur->next = reachable;
+                reachable = cur;
+            }
+        } else {
+            free (cur);
+        }
+    }
 }
 
 void prbss (uint32 addr, uint32 limit)
 {
-	int bss = 1;
-	while (addr + bss < limit && memory[addr+bss] == 0) {
-		mflags[addr+bss] |= W_DONE;
-		++bss;
-	}
-	printf ("%5o            \t", addr);
-	prsym (addr);
-	printf ("\tпам\t%d\n", bss);
+    int bss = 1;
+    while (addr + bss < limit && memory[addr+bss] == 0 && mflags[addr+bss] == 0) {
+        mflags[addr+bss] |= W_DONE;
+        ++bss;
+    }
+    printf ("%5o            \t", addr);
+    prsym (addr);
+    printf ("\tпам\t%d\n", bss);
 }
 
 void
 prsection (uint32 addr, uint32 limit)
 {
-	uint64 opcode;
+    uint64 opcode;
 
-	for (; addr < limit; ++addr) {
-		if (mflags[addr] & W_DONE)
-			continue;
-		if ((mflags[addr] & (W_CODE|W_DATA)) == (W_CODE|W_DATA))
-			printf ("* next insn used as data\n");
-		if (mflags[addr] & W_CODE) {
-			printf ("%5o%c", addr, mflags[addr] & W_STARTBB ? ':' : ' ');
-			opcode = memory[addr];
-			prcode (addr, opcode >> 24);
-			putchar ('\t');
-			prsym (addr);
-			putchar ('\t');
-			prinsn (addr, opcode >> 24);
-			printf ("\n");
-			// Do not print the non-insn part of a word
-			// if it looks like a placeholder
-			opcode &= 0xffffff;
-			if (! (mflags[addr] & W_NORIGHT) ||
-				(opcode != 0 && opcode != 02200000)) {
-				printf("      ");
-				prcode (addr, opcode);
-				putchar ('\t');
-				putchar ('\t');
-				prinsn (addr, opcode);
-				putchar ('\n');
-			}
-		} else if (memory[addr] == 0) {
-				prbss (addr, limit);
-		} else {
-			prconst (addr, limit);
-		}
-	}
+    for (; addr < limit; ++addr) {
+        if (mflags[addr] & W_DONE)
+            continue;
+        if ((mflags[addr] & (W_CODE|W_DATA)) == (W_CODE|W_DATA))
+            printf ("* next insn used as data\n");
+        if (mflags[addr] & W_CODE) {
+            printf ("%5o%c", addr, mflags[addr] & W_STARTBB ? ':' : ' ');
+            opcode = memory[addr];
+            prcode (addr, opcode >> 24);
+            putchar ('\t');
+            prsym (addr);
+            putchar ('\t');
+            prinsn (addr, opcode >> 24);
+            printf ("\n");
+            // Do not print the non-insn part of a word
+            // if it looks like a placeholder
+            opcode &= 0xffffff;
+            if (! (mflags[addr] & W_NORIGHT) ||
+                (opcode != 0 && opcode != 02200000)) {
+                printf("      ");
+                prcode (addr, opcode);
+                putchar ('\t');
+                putchar ('\t');
+                prinsn (addr, opcode);
+                putchar ('\n');
+            }
+        } else if (memory[addr] == 0) {
+            prbss (addr, limit);
+        } else {
+            prconst (addr, limit);
+        }
+    }
 }
 
 void
 readsymtab (char *fname)
 {
-	unsigned int addr;
-	int type;
-	char name[64];
+    unsigned int addr;
+    int type;
+    char name[64];
 
-	FILE * fsym = fopen(fname, "r");
-	while (fsym && !feof(fsym)) {
-		if (fscanf(fsym, "%o %d %63s\n", &addr, &type, name) != 3) {
-			fprintf (stderr, "dis: error reading symbol table\n");
-			fclose (textfd);
-			return;
-		}
-		if (!strcmp(name, "-"))
-			addsym(NULL, type, addr);
-		else
-			addsym(name, type, addr);
-	}
-	addsym("", 0, 32768);
-	addsym("", 0, 0);
+    FILE * fsym = fopen(fname, "r");
+    while (fsym && !feof(fsym)) {
+        if (fscanf(fsym, "%o %d %63s\n", &addr, &type, name) != 3) {
+            fprintf (stderr, "dis: error reading symbol table\n");
+            fclose (textfd);
+            return;
+        }
+        if (!strcmp(name, "-"))
+            addsym(NULL, type, addr);
+        else
+            addsym(name, type, addr);
+    }
+    addsym("", 0, 32768);
+    addsym("", 0, 0);
 }
 
 void make_syms(uint32 addr, uint32 limit)
 {
-	while (addr < limit) {
-		struct nlist * sym;
-		if (mflags[addr] & W_STARTBB) {
-			sym = findsym(addr);
-			if (sym->n_value != addr) {
-				char buf[8];
-				sprintf(buf, "A%05o", addr);
-				addsym(buf, W_CODE, addr);
-			}
-		} else if (mflags[addr] & W_DATA) {
-			sym = findsym(addr);
-			if (sym->n_value != addr) {
-				char buf[8];
-				sprintf(buf, "D%05o", addr);
-				addsym(buf, W_DATA, addr);
-			}
-		}
-		++addr;
-	}
+    while (addr < limit) {
+        struct nlist * sym;
+        if (mflags[addr] & W_STARTBB) {
+            sym = findsym(addr);
+            if (sym->n_value != addr) {
+                char buf[8];
+                sprintf(buf, "A%05o", addr);
+                addsym(buf, W_CODE, addr);
+            }
+        } else if (mflags[addr] & W_DATA) {
+            sym = findsym(addr);
+            if (sym->n_value != addr) {
+                char buf[8];
+                sprintf(buf, "D%05o", addr);
+                addsym(buf, W_DATA, addr);
+            }
+        }
+        ++addr;
+    }
 }
 
 void
 disbin (char *fname)
 {
-	unsigned int addr;
-	struct stat st;
+    unsigned int addr;
+    struct stat st;
 
-	textfd = fopen (fname, "r");
-	if (! textfd) {
-		fprintf (stderr, "dis: %s not found\n", fname);
-		return;
-	}
-	stat (fname, &st);
-	rflag = 0;
-	addr = loadaddr;
-	codelen = st.st_size / 6;
+    textfd = fopen (fname, "r");
+    if (! textfd) {
+        fprintf (stderr, "dis: %s not found\n", fname);
+        return;
+    }
+    stat (fname, &st);
+    rflag = 0;
+    addr = loadaddr;
+    codelen = st.st_size / 6;
 
-	printf ("         File: %s\n", fname);
-	printf ("         Type: Binary\n");
-	printf ("         Code: %d (%#o) words\n", (int) st.st_size, codelen);
-	printf ("      Address: %#o\n", loadaddr);
-	printf ("\n");
-	while (!feof(textfd) && addr < 0100000) {
-		memory[addr++] = freadw (textfd);
-	}
-	printf("\t\t\t\tСТАРТ\t'%o'\n", loadaddr);
-	prequs ();
-	analyze (entryaddr, loadaddr, loadaddr + codelen);
-	make_syms(loadaddr, loadaddr + codelen);
-	prsection (loadaddr, loadaddr + codelen);
-	printf("\t\t\t\tФИНИШ\n");
-	fclose (textfd);
+    printf ("         File: %s\n", fname);
+    printf ("         Type: Binary\n");
+    printf ("         Code: %d (%#o) words\n", (int) st.st_size, codelen);
+    printf ("      Address: %#o\n", loadaddr);
+    printf ("\n");
+    while (!feof(textfd) && addr < 0100000) {
+        memory[addr++] = freadw (textfd);
+    }
+    printf("\t\t\t\tСТАРТ\t'%o'\n", loadaddr);
+    prequs ();
+    analyze (entryaddr, loadaddr, loadaddr + codelen);
+    make_syms(loadaddr, loadaddr + codelen);
+    prsection (loadaddr, loadaddr + codelen);
+    printf("\t\t\t\tФИНИШ\n");
+    fclose (textfd);
 }
 
 int
 main (int argc, char **argv)
 {
-	register char *cp;
+    register char *cp;
 
-	utf8_puts (" ", stdout);
-	bflag = 1;
-	while(--argc) {
-		++argv;
-		if (**argv != '-') {
-			disbin (*argv);
-			continue;
-		}
-		for (cp = *argv+1; *cp; cp++) {
-			switch (*cp) {
-			case 'r':       /* -r: print relocation info */
-				rflag++;
-				break;
-			case 'b':	/* -b: disassemble binary file */
-				bflag++;
-				break;
-			case 'a':       /* -aN: load address */
-				loadaddr = 0;
-				while (cp[1] >= '0' && cp[1] <= '7') {
-					loadaddr <<= 3;
-					loadaddr += cp[1] - '0';
-					++cp;
-				}
-				break;
-			case 'e':       /* -eN: entry address */
-				entryaddr = 0;
-				while (cp[1] >= '0' && cp[1] <= '7') {
-					entryaddr <<= 3;
-					entryaddr += cp[1] - '0';
-					++cp;
-				}
-				break;
-			case 'R':	/* -RN=x: forced base reg/addr */
-				basereg = baseaddr = 0;
-				while (cp[1] >= '0' && cp[1] <= '7') {
-                                        basereg <<= 3;
-                                        basereg += cp[1] - '0';
-                                        ++cp;
-                                }
-				if (basereg == 0 || basereg > 017) {
-					fprintf(stderr, "Bad base reg %o, need 1 <= R <= 017\n", basereg);
-					exit(1);
-				}
-				if (cp[1] != '=') {
-					fprintf(stderr, "Bad format for base reg, need -RN=x\n");
-					exit(1);
-				}
-				++cp;
-				while (cp[1] >= '0' && cp[1] <= '7') {
-                                        baseaddr <<= 3;
-                                        baseaddr += cp[1] - '0';
-                                        ++cp;
-                                }
-				baseaddr = ADDR(baseaddr);
-				break;
-			case 'n':
-				readsymtab(cp+1);
-				cp += strlen(cp)-1;
-				break;
-			default:
-				fprintf (stderr, "Usage: disbesm6 [-r] [-b] [-aN] [-eN] [-nSymtab] file...\n");
-				return (1);
-			}
-		}
-	}
-	return (0);
+    utf8_puts (" ", stdout);
+    bflag = 1;
+    while(--argc) {
+        ++argv;
+        if (**argv != '-') {
+            disbin (*argv);
+            continue;
+        }
+        for (cp = *argv+1; *cp; cp++) {
+            switch (*cp) {
+            case 'r':       /* -r: print relocation info */
+                rflag++;
+                break;
+            case 'b':	/* -b: disassemble binary file */
+                bflag++;
+                break;
+            case 'a':       /* -aN: load address */
+                loadaddr = 0;
+                while (cp[1] >= '0' && cp[1] <= '7') {
+                    loadaddr <<= 3;
+                    loadaddr += cp[1] - '0';
+                    ++cp;
+                }
+                break;
+            case 'e':       /* -eN: entry address */
+                entryaddr = 0;
+                while (cp[1] >= '0' && cp[1] <= '7') {
+                    entryaddr <<= 3;
+                    entryaddr += cp[1] - '0';
+                    ++cp;
+                }
+                break;
+            case 'R':	/* -RN=x: forced base reg/addr */
+                basereg = baseaddr = 0;
+                while (cp[1] >= '0' && cp[1] <= '7') {
+                    basereg <<= 3;
+                    basereg += cp[1] - '0';
+                    ++cp;
+                }
+                if (basereg == 0 || basereg > 017) {
+                    fprintf(stderr, "Bad base reg %o, need 1 <= R <= 017\n", basereg);
+                    exit(1);
+                }
+                if (cp[1] != '=') {
+                    fprintf(stderr, "Bad format for base reg, need -RN=x\n");
+                    exit(1);
+                }
+                ++cp;
+                while (cp[1] >= '0' && cp[1] <= '7') {
+                    baseaddr <<= 3;
+                    baseaddr += cp[1] - '0';
+                    ++cp;
+                }
+                baseaddr = ADDR(baseaddr);
+                break;
+            case 'n':
+                readsymtab(cp+1);
+                cp += strlen(cp)-1;
+                break;
+            default:
+                fprintf (stderr, "Usage: disbesm6 [-r] [-b] [-aN] [-eN] [-nSymtab] file...\n");
+                return (1);
+            }
+        }
+    }
+    return (0);
 }
