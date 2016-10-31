@@ -2969,9 +2969,9 @@ am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
 
 ac_config_headers="$ac_config_headers config.h"
 
-ac_config_files="$ac_config_files Makefile dispak/Makefile simh/Makefile po/Makefile.in"
+ac_config_files="$ac_config_files Makefile dispak/Makefile po/Makefile.in"
 
-ac_config_files="$ac_config_files besmtool/Makefile sbor/emd2simh/Makefile disbesm6/Makefile"
+ac_config_files="$ac_config_files besmtool/Makefile disbesm6/Makefile"
 
 
 # Checks for programs.
@@ -8510,4 +8510,3 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
