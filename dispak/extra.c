@@ -941,9 +941,6 @@ ret:
 				accex.r = c;
 				return E_SUCCESS;
 
-			case ' ':
-				continue;
-
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
 				/* Digit */
@@ -991,9 +988,7 @@ empty:			reg[14] = 6;
 			return E_SUCCESS;
 
 		case ' ':
-			//if (skip_spaces)
-				continue;
-			//goto empty;
+			continue;
 
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':

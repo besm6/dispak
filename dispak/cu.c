@@ -590,10 +590,6 @@ mtj:
 				STORE(acc, 1);
 				reg[016] = 1;
 				err = ddio();
-				if (trace == 1) {
-					fprintf(stderr, "--- err = %d\n", err);
-					fflush(stderr);
-				}
 				STORE(r, 1);
 			} else
 				err = ddio();
