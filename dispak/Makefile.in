@@ -286,7 +286,7 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-dispak$(EXEEXT): $(dispak_OBJECTS) $(dispak_DEPENDENCIES) $(EXTRA_dispak_DEPENDENCIES) 
+dispak$(EXEEXT): $(dispak_OBJECTS) $(dispak_DEPENDENCIES) $(EXTRA_dispak_DEPENDENCIES)
 	@rm -f dispak$(EXEEXT)
 	$(LINK) $(dispak_OBJECTS) $(dispak_LDADD) $(LIBS)
 
@@ -538,8 +538,7 @@ all-local: ../disks/2099
 install-data-local: ${datadir}/besm6/2048 ${datadir}/besm6/2053 \
 	${datadir}/besm6/2148 ${datadir}/besm6/2153 ${datadir}/besm6/2113 \
 	${datadir}/besm6/2248 ${datadir}/besm6/4001 ${datadir}/besm6/4002 \
-	${datadir}/besm6/4003 ${datadir}/besm6/2099 \
-	${datadir}/besm6/2063 ${datadir}/besm6/2086
+	${datadir}/besm6/2099 ${datadir}/besm6/2063 ${datadir}/besm6/2086
 
 ${datadir}/besm6/2048: ../disks/sbor2048.bin
 	${install_sh_DATA} $< ${datadir}/besm6/
@@ -569,11 +568,7 @@ ${datadir}/besm6/4001: ../disks/tape1.bin
 	${install_sh_DATA} $< ${datadir}/besm6/
 	ln -s -f `basename $<` $@
 
-${datadir}/besm6/4002: ../disks/tape2.bin
-	${install_sh_DATA} $< ${datadir}/besm6/
-	ln -s -f `basename $<` $@
-
-${datadir}/besm6/4003: ../disks/tape3.bin
+${datadir}/besm6/4002: ../disks/tape23.bin
 	${install_sh_DATA} $< ${datadir}/besm6/
 	ln -s -f `basename $<` $@
 

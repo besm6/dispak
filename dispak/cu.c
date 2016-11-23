@@ -582,7 +582,21 @@ mtj:
 			err = deb();
 			goto errchk;
 		case 070:
-			err = ddio();
+			if (reg[016] == 0) {
+				/* control word in ACC (Dubna) */
+				alureg_t r;
+
+				LOAD(r, 1);
+				STORE(acc, 1);
+				reg[016] = 1;
+				err = ddio();
+				if (trace == 1) {
+					fprintf(stderr, "--- err = %d\n", err);
+					fflush(stderr);
+				}
+				STORE(r, 1);
+			} else
+				err = ddio();
 			goto errchk;
 		case 071:
 			err = term();

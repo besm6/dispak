@@ -1241,6 +1241,13 @@ e50(void)
 		return e50_14();
 	case 017:	/* Binary to decimal/float string, OS Dubna specific */
 		return e50_15();
+	case 067:	/* DATE*, OS Dubna specific */
+		acc.l = 077077774; /* mask */
+		acc.r = 0;
+		return E_SUCCESS;
+	case 074:	/* OS Dubna specific */
+		/* Looks like setting up an address to jump on error. */
+		return E_SUCCESS;
 	case 0100:	/* get account id */
 		acc = user;
 		return E_SUCCESS;
