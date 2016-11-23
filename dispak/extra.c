@@ -15,27 +15,47 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdint.h>
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
 #include "gost10859.h"
 #include "encoding.h"
 
+#define IS_DIGIT(c)	(c >= '0' && c <= '9')
+#define IS_CHAR(c)	((c >= 0101 && c <= 0132) || \
+			 (c >= 0140 && c <= 0136))
+
 static void     exform(void);
+
+static inline uchar
+peekbyte(ptr *bp)
+{
+	return core[bp->p_w].w_b[bp->p_b];
+}
 
 uchar
 getbyte(ptr *bp)
 {
-	uchar   c;
+	uchar   c = peekbyte(bp);
 
-	c = core[bp->p_w].w_b[bp->p_b++];
+	++bp->p_b;
+	if (bp->p_b == 6) {
+		bp->p_b = 0;
+		++bp->p_w;
+	}
+	return c;
+}
+
+void
+putbyte(ptr *bp, uchar c)
+{
+	core[bp->p_w].w_b[bp->p_b++] = c;
 
 	if (bp->p_b == 6) {
 		bp->p_b = 0;
 		++bp->p_w;
 	}
-
-	return c;
 }
 
 uint64_t
@@ -802,6 +822,397 @@ uint64_t userid() {
 	return (uint64_t) user.l << 24 | user.r;
 }
 
+/*
+ * Э50 12 - распознаватель текстовой строки (dесоdеr)
+ *
+ * А.П.Сапожников 22/12/80
+ */
+int
+e50_12(void)
+{
+	/*
+	 * Строка подается в isо или в соsу. Признак конца - байт '000' или '012'.
+	 * Информация для экстракода на сумматоре:
+	 *     1-15, 21-24 разряды - индексированный адрес начала строки или 0, если работа с
+	 *          текущего места строки.
+	 *     16 - признак поглощения пробелов
+	 *     17 - символы '*' и '/' суть буквы.
+	 *     18 - восьмеричные числа задаются без суффикса "в"
+	 *     19 - посимвольное сканирование
+	 *
+	 * Результатом работы является тип фрагмента в индекс-регистре 14
+	 * и сам фрагмент. Пробелы в начале фрагмента типа "число"
+	 * всегда сглатываются. Если фрагмент - число, то это число
+	 * выдается на сумматоре, а в РМР выдается (1-8 разряды) код
+	 * ограничителя и (25-33 разряды) позиция этого ограничителя во
+	 * входной строке. Если фрагмент - идентификатор или текст,
+	 * заключенный в апострофы, то он выдается на сумматоре (начало) и
+	 * в РМР (продолжение). Хвост текста заполняется пробелами. Если
+	 * текст более 12 символов, то этот факт запоминается, и остаток
+	 * текста будет выдан при следующем обращении.
+	 *
+	 * Возможные значения индекс-регистра 14:
+	 *     0 - ошибка, фрагмент не распознан
+	 *     1 - восьмеричное (123в, 99d, -10в)
+	 *     2 - целое (8000, -999)
+	 *     3 - вещественное (3.62, -3.141е-3)
+	 *     4 - идентификатор или текст в апострофах
+	 *     5 - то же, но длиной > 12 символов
+	 *     6 - пустой фрагмент
+	 */
+	int addr = acc.r & 077777;
+	//int skip_spaces = (acc.r >> 15) & 1;
+	int star_slash_flag = (acc.r >> 16) & 1;
+	//int octal_flag = (acc.r >> 17) & 1;
+	int char_mode = (acc.r >> 18) & 1;
+	int m = (acc.r >> 20) & 15;
+	static ptr bp;
+	static int index;
+	static char ident[128];
+	static int ident_len;
+	unsigned long long value;
+	int negate = 0;
+
+	//printf ("*** e50_12: acc = %08o%08o\n", acc.l, acc.r);
+	if (m)
+		addr += reg[m];
+
+	if (addr != 0) {
+		bp.p_w = addr;
+		bp.p_b = 0;
+		index = 0;
+	} else {
+		/* Continue from current place. */
+		if (bp.p_w == 0) {
+			/* Parse error. */
+			reg[14] = 0;
+			acc.r = acc.l = 0;
+			//printf ("    --- Parse error\n");
+			return E_SUCCESS;
+		}
+	}
+#if 0
+	ptr tp = bp;
+	while (tp.p_w != 0) {
+		int c = getbyte(&tp);
+		//printf ("-%03o", c);
+		printf ("%c", c ? c : '@');
+
+		if (c == 0 || c == 012)
+			break;
+	}
+	printf ("\n");
+#endif
+	if (char_mode) {
+		/*
+		 * В режиме посимвольного сканирования текущий символ строки выдается на
+		 * сумматоре (прижат влево и дополнен пробелами) и в 1-8 разряды РМР.
+		 * В 25-33 разрядах РМР выдается номер позиции символа в строке.
+		 * Пробелы при необходимости поглощаются.
+		 *
+		 * Тип символа выдается в индекс-регистре 14:
+		 *     0 - конец строки ('000','012')
+		 *     1 - цифра (0 - 9)
+		 *     2 - буква (а-z-я, по заказу: /, *)
+		 *     3 - разделитель (не цифра и не буква)
+		 */
+		for (;;) {
+			if (bp.p_w == 0) {
+				/* Error */
+				reg[14] = 0;
+				acc.l = acc.r = 0;
+				accex.l = index;
+				accex.r = 0;
+				//printf ("    --- Error\n");
+				return E_SUCCESS;
+			}
+			int c = getbyte(&bp);
+			index++;
+			switch (c) {
+			case 0:
+			case 012:
+				/* End of line */
+				//printf ("    --- End of line, index = %u\n", index);
+				reg[14] = 0;
+ret:
+				acc.l = c<<16 | ' '<<8 | ' ';
+				acc.r = ' '<<16 | ' '<<8 | ' ';
+				accex.l = index;
+				accex.r = c;
+				return E_SUCCESS;
+
+			case ' ':
+				continue;
+
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				/* Digit */
+				reg[14] = 1;
+				//printf ("    --- Digit = %d, index = %u\n", c-'0', index);
+				goto ret;
+
+			case '*':
+			case '/':
+				if (star_slash_flag)
+					goto letter;
+				goto delimiter;
+
+			default:
+				if (IS_CHAR(c)) {
+letter:					reg[14] = 2;
+					//printf ("    --- Letter = '%c', index = %u\n", c, index);
+					goto ret;
+				}
+delimiter:			reg[14] = 3;
+				//printf ("    --- Delimiter = '%c', index = %u\n", c, index);
+				goto ret;
+			}
+		}
+	}
+
+	for (;;) {
+		if (bp.p_w == 0) {
+			/* Error */
+			reg[14] = 0;
+			acc.l = acc.r = 0;
+			//printf ("    --- Error\n");
+			return E_SUCCESS;
+		}
+		int c = getbyte(&bp);
+		index++;
+		switch (c) {
+		case 0:
+		case 012:
+			/* Empty fragment */
+empty:			reg[14] = 6;
+			acc.l = 0;
+			acc.r = c;
+			//printf ("    --- Delimiter = '%c'\n", c);
+			return E_SUCCESS;
+
+		case ' ':
+			//if (skip_spaces)
+				continue;
+			//goto empty;
+
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+number:			value = c - '0';
+			for (;;) {
+				c = getbyte(&bp);
+				index++;
+
+				if (!IS_DIGIT(c))
+					break;
+
+				/* Currently only octal numbers are supported. */
+				value = (value << 3) + (c - '0');
+			}
+			if (negate)
+				value = -value;
+
+			/* Return value, delimiter and it's index */
+			reg[14] = 1;
+			acc.l = value >> 24;
+			acc.r = value & 0xffffff;
+			accex.l = index;
+			accex.r = c;
+			//printf ("    --- Number = %#jo, delimiter = '%c', index = %u\n", (intmax_t)value, c, index);
+			return E_SUCCESS;
+
+		case '-':
+			c = peekbyte(&bp);
+			if (IS_DIGIT(c)) {
+				negate = 1;
+				goto number;
+			}
+			c = '-';
+			goto empty;
+
+		case '*':
+		case '/':
+			if (star_slash_flag)
+				goto ident;
+			goto empty;
+
+		default:
+			if (!IS_CHAR(c))
+				goto empty;
+
+			/* Get identifier */
+ident:			ident[0] = c;
+			ident_len = 1;
+			memset(ident + 1, ' ', sizeof(ident) - 1);
+			while (ident_len < sizeof(ident)) {
+				c = getbyte(&bp);
+				index++;
+
+				if (!IS_CHAR(c) && !IS_DIGIT(c) &&
+				    (!star_slash_flag || (c != '*' && c != '/')))
+					break;
+
+				/* Currently only octal numbers are supported. */
+				ident[ident_len++] = c;
+			}
+
+			/* Only short identifier are supported for now */
+			reg[14] = 4;
+			acc.l = ident[0] << 16 | ident[1] << 8 | ident[2];
+			acc.r = ident[3] << 16 | ident[4] << 8 | ident[5];
+			accex.l = ident[6] << 16 | ident[7] << 8 | ident[8];
+			accex.r = ident[9] << 16 | ident[10] << 8 | ident[11];
+			//printf ("    --- Identifier = '%.*s'\n", ident_len, ident);
+			return E_SUCCESS;
+		}
+	}
+}
+
+/*
+ * Э50 К, где К = 13, 14, 15 - форматные преобразования из двоичного кода в ISO.
+ *
+ * Информация на сумматоре:
+ *	25-39, 45-48 - индексир.адрес binary
+ *	1-15, 21-24 - индексир.адрес выходной строки или 0, если результат
+ *		пишется с текущей позиции выходной строки.
+ *	40-44 - N: число позиций для размещения полученного текстового фрагмента.
+ *	16-19 - М: число цифр мантиссы.
+ *	20    - Т: тип нормализации текста числа внутри своего N-поля
+ *		(1 - вправо, 0 - влево).
+ *
+ * Результат работы для всех трех экстракодов: сумматор - длина
+ * выходной строки в символах, и.р.14 = 1, если превышен размер поля,
+ * иначе и.р.14 = 0. В каждый момент времени последнее
+ * слово выходной строки дополнено до конца пробелами.
+ */
+int
+e50_13(void)
+{
+	/*
+	 * К=13 - спецификация Н: перенос в выходную строку N символов входной
+	 * строки вinаrу. Т несущественно. При М=0 символы с кодами <40в
+	 * заменяются на пробелы.
+	 */
+	int src_addr = acc.l & 077777;
+	int dst_addr = acc.r & 077777;
+	int src_r = (acc.l >> 20) & 15;
+	int dst_r = (acc.r >> 20) & 15;
+	int n = (acc.l >> 15) & 0x1f;
+	int m = (acc.r >> 15) & 0x0f;
+
+	if (src_r)
+		src_addr += reg[src_r];
+	if (dst_r)
+		dst_addr += reg[dst_r];
+
+	printf ("*** e50_13: acc = %08o%08o, src = %05o, dst = %05o, n/m/t = %d/%d\n",
+		acc.l, acc.r, src_addr, dst_addr, n, m);
+	//TODO
+	return E_UNIMP;
+}
+
+int
+e50_14(void)
+{
+	/*
+	 * К=14 - спецификация О: преобразование вinаrу по формату О<n>
+	 * со вставкой одного пробела после каждых м восьмеричных цифр.
+	 */
+	int src_addr = acc.l & 077777;
+	int dst_addr = acc.r & 077777;
+	int src_r = (acc.l >> 20) & 15;
+	int dst_r = (acc.r >> 20) & 15;
+	int n = (acc.l >> 15) & 0x1f;
+	//TODO: int m = (acc.r >> 15) & 0x0f;
+	int right_align = (acc.r >> 19) & 1;
+	char buf[64];
+	int i;
+	static ptr bp;
+
+	if (src_r)
+		src_addr += reg[src_r];
+	if (dst_r)
+		dst_addr += reg[dst_r];
+
+	//printf ("*** e50_14: acc = %08o%08o, src = %05o, dst = %05o, n/m/t = %d/%d/%d\n",
+	//	acc.l, acc.r, src_addr, dst_addr, n, m, right_align);
+
+	if (dst_addr != 0) {
+		bp.p_w = dst_addr;
+		bp.p_b = 0;
+	} else {
+		/* Continue from current place. */
+		if (bp.p_w == 0) {
+			/* Error. */
+			reg[14] = 1;
+			acc.r = acc.l = 0;
+			//printf ("    --- Error\n");
+			return E_SUCCESS;
+		}
+	}
+
+	word_t *wp = &core[src_addr];
+	uint64_t w = (uint64_t) wp->w_b[0] << 40 | (uint64_t) wp->w_b[1] << 32 |
+		(uint) wp->w_b[2] << 24 | (uint) wp->w_b[3] << 16 |
+		wp->w_b[4] << 8 | wp->w_b[5];
+
+	snprintf(buf, sizeof(buf), "%016jo", (intmax_t)w);
+	//printf ("    --- value = %s\n", buf);
+
+	/* Right align */
+	if (right_align)
+		for (i=16; i<n; i++)
+			putbyte(&bp, ' ');
+
+	/* Print N digits */
+	char *p = buf;
+	if (n < 16)
+		p += 16 - n;
+	for (i=0; i<n && i<16; i++)
+		putbyte(&bp, *p++);
+
+	/* Left align */
+	if (!right_align)
+		for (i=16; i<n; i++)
+			putbyte(&bp, ' ');
+
+	/* Fill last word with spaces */
+	while (bp.p_b != 0)
+		putbyte(&bp, ' ');
+
+	reg[14] = 0;
+	acc.r = n;
+	acc.l = 0;
+	return E_SUCCESS;
+}
+
+int
+e50_15(void)
+{
+	/*
+	 * К=15 - спецификация G: преобразование по формату I<N> если М=0,
+	 * иначе по формату F<N>.<М>, а если не влезаем в размер поля, то
+	 * по формату Е<N>.<М>. Если задано М>12, число безусловно
+	 * выдается по Е-формату.
+	 */
+	int src_addr = acc.l & 077777;
+	int dst_addr = acc.r & 077777;
+	int src_r = (acc.l >> 20) & 15;
+	int dst_r = (acc.r >> 20) & 15;
+	int n = (acc.l >> 15) & 0x1f;
+	int m = (acc.r >> 15) & 0x0f;
+	int right_align = (acc.r >> 19) & 1;
+
+	if (src_r)
+		src_addr += reg[src_r];
+	if (dst_r)
+		dst_addr += reg[dst_r];
+
+	printf ("*** e50_15: acc = %08o%08o, src = %05o, dst = %05o, n/m/t = %d/%d/%d\n",
+		acc.l, acc.r, src_addr, dst_addr, n, m, right_align);
+	//TODO
+	return E_UNIMP;
+}
+
 int
 e50(void)
 {
@@ -822,6 +1233,14 @@ e50(void)
 		return elfun(EF_EXP);
 	case 7:
 		return elfun(EF_ENTIER);
+	case 014:	/* Text line decoder, OS Dubna specific */
+		return e50_12();
+	case 015:	/* Binary to string, OS Dubna specific */
+		return e50_13();
+	case 016:	/* Binary to octal string, OS Dubna specific */
+		return e50_14();
+	case 017:	/* Binary to decimal/float string, OS Dubna specific */
+		return e50_15();
 	case 0100:	/* get account id */
 		acc = user;
 		return E_SUCCESS;
