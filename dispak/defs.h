@@ -4,6 +4,7 @@
 #include "config.h"
 #include <sys/types.h>
 #include <locale.h>
+#include <stdint.h>
 #include "gettext.h"
 
 #ifndef HAVE_ULONG
@@ -16,22 +17,6 @@ typedef unsigned short  ushort;
 
 #ifndef HAVE_UINT
 typedef unsigned int    uint;
-#endif
-
-#ifndef int64_t
-#  if SIZEOF_LONG == 8
-#    define int64_t long
-#  elif SIZEOF_LONG_LONG == 8
-#    define int64_t long long
-#  endif
-#endif
-
-#ifndef uint64_t
-#  if SIZEOF_LONG == 8
-#    define uint64_t unsigned long
-#  elif SIZEOF_LONG_LONG == 8
-#    define uint64_t unsigned long long
-#  endif
 #endif
 
 #include <sys/param.h>
