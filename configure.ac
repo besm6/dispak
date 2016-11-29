@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT([besm6], [2.5], [http://groups.google.com/group/besm6/topics])
 #AM_INIT_AUTOMAKE(besm6, 2.5, no-define)
 AC_CONFIG_SRCDIR([dispak/extra.c])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_FILES([Makefile dispak/Makefile po/Makefile.in])
 AC_CONFIG_FILES([besmtool/Makefile disbesm6/Makefile])
