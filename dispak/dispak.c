@@ -95,6 +95,7 @@ enum {
 	OPT_OUTPUT_RAW,
 	OPT_DECODE_OUTPUT,
 	OPT_PUNCH_BINARY,
+	OPT_PUNCH_UNICODE,
 	OPT_BOOTSTRAP,
 	OPT_TRACE_E64,
 	OPT_PATH,
@@ -122,6 +123,7 @@ static struct option longopts[] = {
 	{ "decode-output",	0,	0,	OPT_DECODE_OUTPUT },
 	{ "punch",		1,	0,	'c'		},
 	{ "punch-binary",	0,	0,	OPT_PUNCH_BINARY },
+	{ "punch-unicode",	0,	0,	OPT_PUNCH_UNICODE },
 	{ "bootstrap",		0,	0,	OPT_BOOTSTRAP	},
 	{ "path",		1,	0,	OPT_PATH	},
 	{ "input-encoding",	1,	0,	OPT_INPUT_ENCODING },
@@ -267,6 +269,11 @@ main(int argc, char **argv)
 			break;
 		case OPT_PUNCH_BINARY:	/* punch in binary format */
 			punch_binary = 1;
+                        punch_unicode = 0;
+			break;
+		case OPT_PUNCH_UNICODE:	/* punch in unicode format (Braille) */
+			punch_unicode = 1;
+                        punch_binary = 0;
 			break;
 		case OPT_BOOTSTRAP:	/* no supervisor, for bootstrapping 2009 */
 			bootstrap = 1;

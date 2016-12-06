@@ -391,6 +391,64 @@ const unsigned char text_to_gost [64] =
 		GOST_CHE,		GOST_YU,
 };
 
+/* Although Linux seems to support ungetc up to 1000 chars, let's not rely on it */
+static char ungetbuf[1000];            /* enough for one punchcard */
+static int ungetptr;
+static int
+utf8_getc_raw (FILE *fin)
+{
+    int c1, c2, c3;
+    /* We only ungetc ASCII chars '.' and 'O'. */
+    c1 = ungetptr ? ungetbuf[--ungetptr] : getc (fin);
+    if (c1 < 0 || ! (c1 & 0x80))
+        return c1;
+    c2 = getc (fin);
+    if (! (c1 & 0x20))
+        return (c1 & 0x1f) << 6 | (c2 & 0x3f);
+    c3 = getc (fin);
+    return (c1 & 0x0f) << 12 | (c2 & 0x3f) << 6 | (c3 & 0x3f);
+
+}
+/* A card image is pushed back in the form of dots and Os only if well-formed.
+ * Stray Braille patterns are ignored.
+ */
+static void
+read_braille(int cur, FILE *fin)
+{
+    static char bits[12][80];
+    int count = 0, line, col;
+    do {
+        line = count / 40 * 4;
+        col = count % 40 * 2;
+        bits[line][col] = cur & 0x01;
+        bits[line+1][col] = cur & 0x02;
+        bits[line+2][col] = cur & 0x04;
+        bits[line][col+1] = cur & 0x08;
+        bits[line+1][col+1] = cur & 0x10;
+        bits[line+2][col+1] = cur & 0x20;
+        bits[line+3][col] = cur & 0x40;
+        bits[line+3][col+1] = cur & 0x80;
+        if (++count % 40 == 0 && (cur = utf8_getc_raw(fin)) != '\n') {
+            /* Eat line feed */
+            break;
+        }
+        if (count == 3*40) break;
+        cur = utf8_getc_raw(fin);
+        if (cur < 0x2800 || cur > 0x28FF) break;
+    } while (count != 3*40);
+
+    if (count != 3*40) {
+	ungetbuf[ungetptr++] = cur;
+        return;
+    }
+    for (line = 11; line >= 0; --line) {
+        ungetbuf[ungetptr++] = '\n';
+        for (col = 79; col >= 0; --col) {
+            ungetbuf[ungetptr++] = bits[line][col] ? 'O' : '.';
+        }
+    }
+}
+
 /*
  * Read Unicode symbol from file.
  * Convert from UTF-8 encoding.
@@ -398,20 +456,15 @@ const unsigned char text_to_gost [64] =
 static int
 utf8_getc (FILE *fin)
 {
-	int c1, c2, c3;
-again:
-	c1 = getc (fin);
-	if (c1 < 0 || ! (c1 & 0x80))
-		return c1;
-	c2 = getc (fin);
-	if (! (c1 & 0x20))
-		return (c1 & 0x1f) << 6 | (c2 & 0x3f);
-	c3 = getc (fin);
-	if (c1 == 0xEF && c2 == 0xBB && c3 == 0xBF) {
-		/* Skip zero width no-break space. */
-		goto again;
-	}
-	return (c1 & 0x0f) << 12 | (c2 & 0x3f) << 6 | (c3 & 0x3f);
+    int c;
+    /* Skip zero width no-break space. */
+    while ((c = utf8_getc_raw (fin)) == 0xFEFF);
+    if (0x2800 <= c && c <= 0x28FF) {
+        /* Read a card image encoded as Braille pattern and convert to dots and Os */
+        read_braille(c, fin);
+        return utf8_getc(fin);
+    }
+    return c;
 }
 
 /*

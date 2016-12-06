@@ -29,6 +29,7 @@ typedef union {
 
 /*
  * Convert floating-point value from BESM-6 format to IEEE 754.
+ * to.d = ldexp(ldexp(from.mr, -40)+ldexp(from.ml & 0xffff, -16), from.o-64);
  */
 #define BESM_TO_IEEE(from,to) {\
 	to.u.left32 = ((from.o - 64 + 1022) << 20) |\
@@ -355,7 +356,6 @@ elfun(int fun)
 	if ((acc.ml == 0) && (acc.mr == 0)) {
 qzero:
 		acc = zeroword;
-		return E_SUCCESS;
 	} else
 	if ((acc.ml & 0x8000) == 0) {   /* normalize */
 		while (acc.ml == 0) {

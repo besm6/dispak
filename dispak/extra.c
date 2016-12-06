@@ -1402,6 +1402,7 @@ e50(void)
 		acc.r = reg[016] = pc;
 		return E_SUCCESS;
 	default:
+		fprintf(stderr, "E50 %04o\n", reg[016]);
 		return E_UNIMP;
 	}
 }
@@ -1827,6 +1828,28 @@ ttin(uchar flags, ushort a1, ushort a2)
 	return E_SUCCESS;
 }
 
+void punch_braille(FILE * fd, unsigned char * sp, int left) {
+    // Print 3 lines of 40 Braille characters per line representing a punchcard.
+    unsigned char bytes[3][40];
+    int line, col;
+    memset(bytes, 0, 120);
+    for (line = 0; line < 12; ++line) {
+        for (col = 0; col < 80; ++col) {
+            int idx = 1 + 12*line + (col>=40) + col/8;
+            int bit = idx >= left ? 0 : (sp[idx] >> (7-col%8)) & 1;
+            if (bit)
+                bytes[line/4][col/2] |= "\x01\x08\x02\x10\x04\x20\x40\x80"[line%4*2+col%2];
+        }
+    }
+    for (line = 0; line < 3; ++line) {
+        for (col = 0; col < 40; ++col) {
+            fprintf(fd, "\342%c%c", 0240+(bytes[line][col] >> 6), 0200 + (bytes[line][col] & 077));
+        }
+        putc('\n', fd);
+    }
+    putc('\n', fd);
+}
+
 int punch(ushort a1, ushort a2)
 {
 	static FILE * fd = 0;
@@ -1844,8 +1867,15 @@ int punch(ushort a1, ushort a2)
 	}
 	sp = core[a1].w_b;
 	max = (a2 - a1 + 1) * 6;
-	while (bytecnt < max) {
-		if (bytecnt % 6) {
+        if (punch_unicode) {
+            while (bytecnt < max) {
+                punch_braille(fd, sp, max-bytecnt);
+                sp += 144;
+                bytecnt += 144;
+            }
+        } else {
+            while (bytecnt < max) {
+                if (bytecnt % 6) {
 			if (punch_binary)
 				fputc(*sp, fd);
 			else if (bytecnt % 6) {
@@ -1879,9 +1909,9 @@ int punch(ushort a1, ushort a2)
 			if (bytecnt % 144 == 0)
 				fputc('\n', fd);
 		}
-	}
-	/* if a partial card was punched, flush it */
-	if ((a2 - a1 + 1) % 24 != 0) {
+	    }
+	    /* if a partial card was punched, flush it */
+	    if ((a2 - a1 + 1) % 24 != 0) {
 		int remain = 24 - (a2 - a1 + 1) % 24;
 		while (remain--) {
 			if (punch_binary)
@@ -1894,8 +1924,9 @@ int punch(ushort a1, ushort a2)
 		}
 		if (! punch_binary)
 			fputc('\n', fd);
-	}
-	return E_SUCCESS;
+	    }
+    }
+    return E_SUCCESS;
 }
 
 int

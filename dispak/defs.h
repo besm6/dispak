@@ -293,7 +293,7 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 	(R).ml |= ((R).ml & 0x10000) << 1; \
 }
 #define PACK(R) { \
-	(R).l = (long) ((R).o << 17) | (R).ml; \
+	(R).l = (long) ((R).o << 17) | ((R).ml & 0x1ffff); \
 /*	(R).r = (R).mr; */ \
 }
 
@@ -352,6 +352,7 @@ EXTERN int              stats;          /* gather statistics flag */
 EXTERN char             *lineptr;
 EXTERN char		*punchfile;	/* card puncher file */
 EXTERN uchar		punch_binary;	/* punch in binary format */
+EXTERN uchar		punch_unicode;	/* punch in unicode format */
 EXTERN char             *ifile;         /* source code  */
 EXTERN jmp_buf          top;
 EXTERN ddisk_t          disks[NDISKS];  /* disks & drums        */
