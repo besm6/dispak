@@ -37,6 +37,10 @@ typedef union {
 			(from.mr >> 19);\
 	to.u.right32 = (from.mr & 0x7ffff) << 13;\
 }
+#define ABS(x) ((x) < 0 ? -x : x)
+#define BESM_TO_INT64(from,to) {\
+	to = from.mr | (int64_t)from.ml << 24;\
+}
 
 int
 add()
@@ -169,28 +173,23 @@ aox()
 /*
  * non-restoring division
  */
-double
-nrdiv (double n, double d)
+uint64_t
+nrdiv (int64_t nn, int64_t dd, int * expdiff)
 {
-	int ne, de, re;
-	double nn, dd, res, q, eps;
+	int64_t res = 0;
+	int64_t q = 1LL << 40;
+	nn *= 2;
+	dd *= 2;
+	if (nn >= dd)
+		nn/=2, (*expdiff)++;
 
-	nn = frexp(n, &ne);
-	dd = frexp(d, &de);
-
-	res = 0, q = 0.5;
-	eps = ldexp(q, -40);		/* run for 40 bits of precision */
-
-	if (fabs(nn) >= fabs(dd))
-		nn/=2, ne++;
-
-	while (q > eps) {
-		if (nn == 0.0)
+	while (q > 1) {
+		if (nn == 0)
 			break;
 
-		if (fabs(nn) < 0.25)
+		if (ABS(nn) < (1LL << 39)) {
 			nn *= 2;	/* magic shortcut */
-		else if ((nn > 0) ^ (dd > 0)) {
+		} else if ((nn > 0) ^ (dd > 0)) {
 			res -= q;
 			nn = 2*nn+dd;
 		} else {
@@ -199,19 +198,16 @@ nrdiv (double n, double d)
 		}
 		q /= 2;
 	}
-	res = frexp(res, &re);
-
-	return ldexp(res, re+ne-de);
+	return res / 2;
 }
 
 int
 b6div()
 {
-#ifdef DIV_NATIVE
 	int             neg, o;
 	unsigned long   i, c, bias = 0;
-	math_t          dividend, divisor, quotient;
-
+	int64_t         dividend, divisor, quotient;
+	int expdiff;
 	accex.o = accex.ml = accex.mr = 0;
 	neg = NEGATIVE(acc) != NEGATIVE(enreg);
 	if (NEGATIVE(acc))
@@ -225,117 +221,22 @@ qzero:
 		acc = zeroword;
 		return E_SUCCESS;
 	}
-	if ((acc.ml & 0x8000) == 0) {   /* normalize */
-		while (acc.ml == 0) {
-			if (!acc.mr)
-				goto qzero;
-			bias += 16;
-			acc.ml = acc.mr >> 8;
-			acc.mr = (acc.mr & 0xff) << 16;
-		}
-		for (i = 0x8000, c = 0; (i & acc.ml) == 0; ++c)
-			i >>= 1;
-		bias += c;
-		acc.ml = ((acc.ml << c) | (acc.mr >> (24 - c))) & 0xffff;
-		acc.mr = (acc.mr << c) & 0xffffff;
-	}
 
-	BESM_TO_IEEE(acc, dividend);
-	dividend.u.left32 -= bias << 20;
-	BESM_TO_IEEE(enreg, divisor);
+	BESM_TO_INT64(acc, dividend);
+	BESM_TO_INT64(enreg, divisor);
 
-	/* quotient.d = dividend.d / divisor.d; */
-	quotient.d = nrdiv(dividend.d, divisor.d);
+	expdiff = acc.o - enreg.o;
+	quotient = nrdiv(dividend, divisor, &expdiff);
 
-	o = quotient.u.left32 >> 20;
-	o = o - 1022 + 64;
-	if (o < 0)
+	if (expdiff < -64)
 		goto qzero;
-	acc.o = o & 0x7f;
-	acc.ml = ((quotient.u.left32 & 0xfffff) | 0x100000) >> 5;
-	acc.mr = ((quotient.u.left32 & 0x1f) << 19) |
-			(quotient.u.right32 >> 13);
+	acc.o = (expdiff+64) & 0x7f;
+	acc.ml = quotient >> 24;
+	acc.mr = quotient & 0xffffff;
 	if (neg)
 		NEGATE(acc);
-	if ((o > 0x7f) && !dis_exc)
+	if ((expdiff > 63) && !dis_exc)
 		return E_OVFL;
-
-#else
-#define NEGNORM(R) do { \
-	if (NEGATIVE(R)) \
-		(R).ml |= 0x20000; \
-	(R).mr = (~(R).mr & 0xffffff) + 1; \
-	(R).ml = (~(R).ml + ((R).mr >> 24)) & 0x3ffff; \
-	(R).mr &= 0xffffff; \
-	if ((((R).ml >> 1) ^ (R).ml) & 0x10000) { \
-		(R).mr = (((R).mr >> 1) | ((R).ml << 23)) & 0xffffff; \
-		(R).ml >>= 1; \
-		++(R).o; \
-	} else if (!((((R).ml >> 1) ^ (R).ml) & 0x8000)) { \
-		(R).ml = ((R).ml << 1 | (R).mr >> 23) & 0x3ffff; \
-		(R).mr = ((R).mr << 1) & 0xffffff; \
-		--(R).o; \
-	} \
-	if (NEGATIVE(R)) \
-		(R).ml |= 0x20000; \
-} while (0)
-
-	alureg_t        a, b[2], bit, r[2];
-	register        sgn;
-	int             neg;
-
-	accex.o = accex.ml = accex.mr = 0;
-	neg = NEGATIVE(acc) != NEGATIVE(enreg);
-	a = acc;
-	b[0] = b[1] = enreg;
-	if (NEGATIVE(enreg))
-		NEGNORM(b[1]);
-	else
-		NEGNORM(b[0]);
-	acc.o = acc.o - enreg.o + 64;
-	if (b[0].o != b[1].o) {
-	    /* the divisor is a power of 2 */
-	    if (neg != NEGATIVE(acc))
-		NEGNORM(acc);
-	    if (!NEGATIVE(enreg))
-		acc.o++;
-	    return E_SUCCESS;
-	}
-	if (NEGATIVE(acc))
-		NEGNORM(acc);
-	a = acc;
-	memset(r, 0, sizeof(r));
-	bit.ml = 0x10000;
-	bit.mr = 0;
-
-	for (sgn = (a.ml >> 16) & 1;;) {
-		r[sgn].ml |= bit.ml;
-		r[sgn].mr |= bit.mr;
-		bit.mr = ((bit.mr >> 1) | (bit.ml << 23)) & 0xffffff;
-		bit.ml >>= 1;
-		a.mr += b[sgn].mr;
-		a.ml = (a.ml + b[sgn].ml + (a.mr >> 24)) & 0x1ffff;
-		a.mr &= 0xffffff;
-		if (!bit.mr && !bit.ml || !(a.ml & 0xffff) && !a.mr)
-			break;
-		sgn = (a.ml >> 16) & 1;
-		a.ml = ((a.ml << 1) | (a.mr >> 23)) & 0x1ffff;
-		a.mr = (a.mr << 1) & 0xffffff;
-	}
-
-	acc.ml = r[0].ml - r[1].ml - (r[0].mr < r[1].mr);
-	acc.mr = r[0].mr - r[1].mr;
-	acc.mr &= 0xffffff;
-	acc.ml &= 0x3ffff;
-
-	if (acc.ml >> 16) {
-		acc.mr = ((acc.mr >> 1) | (acc.ml << 23)) & 0xffffff;
-		acc.ml >>= 1;
-		++acc.o;
-	}
-	if (neg)
-		NEGNORM(acc);
-#endif
 	return E_SUCCESS;
 }
 
