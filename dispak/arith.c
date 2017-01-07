@@ -412,7 +412,7 @@ mul()
 	acc.mr &= 0xffffff;
 	acc.ml &= 0xffff;
 
-	if (neg) {
+	if (neg && (accex.mr || accex.ml || acc.mr || acc.ml)) {
 		accex.mr = (~accex.mr & 0xffffff) + 1;
 		accex.ml = (~accex.ml & 0xffff) + (accex.mr >> 24);
 		accex.mr &= 0xffffff;
