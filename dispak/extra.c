@@ -1651,7 +1651,6 @@ ddio(void)
 		r = disk_readi(disks[u].diskh,
 			(zone + disks[u].offset) & 0xfff,
                                (char *)(core + addr), (char *)convol + addr, cwords, iomode);
-		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		if (uil.i_opcode & 1 && disks[u].diskno < 2048) {
 			/* check words requested for tape */
 			put_check_words(u, zone, addr, 0 != (uir.i_opcode & 0200));
@@ -1678,7 +1677,6 @@ ddio(void)
                 memcpy(convol + addr + (uil.i_addr & 3) * 256,
                        cvbuf + sector * 256,
                        256);
-		core[0].w_s[0] = core[0].w_s[1] = core[0].w_s[2] = 0;
 		for (u = addr + (uil.i_addr & 3) * 256;
 		     u < addr + (uil.i_addr & 3) * 256 + 256; ++u)
 			cflags[u] &= ~C_UNPACKED;

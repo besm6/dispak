@@ -260,11 +260,14 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 #define NEGATIVE(R)     (((R).ml & 0x10000) != 0)
 
 #define LOAD(reg,addr) \
-{ \
+if (addr & 077777) { \
 	uchar *_cp = core[addr].w_b; \
 	(reg).l = ((long) _cp[0] << 16) | (_cp[1] << 8) | _cp[2]; \
 	(reg).r = ((long) _cp[3] << 16) | (_cp[4] << 8) | _cp[5]; \
-}
+} else if (1) { \
+	(reg).l = 0; \
+	(reg).r = 0; \
+} else
 
 #define STORE(reg,addr) \
 	if (addr) { \
