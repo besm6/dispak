@@ -573,11 +573,11 @@ a3over:;
 		case GOST_E:
 			if (array) {
 				nextc();
-wrap:				if (ch != GOST_K) goto fs; nextc();
-				if (ch != GOST_O) goto fs; nextc();
-				if (ch != GOST_H) goto fs; nextc();
-				if (ch != GOST_E) goto fs; nextc();
-				if (ch != GOST_TSE) goto fs; nextc();
+wrap:				if (ch != GOST_K && ch != GOST_F) goto fs; nextc();
+				if (ch != GOST_O && ch != GOST_I) goto fs; nextc();
+				if (ch != GOST_H && ch != GOST_N) goto fs; nextc();
+				if (ch != GOST_E && ch != GOST_I) goto fs; nextc();
+				if (ch != GOST_TSE && ch != GOST_S) goto fs; nextc();
 				return 0;
 			} else {
 				array = 1;
@@ -588,7 +588,7 @@ wrap:				if (ch != GOST_K) goto fs; nextc();
 					return -1;
 				}
 				NEXT_NS();
-				if (ch == GOST_K)
+				if (ch == GOST_K || ch == GOST_F)
 					goto wrap;
 			}
 			break;
