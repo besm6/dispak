@@ -320,11 +320,11 @@ view_line (unsigned char *p, int nwords,
 	putchar ('\n');
 }
 
-void print_cosy_word (unsigned char * p)
+void print_cosy_word (char *p)
 {
 	int i;
 	for (i = 0; i < 6; ++i) {
-		switch (p[i]) {
+		switch ((unsigned char) p[i]) {
 		case ' ' ... 0177:
 			print_iso_char(p[i]);
 			break;
@@ -332,7 +332,7 @@ void print_cosy_word (unsigned char * p)
 			putchar('\n');
 			return;
 		case 0201 ... 0377:
-			printf("%*c", p[i]-0200, ' ');
+			printf("%*c", p[i] & 0177, ' ');
 			break;
 		default:
 			putchar('`');
@@ -390,7 +390,7 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 			utf8_puts ("\n", stdout);
 		addr = 0;
 		for (p = buf; p < buf + ZBYTES; p += 6*nwords_per_line) {
-			if (show_file) {				
+			if (show_file) {
 				print_cosy_word (p);
 			} else if (memcmp (p, prev, 6*nwords_per_line) != 0) {
 				printf ("%04o.%04o:", z, addr & 01777);

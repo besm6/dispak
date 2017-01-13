@@ -43,7 +43,9 @@ unpack(pc)
 }
 
 int
-_abort(err) {
+_abort(err)
+        int     err;
+{
 	lasterr = err;
 	if (ninter) {
 		ninter--;
@@ -113,7 +115,6 @@ ulong   run() {
 	ushort                  cnt, r, err = 0;
 	int                     i;
 	ulong                   icount = 0;
-	uchar                   mem;
 	uchar                   last_op = 0;
 	uint64_t		tsc = rdtsc();
 
@@ -166,7 +167,6 @@ FOREVER
 	}
 	nextpc = ADDR(pc + 1);
 	pcm = pc | supmode;
-	mem = 0;
 
 	cf = cflags[pcm];
 	if (!(cf & C_UNPACKED) && !right)

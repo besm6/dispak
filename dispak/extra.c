@@ -1367,15 +1367,15 @@ e50(void)
 		return E_SUCCESS;
 	case 0202:	/* get error description */
 		{
-			uchar           *sp;
+			uchar           *sp, *dp;
 			unsigned        di;
 
 			if (acc.r > E_MAX)
 				acc.r = 0;
 			sp = (uchar*) _(errtxt[acc.r]);
+			dp = core[reg[015]].w_b;
 			for (di = 0; di < 18; ++di)
-				core[reg[015]].w_b[di] = *sp ?
-					utf8_to_gost(&sp) : GOST_SPACE;
+				*dp++ = *sp ? utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
 	case 01212:	/* discard print stream */

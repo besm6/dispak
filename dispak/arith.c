@@ -204,8 +204,7 @@ nrdiv (int64_t nn, int64_t dd, int * expdiff)
 int
 b6div()
 {
-	int             neg, o;
-	unsigned long   i, c, bias = 0;
+	int             neg;
 	int64_t         dividend, divisor, quotient;
 	int expdiff;
 	accex.o = accex.ml = accex.mr = 0;

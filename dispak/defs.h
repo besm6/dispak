@@ -220,7 +220,7 @@ EXTERN reg_t    supmode;                /* 0100000 - supervisor mode    */
 EXTERN reg_t    sup_mmap;               /* 0100000 - supervisor mem map */
 
 EXTERN union    {
-	uchar   gc_au[1];               /* arith cond jump modes        */
+	uchar   gc_au[4];               /* arith cond jump modes        */
 	uint    gl_au;
 }       augroup;
 
@@ -260,7 +260,7 @@ EXTERN uchar    dis_norm;               /* disable normalization        */
 #define NEGATIVE(R)     (((R).ml & 0x10000) != 0)
 
 #define LOAD(reg,addr) \
-if (addr & 077777) { \
+if ((addr) & 077777) { \
 	uchar *_cp = core[addr].w_b; \
 	(reg).l = ((long) _cp[0] << 16) | (_cp[1] << 8) | _cp[2]; \
 	(reg).r = ((long) _cp[3] << 16) | (_cp[4] << 8) | _cp[5]; \
