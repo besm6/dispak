@@ -35,9 +35,9 @@ OPCODE_DEFAULT
 
 struct opcode {
 	const char *name;
-	opcode_e opcode;
+	int opcode;
 	int mask;
-	int type;
+	opcode_e type;
 	int extension;
 } op[] = {
   /* name,	pattern,  mask,	opcode type,		insn type,    alias */
@@ -252,10 +252,10 @@ findsym (uint32 addr)
     last = &dummy;
     for (p=stab; p<stab+stabindex; ++p) {
         if ((int)p->n_value < (int)addr-fuzz || (int)p->n_value > (int)addr+fuzz ||
-            abs(p->n_value-addr) >= leastfuzz)
+            abs((int)p->n_value - (int)addr) >= leastfuzz)
             continue;
         last = p;
-        leastfuzz = abs(p->n_value-addr);
+        leastfuzz = abs((int)p->n_value - (int)addr);
     }
     if (last->n_type & W_UNSET)
         return &dummy;
@@ -698,7 +698,7 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
     int opcode, arg1, arg2, reg, i;
     if (cur->addr < addr || cur->addr > limit)
         return 0;
-    if (right) 
+    if (right)
         opcode = memory[cur->addr] & 0xffffff;
     else
         opcode = memory[cur->addr] >> 24;
