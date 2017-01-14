@@ -453,7 +453,7 @@ void bpw (int);
 void okno (int);
 
 /* cu.c */
-void unpack (ushort);
+void unpack (unsigned);
 
 /* dpout.c */
 void pout_decode (char *fout);

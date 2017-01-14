@@ -28,7 +28,7 @@ extern ulong icnt;
 
 void
 unpack(pc)
-	ushort  pc;
+	unsigned pc;
 {
 	word_t         *wp = &core[pc];
 	uinstr_t       *ip = uicore[pc];
