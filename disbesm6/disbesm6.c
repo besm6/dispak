@@ -23,6 +23,7 @@ OPCODE_ADDRMOD,		/* МОДА, МОД */
 OPCODE_REG2,		/* УИА, СЛИА */
 OPCODE_IMMEX,		/* Э50, ... */
 OPCODE_ADDREX,		/* Э64, Э70, ... */
+OPCODE_STOP,		/* Э74 */
 OPCODE_DEFAULT
 } opcode_e;
 
@@ -101,7 +102,7 @@ struct opcode {
   { "Э71",	0x039000, 0x0bf000, OPCODE_ADDREX,	BASIC },
   { "Э72",	0x03a000, 0x0bf000, OPCODE_ADDREX,	BASIC },
   { "Э73",	0x03b000, 0x0bf000, OPCODE_ADDREX,	BASIC },
-  { "Э74",	0x03c000, 0x0bf000, OPCODE_IMMEX,	BASIC },
+  { "Э74",	0x03c000, 0x0bf000, OPCODE_STOP,	BASIC },
   { "Э75",	0x03d000, 0x0bf000, OPCODE_ADDREX,	BASIC },
   { "Э76",	0x03e000, 0x0bf000, OPCODE_IMMEX,	BASIC },
   { "Э77",	0x03f000, 0x0bf000, OPCODE_IMMEX,	BASIC },
@@ -483,6 +484,7 @@ prinsn (uint32 memaddr, uint32 opcode)
         break;
     case OPCODE_IMMEX:
     case OPCODE_IMM:
+    case OPCODE_STOP:
         fputs (op[i].name, stdout);
         printf (AFTER_INSTRUCTION);
         if (arg1) printf ("'%o'", arg1);
@@ -526,6 +528,11 @@ prinsn (uint32 memaddr, uint32 opcode)
     }
 }
 
+int is_good_gost(int s)
+{
+	return s < 020 || s >= 040 && s <= 0115;
+}
+
 void prconst (uint32 addr, uint32 limit)
 {
     int flags = 0;
@@ -540,7 +547,7 @@ void prconst (uint32 addr, uint32 limit)
 
         for (i = 0; i < 6; ++i) {
             bytes[i] = (memory[addr] >> (40-8*i)) & 0xff;
-            if (bytes[i] >= 0140)
+            if (!is_good_gost(bytes[i]))
                 good_gost = 0;
         }
         if (flags & W_GOST || good_gost)  {
@@ -731,6 +738,7 @@ int analyze_insn (actpoint_t * cur, int right, int addr, int limit) {
     case OPCODE_ILLEGAL:
         // mflags[cur->addr] |= W_DATA;
         return 0;
+    case OPCODE_STOP:
     case OPCODE_IRET:
         // Usually tranfers control outside of the program being disassembled
         if (!right)
