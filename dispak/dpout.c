@@ -109,7 +109,7 @@ decode (FILE *fout, char *data)
 {
 	if (done)
 		return;
-	memcpy (para, data, PARASZ);
+	memmove (para, data, PARASZ);
 	if (! bytes_total) {
 		bytes_total = (para[4] << 8 & 0x300) | para[5];
 		if (bytes_total) {
@@ -126,7 +126,7 @@ decode (FILE *fout, char *data)
 			dump(fout, PARASZ);
 		} else {
 			if (bytes_tail) {
-				memcpy(para + bytes_total - 6,
+				memmove(para + bytes_total - 6,
 					para + bytes_total - bytes_tail,
 					bytes_tail);
 				dump(fout, bytes_total - 6 + bytes_tail);
