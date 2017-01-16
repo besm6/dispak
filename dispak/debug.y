@@ -25,6 +25,8 @@
 
 static alureg_t wd;
 static void pfloat();
+static void prcmd(int);
+static void prword(int);
 
 void yyerror (char*);
 int yylex (void);
@@ -102,13 +104,7 @@ command:        /* void */
 	|       octal '-'
 			{ int   i;
 				for (i = 0; i < 8; ++i) {
-					if ($1) {
-						LOAD(wd, $1);
-						printf ("%08o%08o\n",
-								wd.l, wd.r);
-					} else
-						printf ("0000000000000000\n");
-					$1 += 1;
+					prword($1 + i);
 				}
 			}
 	|       octal 't'
@@ -165,24 +161,7 @@ command:        /* void */
 	|       octal '/'
 			{ int   i;
 				for (i = 0; i < 8; ++i) {
-					LOAD(wd, $1);
-					if (wd.l & 0x80000)
-						printf ("%02o %02o %05o\t",
-						(uint)wd.l >> 20, (uint)(wd.l >> 15) & 037,
-						(uint)wd.l & 077777);
-					else
-						printf ("%02o %03o %04o\t",
-						(uint)wd.l >> 20, (uint)(wd.l >> 12) & 0177,
-						(uint)wd.l & 07777);
-					if (wd.r & 0x80000)
-						printf ("%02o %02o %05o\n",
-						(uint)wd.r >> 20, (uint)(wd.r >> 15) & 037,
-						(uint)wd.r & 077777);
-					else
-						printf ("%02o %03o %04o\n",
-						(uint)wd.r >> 20, (uint)(wd.r >> 12) & 0177,
-						(uint)wd.r & 07777);
-					$1 += 1;
+					prcmd($1 + i);
 				}
 			}
 	|	octal 'd'
@@ -227,6 +206,18 @@ command:        /* void */
 			}
 			cmdflg = 0;
 			}
+	|	dump octal '-' octal
+			{ int   i;
+				for (i = $2; i <= $4; ++i) {
+					if (convol[i] & CV_NUMBER) {
+						printf("C ");
+						prword(i);
+					} else {
+						printf("K ");
+						prcmd(i);
+					}
+				}
+			}
 	;
 
 go:             'g';
@@ -243,6 +234,7 @@ breakpoint:     'b';
 bpw:            'W';
 jhb:            'j';
 ec:             'e';
+dump:		'd';
 
 word:           word odigit
 			{
@@ -314,6 +306,36 @@ o5:             odigit odigit odigit odigit odigit
 			{ $$ = $1 << 12 | $2 << 9 | $3 << 6 | $4 << 3 | $5; }
 	;
 %%
+
+static void
+prcmd (int addr)
+{
+	LOAD(wd, addr);
+	if (wd.l & 0x80000)
+		printf ("%02o %02o %05o\t",
+		(uint)wd.l >> 20, (uint)(wd.l >> 15) & 037,
+		(uint)wd.l & 077777);
+	else
+		printf ("%02o %03o %04o\t",
+		(uint)wd.l >> 20, (uint)(wd.l >> 12) & 0177,
+		(uint)wd.l & 07777);
+	if (wd.r & 0x80000)
+		printf ("%02o %02o %05o\n",
+		(uint)wd.r >> 20, (uint)(wd.r >> 15) & 037,
+		(uint)wd.r & 077777);
+	else
+		printf ("%02o %03o %04o\n",
+		(uint)wd.r >> 20, (uint)(wd.r >> 12) & 0177,
+		(uint)wd.r & 07777);
+}
+
+static void
+prword (int addr)
+{
+	LOAD(wd, addr);
+	printf ("%04o %04o %04o %04o\n",
+	(uint)wd.l >> 12, (uint)wd.l & 07777, (uint)wd.r >> 12, (uint)wd.r & 07777);
+}
 
 int
 yylex ()
