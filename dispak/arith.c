@@ -32,10 +32,13 @@ typedef union {
  * to.d = ldexp(ldexp(from.mr, -40)+ldexp(from.ml & 0xffff, -16), from.o-64);
  */
 #define BESM_TO_IEEE(from,to) {\
+	if (!from.ml && !from.mr) to.u.left32 = to.u.right32 = 0;\
+	else {\
 	to.u.left32 = ((from.o - 64 + 1022) << 20) |\
 			((from.ml << 5) & 0xfffff) |\
 			(from.mr >> 19);\
 	to.u.right32 = (from.mr & 0x7ffff) << 13;\
+	}\
 }
 #define ABS(x) ((x) < 0 ? -x : x)
 #define BESM_TO_INT64(from,to) {\
