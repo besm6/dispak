@@ -704,6 +704,7 @@ errchk:
 				acc.mr = (acc.mr << (fcnt = 16 + cnt)) |
 						(accex.ml << cnt) |
 						(accex.mr >> (24 - cnt));
+				accex.ml = accex.mr >> (8-cnt);
 				accex.mr <<= fcnt;
 				acc.o -= fcnt;
 				rr = acc.r & ((1l << fcnt) - 1);
