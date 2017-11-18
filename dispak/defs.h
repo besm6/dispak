@@ -463,6 +463,6 @@ void pout_decode_file (char *inname, char *outname);
 int input (unsigned);
 
 /* vsinput.c */
-int vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit);
+int vsinput(unsigned (*cget)(void), void (*diag)(const char *), int edit);
 
 #endif  /* defs_h */

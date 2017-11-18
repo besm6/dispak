@@ -27,7 +27,7 @@ static uchar			ch;
 static unsigned                 iaddr;
 static unsigned                 user_hi, user_lo;
 static unsigned                 (*_nextc[2])(void);
-static void                     (*diagftn)(char *);
+static void                     (*diagftn)(const char *);
 static uchar                    *stpsp;
 static struct passport          psp;
 static FILE                     *ibuf;
@@ -37,7 +37,7 @@ static ushort                   chunk;
 
 static unsigned                 nextc(void);
 static int                      scan(int edit);
-static void                     inperr(char *);
+static void                     inperr(const char *);
 static uchar                    *passload(char *src);
 static unsigned                 nextcp(void);
 static int                      dump(uchar tag, uint64_t w);
@@ -61,7 +61,7 @@ NEXT_NS()
 }
 
 int
-vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit)
+vsinput(unsigned (*cget)(void), void (*diag)(const char *), int edit)
 {
 	int     r;
 
@@ -653,7 +653,7 @@ nextc(void)
 }
 
 static void
-inperr(char *s)
+inperr(const char *s)
 {
 	char    buf[160];
 

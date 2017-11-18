@@ -196,7 +196,7 @@ cget(void)
 }
 
 static void
-diag(char *s)
+diag(const char *s)
 {
 	utf8_puts (s, stderr);
 }

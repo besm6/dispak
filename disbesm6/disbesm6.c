@@ -530,7 +530,7 @@ prinsn (uint32 memaddr, uint32 opcode)
 
 int is_good_gost(int s)
 {
-	return s < 020 || s >= 040 && s <= 0115;
+	return (s < 020) || (s >= 040 && s <= 0115);
 }
 
 void prconst (uint32 addr, uint32 limit)

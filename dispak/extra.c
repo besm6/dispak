@@ -2209,7 +2209,7 @@ nextw(void)
 static ushort   diagaddr;
 
 static void
-diag(char *s)
+diag(const char *s)
 {
 	uchar    *cp, *dp;
 
