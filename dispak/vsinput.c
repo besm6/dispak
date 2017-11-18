@@ -301,7 +301,7 @@ mpar:				inperr(_("НЕТ ПАРАМ"));
 				++cp;
 			psp.phys = get_octal (cp);
 			if (! psp.phys || (psp.phys >= 030 && psp.phys < 070) ||
-    			    psp.phys >= 0100)
+			    psp.phys >= 0100)
 				goto mpar;
 
 		} else if ((art[0] == GOST_EL && art[1] == GOST_E && art[2] == GOST_H) ||
@@ -573,12 +573,22 @@ a3over:;
 		case GOST_E:
 			if (array) {
 				nextc();
-wrap:				if (ch != GOST_K && ch != GOST_F) goto fs; nextc();
-				if (ch != GOST_O && ch != GOST_I) goto fs; nextc();
-				if (ch != GOST_H && ch != GOST_N) goto fs; nextc();
-				if (ch != GOST_E && ch != GOST_I) goto fs; nextc();
-				if (ch != GOST_TSE && ch != GOST_S) goto fs; nextc();
-				return 0;
+wrap:				if (ch == GOST_K) {
+					nextc(); if (ch != GOST_O) goto fs;
+					nextc(); if (ch != GOST_H) goto fs;
+					nextc(); if (ch != GOST_E) goto fs;
+					nextc(); if (ch != GOST_TSE) goto fs;
+					nextc();
+					return 0;
+				} else if (ch == GOST_F) {
+					nextc(); if (ch != GOST_I) goto fs;
+					nextc(); if (ch != GOST_N) goto fs;
+					nextc(); if (ch != GOST_I) goto fs;
+					nextc(); if (ch != GOST_S) goto fs;
+					nextc();
+					return 0;
+				} else
+					goto fs;
 			} else {
 				array = 1;
 				iaddr = 0;
