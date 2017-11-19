@@ -143,6 +143,7 @@ static int
 scan(int edit)
 {
 	int             i;
+	unsigned char	Atype = 0;
 
 	if (level == 0) {
 		if (ch == GOST_SHA) {
@@ -403,7 +404,6 @@ newaddr:
 
 	for (;;) {
 		uint64_t w = 0;
-		unsigned char	Atype;
 
 		switch (ch) {
 		case GOST_SPACE:
