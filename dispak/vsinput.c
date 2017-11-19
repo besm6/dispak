@@ -34,6 +34,7 @@ static FILE                     *ibuf;
 static int                      ibufno;
 static char                     ibufname[MAXPATHLEN];
 static ushort                   chunk;
+static uchar			AXcont;
 
 static unsigned                 nextc(void);
 static int                      scan(int edit);
@@ -78,6 +79,7 @@ vsinput(unsigned (*cget)(void), void (*diag)(char *), int edit)
 	diagftn = diag;
 	ibuf = NULL;
 	ibufno = 0;
+	AXcont = GOST_EOF;
 
 	nextc();
 	r = scan(edit);
@@ -391,10 +393,17 @@ newaddr:
 		}
 	}
 
+	if ((level == 0) && (AXcont != GOST_EOF)) {
+		ch = AXcont;
+		AXcont = GOST_EOF;
+		goto contAX;
+	}
+
 	nextc();        /* eat 'E'      */
 
 	for (;;) {
 		uint64_t w = 0;
+		unsigned char	Atype;
 
 		switch (ch) {
 		case GOST_SPACE:
@@ -459,6 +468,8 @@ noend:
 			break;
 		case GOST_A:
 			nextc();
+			Atype = ch;
+contAX:
 			if (ch == GOST_0 || ch == GOST_1) {
 			    uchar itm = (ch == GOST_0);
 			    unsigned pch = 0;
@@ -468,8 +479,19 @@ noend:
 				    do {
 					nextc();
 				    } while (ch == GOST_NEWLINE);
-				    if (ch == GOST_EOF)
-					goto noend;
+				    if (ch == GOST_EOF) {
+					if (level == 1) {
+						if (i) {
+						    w <<= (6 - i) * 8;
+						    if ((i = dump(W_DATA, w)))
+							    return i;
+						}
+						AXcont = Atype;
+						return 0;
+				        }
+					else
+						goto noend;
+				    }
 				    if (ch == GOST_DIAMOND &&
 					pch == GOST_UNDERLINE) {
 					if (i) {
