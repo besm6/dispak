@@ -54,6 +54,8 @@
  *		run in user mode only to build 2099 (no E66, cannot use -x)
  *	--no-insn-check
  *		the only non-insn word is at addr 0
+ *	--drum-dump=file
+ *		output contents of drum 27 to file
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,6 +80,7 @@ static struct   {
 };
 
 char		*punchfile = NULL;
+char		*drum_dump_filename = NULL;
 ulong           icnt;
 
 static char     *pout_raw = NULL;
@@ -89,6 +92,7 @@ extern void     ib_cleanup(void);
 static int      sv_load(void);
 void            pout_dump(char *filename);
 void            stat_out(void);
+static void	drum_dump(int drum_no, char *filename);
 
 enum {
 	OPT_CYRILLIC,
@@ -101,6 +105,7 @@ enum {
 	OPT_PATH,
 	OPT_INPUT_ENCODING,
 	OPT_NO_INSN_CHECK,
+	OPT_DRUM_DUMP,
 };
 
 /* Table of options. */
@@ -128,6 +133,7 @@ static struct option longopts[] = {
 	{ "path",		1,	0,	OPT_PATH	},
 	{ "input-encoding",	1,	0,	OPT_INPUT_ENCODING },
 	{ "no-insn-check",	0,	0,	OPT_NO_INSN_CHECK },
+	{ "drum-dump",		1,	0,	OPT_DRUM_DUMP   },
 	{ 0,			0,	0,	0		},
 };
 
@@ -163,6 +169,7 @@ usage ()
 	fprintf (stderr, _("  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 cp866\n"));
 	fprintf (stderr, _("  --bootstrap            used to generate contents of the system disk\n"));
 	fprintf (stderr, _("  --no-insn-check        all words but at addr 0 are treated as insns\n"));
+	fprintf (stderr, _("  --drum-dump=file       output drum 27 to file\n"));
 
 	fprintf (stderr, _("\nReport bugs to %s\n"), PACKAGE_BUGREPORT);
 	exit (1);
@@ -290,6 +297,9 @@ main(int argc, char **argv)
 		case OPT_NO_INSN_CHECK:
 			no_insn_check = 1;
 			break;
+		case OPT_DRUM_DUMP:
+			drum_dump_filename = optarg;
+			break;
 		}
 	}
 	if (bootstrap) {
@@ -386,6 +396,8 @@ main(int argc, char **argv)
 	}
 	if (pout_enable && xnative && pout_raw)
 		pout_dump(pout_raw);
+	if (drum_dump_filename)
+		drum_dump(027, drum_dump_filename);
 	terminate();
 	ib_cleanup();
 	return (0);
@@ -487,4 +499,90 @@ stat_out(void)
 				optab[i].o_count,
 				100.0 * optab[i].o_count / total,
 				optab[i].o_ticks / optab[i].o_count);
+}
+
+/*
+ * Dump the contents of
+ */
+static void
+print_insn(FILE *fp, int value)
+{
+    if (value & (1 << 19))
+        fprintf(fp, "%02o %02o %05o",
+                 (value >> 20) & 017, (value >> 15) & 037, value & 077777);
+    else
+        fprintf(fp, "%02o %03o %04o",
+                 (value >> 20) & 017, (value >> 12) & 0177, value & 07777);
+}
+
+/*
+ * Dump the contents of a drum to a file.
+ */
+static void
+drum_dump(int drum_no, char *filename)
+{
+	ushort	base = disks[drum_no].offset;
+	ushort  z, i, address;
+	int	last_nonempty_address;
+	FILE    *fp;
+	char	buf[6144], dataflag[1024];
+	uint64_t word;
+
+	fp = fopen(filename, "w");
+	if (! fp) {
+		perror(filename);
+		return;
+	}
+	address = 0;
+	last_nonempty_address = -1;
+	for (z=0; z<32; z++) {
+		if (disk_readi(drumh, base + z, buf, dataflag, NULL, DISK_MODE_LOUD) != DISK_IO_OK) {
+			break;
+		}
+		for (i=0; i<1024; i++, address++) {
+			word = (uint64_t) (uchar)buf[i*6]   << 40 |
+			       (uint64_t) (uchar)buf[i*6+1] << 32 |
+			       (uint64_t) (uchar)buf[i*6+2] << 24 |
+			       (uint64_t) (uchar)buf[i*6+3] << 16 |
+			       (uint64_t) (uchar)buf[i*6+4] << 8 |
+			       (uint64_t) (uchar)buf[i*6+5];
+
+			if (word == 0 && dataflag[i]) {
+				/* Skip empty space. */
+				continue;
+			}
+
+			if (last_nonempty_address < 0) {
+				/* Print base address. */
+				fprintf(fp, "в %o\n", address);
+			} else {
+				/* Print uninitialized data. */
+				int a;
+				for (a=last_nonempty_address+1; a<address; a++) {
+					fprintf(fp, "с 0 ; %05o\n", a);
+				}
+			}
+
+			if (! dataflag[i]) {
+				/* Instruction */
+				fprintf(fp, "к ");
+				print_insn(fp, word >> 24);
+				fprintf(fp, ", ");
+				print_insn(fp, word);
+				fprintf(fp, " ; ");
+			}
+
+			/* Data */
+			fprintf(fp, "с %04o %04o %04o %04o",
+				(int) (word >> 36) & 07777,
+				(int) (word >> 24) & 07777,
+				(int) (word >> 12) & 07777,
+				(int) word & 07777);
+
+			/* Address. */
+			fprintf(fp, " ; %05o\n", address);
+			last_nonempty_address = address;
+		}
+	}
+	fclose(fp);
 }
