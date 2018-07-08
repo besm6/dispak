@@ -190,6 +190,11 @@ unicode_to_gost (unsigned short val)
 		case 0x83: return 0122;
 		}
 		break;
+	case 0x23:
+		switch ((unsigned char) val) {
+		case 0xe8: return 0020;
+		}
+		break;
 	case 0x25:
 		switch ((unsigned char) val) {
 		case 0xc7: return 0127;
