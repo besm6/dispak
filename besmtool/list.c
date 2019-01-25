@@ -59,6 +59,13 @@ convert_text_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes
 }
 
 static void
+convert_itm_to_unicode (unsigned short *to, unsigned char *from, unsigned bytes)
+{
+	while (bytes-- > 0)
+		*to++ =	gost_to_unicode (itm_to_gost [*from++]);
+}
+
+static void
 view_unicode (unsigned short *buf, int buf_len, int offset)
 {
 	int i, limit;
@@ -98,6 +105,7 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 	unsigned limit, z, pattern_len;
 	unsigned char buf [ZBYTES * 2];
 	unsigned short buf_gost [ZBYTES * 2], buf_koi7 [ZBYTES * 2], buf_text [8192 * 2];
+	unsigned short buf_itm [ZBYTES * 2];
 	unsigned short pattern_unicode [ZBYTES];
 
 	utf8_puts ("Searching for '", stdout);
@@ -124,6 +132,8 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 	convert_gost_to_unicode (buf_gost, buf, ZBYTES);
 	convert_koi7_to_unicode (buf_koi7, buf, ZBYTES);
 	convert_text_to_unicode (buf_text, buf, ZBYTES);
+	convert_itm_to_unicode (buf_itm, buf, ZBYTES);
+
 	/* Searching in every 2 zones. */
 	while (z < limit-1) {
 		if (disk_read (disk, z+1, (char*) buf+ZBYTES) != DISK_IO_OK)
@@ -131,18 +141,22 @@ search_disk (unsigned diskno, unsigned char *pattern, unsigned start, unsigned l
 		convert_gost_to_unicode (buf_gost+ZBYTES, buf+ZBYTES, ZBYTES);
 		convert_koi7_to_unicode (buf_koi7+ZBYTES, buf+ZBYTES, ZBYTES);
 		convert_text_to_unicode (buf_text+8192, buf+ZBYTES, ZBYTES);
+		convert_itm_to_unicode (buf_itm+ZBYTES, buf+ZBYTES, ZBYTES);
 
 		search (pattern_unicode, pattern_len, buf_gost, ZBYTES*2, z, "GOST");
 		search (pattern_unicode, pattern_len, buf_koi7, ZBYTES*2, z, "KOI7");
 		search (pattern_unicode, pattern_len, buf_text, 8192*2, z, "TEXT");
+		search (pattern_unicode, pattern_len, buf_itm, ZBYTES*2, z, "ITM");
 
 		memcpy (buf_gost, buf_gost+ZBYTES, ZBYTES*sizeof(unsigned short));
 		memcpy (buf_koi7, buf_koi7+ZBYTES, ZBYTES*sizeof(unsigned short));
 		memcpy (buf_text, buf_text+8192, 8192*sizeof(unsigned short));
+		memcpy (buf_itm, buf_itm+ZBYTES, ZBYTES*sizeof(unsigned short));
 		++z;
 	}
 	/* Searching in last zone. */
 	search (pattern_unicode, pattern_len, buf_gost, ZBYTES, z, "GOST");
 	search (pattern_unicode, pattern_len, buf_koi7, ZBYTES, z, "KOI7");
 	search (pattern_unicode, pattern_len, buf_text, 8192, z, "TEXT");
+	search (pattern_unicode, pattern_len, buf_itm, ZBYTES, z, "ITM");
 }
