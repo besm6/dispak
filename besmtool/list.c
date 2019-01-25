@@ -1,13 +1,66 @@
 #include <stdio.h>
+#include <ftw.h>
 #include "besmtool.h"
 #include "disk.h"
 #include "encoding.h"
 
+static int
+print_disk(const char *dirname, const struct stat *sb, int tflag)
+{
+	unsigned nzones = sb->st_size / (8*1024 + 64);
+	unsigned dirlen;
+	const char *filename;
+
+	if ((sb->st_mode & S_IFMT) == S_IFDIR) {
+		/* Ignore directories. */
+		return 0;
+	}
+
+	filename = strrchr(dirname, '/');
+	if (filename && filename[1] != '0' && nzones > 0) {
+		dirlen = filename - dirname;
+		filename++;
+		printf("%-7s 0%-10o %.*s\n", filename, nzones, dirlen, dirname);
+	}
+	return 0;
+}
+
+/*
+ * List all disks.
+ * TODO: sort disks by name.
+ */
 void
 list_all_disks (void)
 {
-	printf ("List all disks.\n");
-	printf ("*** Not implemented yet. Sorry.\n");
+	char *p, *q;
+	char path[256];
+
+	if (! disk_path) {
+		disk_find_path (path, 0);
+	}
+
+	printf("Disk    Size        Directory\n");
+	printf("-----------------------------\n");
+
+	p = disk_path;
+	while (p) {
+		/* Copy first element of p to path.
+		 * Advance p to the next element. */
+		q = strchr (p, ':');
+		if (q) {
+			if (q > p)
+				memcpy (path, p, q-p);
+			path [q-p] = 0;
+			p = q+1;
+		} else {
+			strcpy (path, p);
+			p = 0;
+		}
+
+		/* List all disk images here. */
+		//printf ("Directory: %s\n", path);
+		ftw(path, print_disk, 10);
+	}
 }
 
 void

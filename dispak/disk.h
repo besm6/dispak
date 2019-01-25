@@ -34,6 +34,7 @@ extern  int     disk_setmode(void *disk_descr, u_int mode);
 extern  int     disk_readi(void *disk_descr, u_int zone, char* buf, char* convol, char* check, u_int mode);
 extern  int     disk_writei(void *disk_descr, u_int zone, char* buf, char* convol, char *check, u_int mode);
 extern	void	disk_local_path(char *buf);
+extern	void	disk_find_path(char *fname, u_int diskno);
 
 #define disk_read(a,b,c)    disk_readi(a,b,c,NULL,NULL,DISK_MODE_QUIET)
 #define disk_write(a,b,c)   disk_writei(a,b,c,NULL,NULL,DISK_MODE_QUIET)
