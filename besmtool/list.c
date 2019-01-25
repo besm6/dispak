@@ -17,7 +17,7 @@ print_disk(const char *dirname, const struct stat *sb, int tflag)
 	}
 
 	filename = strrchr(dirname, '/');
-	if (filename && filename[1] != '0' && nzones > 0) {
+	if (filename && nzones > 0 && filename[1] >= '1' && filename[1] <= '9') {
 		dirlen = filename - dirname;
 		filename++;
 		printf("%-7s 0%-10o %.*s\n", filename, nzones, dirlen, dirname);
