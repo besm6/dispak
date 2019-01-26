@@ -4,30 +4,97 @@
 #include "disk.h"
 #include "encoding.h"
 
-static int
-print_disk(const char *dirname, const struct stat *sb, int tflag)
-{
-	unsigned nzones = sb->st_size / (8*1024 + 64);
-	unsigned dirlen;
-	const char *filename;
+/*
+ * Sorted list of disk images.
+ */
+typedef struct _list_item_t {
+	unsigned	    disknum;
+	unsigned	    nzones;
+	struct _list_item_t *next;
+	char		    dirname[1];
+} list_item_t;
 
-	if ((sb->st_mode & S_IFMT) == S_IFDIR) {
-		/* Ignore directories. */
+static list_item_t *list_head;
+
+/*
+ * Callback for ftw(): store info about disk image.
+ */
+static int
+add_disk(const char *dirname, const struct stat *sb, int tflag)
+{
+	unsigned nzones, dirlen, disknum;
+	const char *filename;
+	char *endptr;
+	struct stat st = *sb;
+
+	if ((st.st_mode & S_IFMT) == S_IFLNK) {
+		/* Symlink: get target status. */
+		if (stat(dirname, &st) < 0) {
+			perror(dirname);
+			return 0;
+		}
+	}
+	if ((st.st_mode & S_IFMT) != S_IFREG) {
+		/* Ignore directories and special files. */
+		return 0;
+	}
+
+	nzones = st.st_size / (8*1024 + 64);
+	if (nzones <= 0) {
+		/* Ignore empty files. */
 		return 0;
 	}
 
 	filename = strrchr(dirname, '/');
-	if (filename && nzones > 0 && filename[1] >= '1' && filename[1] <= '9') {
-		dirlen = filename - dirname;
-		filename++;
-		printf("%-7s 0%-10o %.*s\n", filename, nzones, dirlen, dirname);
+	if (! filename || filename[1] == '0') {
+		/* Filename should not start with 0. */
+		return 0;
+	}
+	dirlen = filename - dirname;
+	filename++;
+
+	disknum = strtoul(filename, &endptr, 10);
+	if (*endptr != 0) {
+		/* Ignore non-numeric names. */
+		return 0;
+	}
+	//printf("%-7d 0%-10o %.*s\n", disknum, nzones, dirlen, dirname);
+
+	/* Allocate item data. */
+	list_item_t *item = (list_item_t *) malloc(sizeof(list_item_t) + dirlen);
+	if (!item)
+		return 0;
+	item->disknum = disknum;
+	item->nzones  = nzones;
+	strncpy(item->dirname, dirname, dirlen);
+	item->dirname[dirlen] = 0;
+	item->next = 0;
+
+	/* Insert item into the list, sorted by disknum. */
+	list_item_t **next;
+	for (next = &list_head; ; next = &(*next)->next) {
+		if (!*next) {
+			/* Append to the end of the list. */
+			*next = item;
+			return 0;
+		}
+		if ((*next)->disknum == disknum) {
+			/* Ignore duplicates. */
+			free(item);
+			return 0;
+		}
+		if ((*next)->disknum > disknum) {
+			/* Insert into the list. */
+			item->next = *next;
+			*next = item;
+			return 0;
+		}
 	}
 	return 0;
 }
 
 /*
  * List all disks.
- * TODO: sort disks by name.
  */
 void
 list_all_disks (void)
@@ -38,9 +105,6 @@ list_all_disks (void)
 	if (! disk_path) {
 		disk_find_path (path, 0);
 	}
-
-	printf("Disk    Size        Directory\n");
-	printf("-----------------------------\n");
 
 	p = disk_path;
 	while (p) {
@@ -59,7 +123,18 @@ list_all_disks (void)
 
 		/* List all disk images here. */
 		//printf ("Directory: %s\n", path);
-		ftw(path, print_disk, 10);
+		ftw(path, add_disk, 10);
+	}
+
+	/* Print the list. */
+	printf("Disk    Size        Directory\n");
+	printf("-----------------------------\n");
+	list_item_t *item, *next;
+	for (item = list_head; item; item = next) {
+		printf("%-7d 0%-10o %s\n", item->disknum,
+			item->nzones, item->dirname);
+		next = item->next;
+		free(item);
 	}
 }
 
