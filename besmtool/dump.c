@@ -3,6 +3,7 @@
 #include "disk.h"
 #include "encoding.h"
 
+#if !defined(MADLEN)
 const char *opname_short_bemsh [64] = {
 	"зп",	"зпм",	"рег",	"счм",	"сл",	"вч",	"вчоб",	"вчаб",
 	"сч",	"и",	"нтж",	"слц",	"знак",	"или",	"дел",	"умн",
@@ -18,6 +19,24 @@ static const char *opname_long_bemsh [16] = {
 	"э20",	"э21",	"мода",	"мод",	"уиа",	"слиа",	"по",	"пе",
 	"пб",	"пв",	"выпр",	"стоп",	"пио",	"пино",	"э36",	"цикл",
 };
+
+#else
+const char *opname_short_madlen [64] = {
+    "atx",  "stx",  "mod",  "xts",  "a+x",  "a-x",  "x-a",  "amx",
+    "xta",  "aax",  "aex",  "arx",  "avx",  "aox",  "a/x",  "a*x",
+    "apx",  "aux",  "acx",  "anx",  "e+x",  "e-x",  "asx",  "xtr",
+    "rte",  "yta",  "*32",  "ext",  "e+n",  "e-n",  "asn",  "ntr",
+    "ati",  "sti",  "ita",  "its",  "mtj",  "j+m",  "*46",  "*47",
+    "*50",  "*51",  "*52",  "*53",  "*54",  "*55",  "*56",  "*57",
+    "*60",  "*61",  "*62",  "*63",  "*64",  "*65",  "*66",  "*67",
+    "*70",  "*71",  "*72",  "*73",  "*74",  "*75",  "*76",  "*77",
+};
+
+static const char *opname_long_madlen [16] = {
+    "*20",  "*21",  "utc",  "wtc",  "vtm",  "utm",  "uza",  "u1a",
+    "uj",   "vjm",  "ij",   "stop", "vzm",  "v1m",  "*36",  "vlm",
+};
+#endif
 
 /*
  * Печать машинной инструкции с мнемоникой.
@@ -37,10 +56,17 @@ sprint_command (char *str, unsigned cmd)
 		if (cmd & 01000000)
 			addr |= 070000;
 	}
+#ifdef MADLEN
+	if (opcode & 0200)
+		strcpy (str, opname_long_madlen[(opcode >> 3) & 017]);
+	else
+		strcpy (str, opname_short_madlen[opcode]);
+#else
 	if (opcode & 0200)
 		strcpy (str, opname_long_bemsh [(opcode >> 3) & 017]);
 	else
 		strcpy (str, opname_short_bemsh [opcode]);
+#endif
 	str += strlen (str);
 	if (addr) {
 		if (addr >= 077700)

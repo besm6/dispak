@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
@@ -1208,6 +1209,31 @@ e50_15(void)
 	return E_UNIMP;
 }
 
+
+
+int
+e50_76(void)
+{
+	int addr = acc.r & 077777;
+	static ptr tp;
+
+	tp.p_w = addr;
+	tp.p_b = 0;
+	int c;
+
+	while (tp.p_w != 0) {
+		c = getbyte(&tp);
+		c = toupper(c);
+
+		printf ("%c", (c > 037) ? c : '@');
+
+		if (c == 0 || c == 012)
+			break;
+	}
+	printf ("\n");
+	return (E_SUCCESS);
+}
+
 int
 e50(void)
 {
@@ -1243,6 +1269,11 @@ e50(void)
 	case 074:	/* OS Dubna specific */
 		/* Looks like setting up an address to jump on error. */
 		return E_SUCCESS;
+	
+	case 076:	/* OS Dubna specific */
+		/* Term OUTPUT */
+		return e50_76();
+	
 	case 0100:	/* get account id */
 		acc = user;
 		return E_SUCCESS;
