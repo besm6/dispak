@@ -3,6 +3,7 @@
 #include "disk.h"
 #include "encoding.h"
 
+#if !defined(MADLEN)
 const char *opname_short_bemsh [64] = {
 	"зп",	"зпм",	"рег",	"счм",	"сл",	"вч",	"вчоб",	"вчаб",
 	"сч",	"и",	"нтж",	"слц",	"знак",	"или",	"дел",	"умн",
@@ -19,6 +20,7 @@ static const char *opname_long_bemsh [16] = {
 	"пб",	"пв",	"выпр",	"стоп",	"пио",	"пино",	"э36",	"цикл",
 };
 
+#else
 const char *opname_short_madlen [64] = {
     "atx",  "stx",  "mod",  "xts",  "a+x",  "a-x",  "x-a",  "amx",
     "xta",  "aax",  "aex",  "arx",  "avx",  "aox",  "a/x",  "a*x",
@@ -34,7 +36,7 @@ static const char *opname_long_madlen [16] = {
     "*20",  "*21",  "utc",  "wtc",  "vtm",  "utm",  "uza",  "u1a",
     "uj",   "vjm",  "ij",   "stop", "vzm",  "v1m",  "*36",  "vlm",
 };
-
+#endif
 
 /*
  * Печать машинной инструкции с мнемоникой.
