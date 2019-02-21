@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "defs.h"
 #include "disk.h"
 #include "iobuf.h"
