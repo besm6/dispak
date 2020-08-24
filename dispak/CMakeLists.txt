@@ -11,6 +11,9 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+include(CheckIncludeFile)
+check_include_file("string.h" HAVE_STRING_H)
+
 #
 # Need Bison parser.
 #
@@ -36,5 +39,7 @@ add_executable(dispak
     "${CMAKE_CURRENT_BINARY_DIR}/debug.c"
 )
 target_link_libraries(dispak PUBLIC m)
-target_compile_options(dispak PRIVATE -Wall -g -O3 -ffast-math -fomit-frame-pointer)
+target_compile_options(dispak PRIVATE
+    -Wall -g -O3 -ffast-math -fomit-frame-pointer -DHAVE_STRING_H=${HAVE_STRING_H}
+)
 install(TARGETS dispak DESTINATION bin)
