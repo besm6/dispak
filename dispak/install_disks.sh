@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Download BESM-6 disk images.
+# Usage:
+#   install_disks.sh <destdir> <bindir> disk1 disk2 ...
+#
 
 #
 # Download disk images from this site.
@@ -6,28 +11,29 @@
 ARCHIVE="http://www.besm6.org/download/disks"
 
 #
-# Put disk images into this directory.
+# First argument is a destination directory where disk images should be stored.
 #
-DISKDIR="$HOME/.besm6"
+DESTDIR="$1"
+shift
 
 #
-# First argument is a binary directory where disk 2099 is stored.
+# Second argument is a binary directory where disk 2099 is stored.
 #
 BINARY="$1"
 shift
 
-mkdir -p -v "$DISKDIR"
-cd "$DISKDIR" || (
-    echo "Cannot create $DISKDIR"
+mkdir -p -v "$DESTDIR"
+cd "$DESTDIR" || (
+    echo "Cannot create $DESTDIR"
     exit 1
 )
 
 for d in $*
 do
     if [ ! -e "$d" ]; then
-        if [ "$d" = "2099" ]; then
-            # Copy disk 2099 from binary directory.
-            cp -v -a $BINARY/2099 $DISKDIR/2099
+        if [ -f "$BINARY/$d" ]; then
+            # Copy disk from binary directory.
+            cp -v -a "$BINARY/$d" "$DESTDIR/$d"
         else
             # Download disk from website.
             case "$d" in
