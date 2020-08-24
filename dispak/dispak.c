@@ -171,7 +171,6 @@ usage ()
 	fprintf (stderr, _("  --no-insn-check        all words but at addr 0 are treated as insns\n"));
 	fprintf (stderr, _("  --drum-dump=file       output drum 27 to file\n"));
 
-	fprintf (stderr, _("\nReport bugs to %s\n"), PACKAGE_BUGREPORT);
 	exit (1);
 }
 
