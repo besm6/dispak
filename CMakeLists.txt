@@ -25,10 +25,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# Build version name as: tag.revcount-hash
-# For example: v1.0.123-abcdef9
-add_definitions("-DPACKAGE_VERSION=\"${GIT_TAG}.${GIT_REVCOUNT}-${GIT_HASH}\"")
-
 #
 # Build subdirectories.
 #

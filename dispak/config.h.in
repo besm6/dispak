@@ -1,2 +1,10 @@
-/* Short name of this project. */
+/*
+ * Short name of this project.
+ */
 #define PACKAGE_NAME "@CMAKE_PROJECT_NAME@"
+
+/*
+ * Version string as: tag.revcount-hash.
+ * For example: v2.6.123-abcdef9
+ */
+#define PACKAGE_VERSION "@GIT_TAG@.@GIT_REVCOUNT@-@GIT_HASH@"
