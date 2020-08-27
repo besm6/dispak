@@ -1,0 +1,42 @@
+ШИФР 419999^
+ФИЗО МБ21^
+ТРАК 32^
+ЛИСТ 0-27^
+ВХОД 37^
+ВРЕМ 240^
+АЦПУ 3^
+ЛЕНТ 57(2148-300)^
+ЛЕНТ 30(1С)^
+РОСП 0^
+АВОС^
+СПЕЦ^
+Е
+В 37
+К 00 010 0042
+К 15 24 00100
+К 00 066 0011 00 000 0100
+С 0000 0000 0057 0002
+EВ1A3
+$АЛГО
+_begin
+    _comment Целые числа от 2 до 100: решето Эратосфена;
+    _integer _array prime [2:100];
+    _integer n, k;
+
+    _comment Обнулим prime;
+    _for n:=2 _step 1 _until 100 _do
+        prime [n] := 1;
+
+    _comment Вычислим prime;
+    _for n:=2 _step 1 _until 100 _do
+        _if prime[n] = 1 _then
+            _for k:=n+n _step n _until 100 _do
+                prime [k] := 0;
+
+    _comment Печать prime;
+    _for n:=2 _step 1 _until 100 _do
+        _if prime[n] = 1 _then
+            output (`z4d', n);
+_end
+``````
+ЕКОНЕЦ
