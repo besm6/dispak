@@ -92,14 +92,46 @@ def compare_output(output_name, expected_name):
         expected = file.readlines()
 
     import difflib
-    return difflib.unified_diff(expected, output)
+    return difflib.unified_diff(expected, output, n=0)
+
+#--------------------------------------------------------------
+# Match line against pattern.
+# A symbol # in pattern matches any symbol in the line.
+#
+def match_line(line, pattern):
+    for c, p in zip(line, pattern):
+        #print("---", c, p)
+        if p != '#' and c != p:
+            return False
+    return True
 
 #--------------------------------------------------------------
 # Compare the output with expected contents.
 #
 def process_wildcards(diff):
-    # TODO: match wildcards
-    return list(diff)
+    # Convert the iterator into list.
+    lines = list(diff)
+
+    # Remove header.
+    if len(lines) < 2 or \
+       lines[0] != "--- \n" or \
+       lines[1] != "+++ \n":
+        return lines
+    lines = lines[2:]
+
+    # Process groups of three lines and match wildcards.
+    while len(lines) >= 3:
+        if lines[0][0] == '@' and \
+           lines[1][0] == '-' and \
+           lines[2][0] == '+' and \
+           match_line(lines[2][1:], lines[1][1:]):
+            # Match: remove these three lines.
+            lines = lines[3:]
+        else:
+            # No match, return the rest.
+            return lines
+
+    return lines
 
 #--------------------------------------------------------------
 #
