@@ -46,12 +46,3 @@ To see, why a particular test fails, use:
 
     cd build
     ctest -V -R test-name
-
-To create a new test:
-  * Create a directory for it, say tests/mytest
-  * Put here a file with input for dispak, for example 'mytest.b6'.
-  * Create a file tests/mytest/options.txt with command line parameters for dispak. The file should contains at least a filename of the input file, i.e. mytest.b6.
-  * Create a file with expected output 'output.txt'. It can be obtained by manually running dispak and redirecting the output to a file. For example: "dispak mytest.b6 > output.txt".
-  * Add a line to the file tests/CMakeLists.txt for your test. Like this:
-
-    add_test(NAME mytest COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/mytest)
