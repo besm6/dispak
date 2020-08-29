@@ -66,7 +66,7 @@ def run_test(app, options, output_name):
 
     import subprocess
     with open(output_name, 'w') as file:
-        status = subprocess.call([app] + options, shell=False, stdout=file, stderr=subprocess.STDOUT)
+        status = subprocess.call([app] + options, shell=False, stdout=file)
 
     if arg.verbosity:
         print("Status:", status)

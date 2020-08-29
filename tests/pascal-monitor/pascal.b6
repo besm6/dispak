@@ -1,0 +1,35 @@
+шифр 419999 зс5^
+лен 67(2148)^
+eeв1а3
+*name Pascal
+*call yesmemory
+*     no list
+*     full list
+*system
+*personal library:670440
+*pascal
+(* Целые числа от 2 до 100: решето Эратосфена *)
+program main (output);
+var
+    prime: array [2..100] of boolean;
+    n, k: integer;
+_(
+    (* Обнулим prime *)
+    for n:=2 to 100 do
+        prime [n] := true;
+
+    (* Вычислим prime *)
+    for n:=2 to 100 do
+        if prime[n] then
+            for k:=2 to trunc (100/n) do
+                prime [n*k] := false;
+
+    (* Печать prime *)
+    for n:=2 to 100 do
+        if prime[n] then
+            write (n);
+_).
+*execute
+*end file
+``````
+еконец

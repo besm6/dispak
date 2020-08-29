@@ -1,0 +1,46 @@
+шифр 419999 зс5^
+лен 41(2048)^
+eeв1а3
+*name Trabb Pardo–Knuth
+*       no list
+*no load list
+*assem
+ etime: ,name,
+	,*53 , 010b
+	,aox , =6400000000000000
+	,a/x , =R50.0
+     13 ,uj  ,
+	,end ,
+*ftn
+        program main
+        print 1
+   1    format(' The TPK Algorithm')
+        time0 = etime(0)
+        call tpk
+        time1 = etime(0)
+        ntime = time1 - time0
+        print 1000, ntime
+        stop
+1000    format (' Time, seconds =', i6)
+        end
+c
+        subroutine tpk
+c From: https://rosettacode.org/wiki/Trabb_Pardo%E2%80%93Knuth_algorithm
+        dimension a(11)
+        data a/10, -1, 1, 2, 3, 4, 4.3, 4.305, 4.303, 4.302, 4.301/
+        fun(x) = sqrt(abs(x)) + 5.0 * x**3
+        do 3 i=1, 11
+            j = 12 - i
+            y = fun(a(j))
+            if (y .le. 400.0) goto 2
+   1            print 301, i, a(j)
+ 301            format(i10, f12.3, 18h *** too large ***)
+                go to 3
+   2        print 302, i, a(j), y
+ 302        format(i10, 2f12.3)
+   3        continue
+        end
+*execute
+*end file
+``````
+еконец

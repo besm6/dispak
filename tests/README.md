@@ -38,7 +38,7 @@ For example:
     cd tests/mytest
     dispak mytest.b6 > output.txt
 
-## Update
+## 5. Update the list
 
 File tests/CMakeLists.txt contains a list of all tests.
 You need to update it to include your test.
