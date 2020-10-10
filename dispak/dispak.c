@@ -79,7 +79,6 @@ static struct   {
 	{0,      0,      0,      0,		},
 };
 
-char		*punchfile = NULL;
 char		*drum_dump_filename = NULL;
 ulong           icnt;
 

@@ -21,7 +21,7 @@ eeв1а3
 *     subprocesses, including compilers and control directives
 *
 *PUNCH will enable punching of object modules in a non-text format
-*     (command line option --punch=file is needed). The contents of the 
+*     (command line option --punch=file is needed). The contents of the
 *     punch file can be included in the input batch literally if punched
 *     as dots and holes, or by an "include" line, if punched in binary:
 *     `N
@@ -301,10 +301,8 @@ C
       common/ptime/ptime,time0
       real ptime,time1,time0,walltm
       time1 = walltm(0)
-      nint1 = (time1-time0)
-      nint2 = (time1-ptime)
-      print 10, nint1, nint2, N,J,K,X1,X2,X3,X4
-   10   FORMAT (2i3,1X,3I7,4(1PE12.4))
+      print 10, N,J,K,X1,X2,X3,X4
+   10   FORMAT (1X,3I7,4(1PE12.4))
       ptime = time1
       RETURN
       END
