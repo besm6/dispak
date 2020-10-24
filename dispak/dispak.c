@@ -217,8 +217,8 @@ main(int argc, char **argv)
 
 	/* Set locale and message catalogs. */
 	setlocale (LC_ALL, "");
-	bindtextdomain (PACKAGE_NAME, "/usr/local/share/locale");
-	textdomain (PACKAGE_NAME);
+	(void)bindtextdomain (PACKAGE_NAME, "/usr/local/share/locale");
+	(void)textdomain (PACKAGE_NAME);
 
 	for (;;) {
 		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);
