@@ -385,7 +385,7 @@ view_disk (unsigned diskno, unsigned start, unsigned length, char *encoding)
 	show_file = (strchr (encoding, 'f') != 0);
 
 	nwords_per_line = 2;
-	switch (show_upp + show_gost + show_koi7 + show_text + show_itm) {
+	switch (show_upp + show_gost + show_koi7 + show_text + show_itm + show_bemsh) {
 	case 0:
 		show_gost = show_koi7 = show_text = 1;
 		break;
