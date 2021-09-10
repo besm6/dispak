@@ -17,12 +17,31 @@ typedef struct _list_item_t {
 static list_item_t *list_head;
 
 /*
+ * Return disk size in zones, or -1 on error.
+ */
+static int get_disk_size(unsigned disknum)
+{
+	void *disk;
+	int nzones;
+
+	disk = disk_open(disknum, DISK_READ_ONLY);
+	if (!disk)
+		return -1;
+
+	nzones = disk_size(disk);
+
+	disk_close(disk);
+	return nzones;
+}
+
+/*
  * Callback for ftw(): store info about disk image.
  */
 static int
 add_disk(const char *dirname, const struct stat *sb, int tflag)
 {
-	unsigned nzones, dirlen, disknum;
+	unsigned dirlen, disknum;
+	int nzones;
 	const char *filename;
 	char *endptr;
 	struct stat st = *sb;
@@ -39,12 +58,6 @@ add_disk(const char *dirname, const struct stat *sb, int tflag)
 		return 0;
 	}
 
-	nzones = st.st_size / (8*1024 + 64);
-	if (nzones <= 0) {
-		/* Ignore empty files. */
-		return 0;
-	}
-
 	filename = strrchr(dirname, '/');
 	if (! filename || filename[1] == '0') {
 		/* Filename should not start with 0. */
@@ -56,6 +69,12 @@ add_disk(const char *dirname, const struct stat *sb, int tflag)
 	disknum = strtoul(filename, &endptr, 10);
 	if (*endptr != 0) {
 		/* Ignore non-numeric names. */
+		return 0;
+	}
+
+	nzones = get_disk_size(disknum);
+	if (nzones < 0) {
+		/* Ignore bad files. */
 		return 0;
 	}
 	//printf("%-7d 0%-10o %.*s\n", disknum, nzones, dirlen, dirname);

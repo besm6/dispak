@@ -282,6 +282,45 @@ disk_setmode(void *ud, u_int mode)
 }
 
 /*
+ * Get disk size in zones.
+ * Return -1 on error.
+ */
+int
+disk_size(void *ud)
+{
+	disk_t *d = (disk_t *) ud;
+	int nzones = 0;
+
+	if (d->d_str == Physical) {
+		/*
+		 * Physical disk image.
+		 */
+		off_t nbytes = lseek(d->d_fileno, 0, SEEK_END);
+		nzones = nbytes / sizeof(zone_t);
+
+	} else {
+		/*
+		 * Chained disk structure.
+		 * Find last zone.
+		 */
+		unsigned bno;
+		for (bno = 0; bno < DESCR_BLOCKS; bno++) {
+			if (d->d_md[bno]) {
+				unsigned z;
+				for (z = 0; z < BLOCK_ZONES; z++) {
+					unsigned pos = getlong(d->d_md[bno]->md_pos[z]);
+					if (pos != 0) {
+						/* Zone is present. */
+						nzones = z + 1 + (bno * BLOCK_ZONES);
+					}
+				}
+			}
+		}
+	}
+	return nzones;
+}
+
+/*
  * mode = DISK_MODE_QUIET reads and writes non-existing zones
  * gracefully; mode = DISK_MODE_LOUD returns DISK_IO_NEW
  */
