@@ -1747,7 +1747,7 @@ ttout(uchar flags, ushort a1, ushort a2)
 			case '\030': fputs("\033[C", stdout); break;		// right
 			case '\010': fputs("\033[D", stdout); break;		// left
 			default:
-				putchar(*sp & 0x7f);
+				koi7_putc(*sp & 0x7f, stdout);
 			}
 		} else
 		switch (*sp) {
@@ -1838,18 +1838,16 @@ ttin(uchar flags, ushort a1, ushort a2)
 	dp = core[a1].w_b;
 	sp = buf;
 	while (dp - core[a1].w_b < (a2 - a1 + 1) * 6) {
-		if (flags & 1) {
-			/* Raw input. */
-			PUTB(*sp == '\n' ? 0 : *sp);
-			++sp;
-			continue;
-		}
-		if (*sp == '\n') {
-			/* End of line. */
-			PUTB(GOST_EOF);
-			break;
-		}
-		PUTB (utf8_to_gost (&sp));
+                if (*sp == '\n') {
+                        /* End of line. */
+                        PUTB(flags & 1 ? 0 : GOST_EOF);
+                        break;
+                }
+                if (flags & 1) {
+                        /* Raw input. */
+                        PUTB (utf8_to_koi7(&sp));
+                } else
+                        PUTB (utf8_to_gost (&sp));
 	}
 	while ((dp - core[a1].w_b) % 6)
 		PUTB(0);
