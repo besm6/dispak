@@ -13,6 +13,7 @@ void gost_write (unsigned char*, int, FILE*);
 unsigned char unicode_to_gost (unsigned short);
 unsigned short gost_to_unicode (unsigned char ch);
 unsigned char utf8_to_gost (unsigned char**);
+unsigned char utf8_to_koi7 (unsigned char**);
 void utf8_puts (const char*, FILE*);
 int unicode_getc (FILE*);
 void unicode_putc (unsigned short, FILE*);
