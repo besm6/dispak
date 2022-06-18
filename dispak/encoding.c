@@ -1439,6 +1439,29 @@ utf8_to_gost (unsigned char **p)
 		(c3 & 0x3f));
 }
 
+unsigned char
+utf8_to_koi7 (unsigned char **p)
+{
+        int c1, c2, c3;
+        int ret;
+        c1 = *(*p)++;
+        if (! (c1 & 0x80))
+                ret = unicode_to_koi8 (c1);
+        else {
+                c2 = *  (*p)++;
+                if (! (c1 & 0x20))
+                        ret = unicode_to_koi8 ((c1 & 0x1f) << 6 | (c2 & 0x3f));
+                else {
+                        c3 = *(*p)++;
+                        ret = unicode_to_koi8 ((c1 & 0x0f) << 12 | (c2 & 0x3f) << 6 |
+                                (c3 & 0x3f));
+                }
+        }
+        if ('a' <= ret && ret <= 'z') ret -= 'a' - 'A';
+        else if (ret >= 192) { ret &= 0x7F; ret |= 0x20; }
+        return ret;
+}
+
 unsigned short
 gost_to_unicode (unsigned char ch)
 {
@@ -1459,6 +1482,17 @@ gost_putc (unsigned char ch, FILE *fout)
 	if (! u)
 		u = ' ';
 	unicode_putc (u, fout);
+}
+
+void
+koi7_putc (unsigned char ch, FILE *fout)
+{
+        unsigned short u;
+
+        u = koi7_to_unicode [ch];
+        if (! u)
+                u = ' ';
+        unicode_putc (u, fout);
 }
 
 /*
