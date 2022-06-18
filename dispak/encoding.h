@@ -8,6 +8,7 @@ extern const unsigned char text_to_gost[];
 extern const unsigned short koi7_to_unicode [128];
 
 void gost_putc (unsigned char, FILE*);
+void koi7_putc (unsigned char, FILE*);
 void gost_write (unsigned char*, int, FILE*);
 unsigned char unicode_to_gost (unsigned short);
 unsigned short gost_to_unicode (unsigned char ch);
