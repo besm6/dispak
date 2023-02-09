@@ -2255,6 +2255,28 @@ diag(const char *s)
 		fputs(s, stderr);
 }
 
+static char *extptr;
+
+static unsigned
+extget(void)
+{
+	uchar   c;
+rpt:
+	c = *extptr++;
+	switch (c) {
+	case GOST_CARRIAGE_RETURN:
+	case 0341:
+		c = GOST_NEWLINE;
+		break;
+	case 0143:
+		goto rpt;
+	case 0342:
+		c = GOST_LEFT_QUOTATION;
+		break;
+	}
+	return c;
+}
+
 static void
 exform(void)
 {
@@ -2274,7 +2296,34 @@ exform(void)
 	txt.p_b = 0;
 	w = getword(&txt);
 	diagaddr = 0;
-	if ((w & 0xffffff000000ull) == TKH000) {
+        if ((acc.l & 077700000) == 077200000) {
+            // loading from a drum or a disk
+            uint64_t myacc = ((uint64_t)acc.l << 24) | acc.r;
+            int u = (myacc >> 33) & 077;
+            int zone = (myacc >> 21) & 07777;
+            int nzon = (myacc >> 15) & 077;
+            int startw = reg[015];
+            int curzone = 0;
+            char *buf = malloc(nzon * 6144);
+	    diagaddr = ADDR(w);
+            do {
+                r = disk_readi(disks[u].diskh,
+                               (zone + disks[u].offset + curzone) & 0xfff,
+                               (char *)buf + curzone * 6144, NULL, NULL, DISK_MODE_QUIET);
+                if (r != DISK_IO_OK) {
+                    acc.r = 0100077777;
+                    acc.l = 0;
+                    return;
+                }
+            } while (++curzone < nzon);
+	    extptr = buf + startw*6;
+            if (diagaddr) {
+                r = vsinput(extget, diag, 1);
+            } else {
+                r = vsinput(extget, diag, 0);
+            }
+            free(buf);
+	} else if ((w & 0xffffff000000ull) == TKH000) {
 		diagaddr = ADDR(w);
 		r = vsinput(uget, diag, 1);
 	} else {
