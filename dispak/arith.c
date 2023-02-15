@@ -27,22 +27,38 @@ typedef union {
 	} u;
 } math_t;
 
-/*
- * Convert floating-point value from BESM-6 format to IEEE 754.
- * to.d = ldexp(ldexp(from.mr, -40)+ldexp(from.ml & 0xffff, -16), from.o-64);
- */
-#define BESM_TO_IEEE(from,to) {\
-	if (!from.ml && !from.mr) to.u.left32 = to.u.right32 = 0;\
-	else {\
-	to.u.left32 = ((from.o - 64 + 1022) << 20) |\
-			((from.ml << 5) & 0xfffff) |\
-			(from.mr >> 19);\
-	to.u.right32 = (from.mr & 0x7ffff) << 13;\
-	}\
+double
+get_real (alureg_t word)
+{
+	math_t exponent;
+	int64_t mantissa;
+
+	mantissa = ((int64_t) word.l << 24 | word.r) << (64 - 48 + 7);
+
+	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
+	exponent.u.right32 = 0;
+
+	return mantissa * exponent.d;
 }
+
 #define ABS(x) ((x) < 0 ? -x : x)
 #define BESM_TO_INT64(from,to) {\
 	to = from.mr | (int64_t)from.ml << 24;\
+        if (from.ml & 0x10000) to |= -1ll << 40;\
+}
+
+void NEGATE(alureg_t* pR) { 
+    alureg_t R = *pR;
+          
+    int was_neg = NEGATIVE(R); 
+    if (was_neg) 
+        (R).ml |= 0x20000; 
+    (R).mr = (~(R).mr & 0xffffff) + 1; 
+    (R).ml = (~(R).ml + ((R).mr >> 24)) & 0x3ffff; 
+    (R).mr &= 0xffffff; 
+    if (!was_neg && NEGATIVE(R))
+        (R).ml |= 0x20000;
+    *pR = R;
 }
 
 int
@@ -60,7 +76,8 @@ add()
 		a1 = enreg;
 		a2 = acc;
 	}
-	neg = NEGATIVE(a1);
+	// operands may be pre-negated, look at the second sign bit
+	neg = a1.ml & 0x20000;
 	if (!diff)
 		/*
 		accex.o = accex.ml = accex.mr = 0;
@@ -160,7 +177,7 @@ int
 avx()
 {
 	if (NEGATIVE(enreg))
-		NEGATE(acc);
+		NEGATE(&acc);
 	return E_SUCCESS;
 }
 
@@ -183,13 +200,15 @@ nrdiv (int64_t nn, int64_t dd, int * expdiff)
 	int64_t q = 1LL << 40;
 	nn *= 2;
 	dd *= 2;
-	if (nn >= dd)
+	if (ABS(nn) >= ABS(dd))
 		nn/=2, (*expdiff)++;
+
+        if (dd == 1ll << 40)
+            return nn;          /* dividing by a power of 2 */
 
 	while (q > 1) {
 		if (nn == 0)
 			break;
-
 		if (ABS(nn) < (1LL << 39)) {
 			nn *= 2;	/* magic shortcut */
 		} else if ((nn > 0) ^ (dd > 0)) {
@@ -207,16 +226,10 @@ nrdiv (int64_t nn, int64_t dd, int * expdiff)
 int
 b6div()
 {
-	int             neg;
 	int64_t         dividend, divisor, quotient;
 	int expdiff;
 	accex.o = accex.ml = accex.mr = 0;
-	neg = NEGATIVE(acc) != NEGATIVE(enreg);
-	if (NEGATIVE(acc))
-		NEGATE(acc);
-	if (NEGATIVE(enreg))
-		NEGATE(enreg);
-	if ((enreg.ml & 0x8000) == 0)
+	if ((enreg.ml & 0x18000) == 0 || (enreg.ml & 0x18000) == 0x18000)
 		return E_ZERODIV;
 	if ((acc.ml == 0) && (acc.mr == 0)) {
 qzero:
@@ -233,12 +246,11 @@ qzero:
 	if (expdiff < -64)
 		goto qzero;
 	acc.o = (expdiff+64) & 0x7f;
-	acc.ml = quotient >> 24;
-	acc.mr = quotient & 0xffffff;
-	if (neg)
-		NEGATE(acc);
+        acc.ml = quotient >> 24;
+        acc.mr = quotient & 0xffffff;
 	if ((expdiff > 63) && !dis_exc)
 		return E_OVFL;
+	// printf("%.12e\n", get_real(acc));
 	return E_SUCCESS;
 }
 
@@ -253,7 +265,7 @@ elfun(int fun)
 	accex.o = accex.ml = accex.mr = 0;
 	UNPCK(acc);
 	if (NEGATIVE(acc)) {
-		NEGATE(acc);
+		NEGATE(&acc);
 		neg = 1;
 	}
 	if ((acc.ml == 0) && (acc.mr == 0)) {
@@ -275,7 +287,7 @@ qzero:
 		acc.mr = (acc.mr << c) & 0xffffff;
 	}
 
-	BESM_TO_IEEE(acc, arg);
+	arg.d = get_real(acc);
 
 	if (neg) {
 		arg.d = -arg.d;
@@ -339,7 +351,7 @@ qzero:
 	acc.mr = ((arg.u.left32 & 0x1f) << 19) |
 			(arg.u.right32 >> 13);
 	if (neg)
-		NEGATE(acc);
+		NEGATE(&acc);
 	if ((o > 0x7f) && !dis_exc)
 		return E_EXP;	// the only one that can overflow
 	PACK(acc)
@@ -355,8 +367,10 @@ mul()
 {
 	uchar           neg = 0;
 	alureg_t        a, b;
-	ushort          a1, a2, a3, b1, b2, b3;
-	register uint   l;
+        uint64_t        aval, bval;
+	typedef unsigned __int128   uint128_t;
+        uint128_t       prod;
+
 
 	a = acc;
 	b = enreg;
@@ -371,58 +385,31 @@ mul()
 
 	if (NEGATIVE(a)) {
 		neg = 1;
-		NEGATE(a);
+		NEGATE(&a);
 	}
 	if (NEGATIVE(b)) {
 		neg ^= 1;
-		NEGATE(b);
+		NEGATE(&b);
 	}
 	acc.o = a.o + b.o - 64;
 
-	a3 = a.mr & 0xfff;
-	a2 = a.mr >> 12;
-	a1 = a.ml;
+        aval = a.ml;
+        aval = aval << 24 | a.mr;
+        bval = b.ml;
+        bval = bval << 24 | b.mr;
+        prod = (uint128_t) aval * bval;
+        
+        if (neg) {
+          prod = -prod;
+        }
 
-	b3 = b.mr & 0xfff;
-	b2 = b.mr >> 12;
-	b1 = b.ml;
-
-	accex.mr = (uint) a3 * b3;
-
-	l = (uint) a2 * b3 + (uint) a3 * b2;
-	accex.mr += (l << 12) & 0xfff000;
-	accex.ml = l >> 12;
-
-	l = (uint) a1 * b3 + (uint) a2 * b2 + (uint) a3 * b1;
-	accex.ml += l & 0xffff;
-	acc.mr = l >> 16;
-
-	l = (uint) a1 * b2 + (uint) a2 * b1;
-	accex.ml += (l & 0xf) << 12;
-	acc.mr += (l >> 4) & 0xffffff;
-	acc.ml = l >> 28;
-
-	l = (uint) a1 * b1;
-	acc.mr += (l & 0xffff) << 8;
-	acc.ml += l >> 16;
-
-	accex.ml += accex.mr >> 24;
-	acc.mr += accex.ml >> 16;
-	acc.ml += acc.mr >> 24;
-	accex.mr &= 0xffffff;
-	accex.ml &= 0xffff;
-	acc.mr &= 0xffffff;
-	acc.ml &= 0xffff;
-
-	if (neg && (accex.mr || accex.ml || acc.mr || acc.ml)) {
-		accex.mr = (~accex.mr & 0xffffff) + 1;
-		accex.ml = (~accex.ml & 0xffff) + (accex.mr >> 24);
-		accex.mr &= 0xffffff;
-		acc.mr = (~acc.mr & 0xffffff) + (accex.ml >> 16);
-		accex.ml &= 0xffff;
-		acc.ml = ((~acc.ml & 0xffff) + (acc.mr >> 24)) | 0x30000;
-		acc.mr &= 0xffffff;
-	}
+        accex.mr = prod & 0xFFFFFF;
+        prod >>= 24;
+        accex.ml = prod & 0xFFFF;
+        prod >>= 16;
+        acc.mr = prod & 0xFFFFFF;
+        prod >>= 24;
+        acc.ml = prod & 0x3FFFF;
 
 	rnd_rq = !!(accex.ml | accex.mr);
 
