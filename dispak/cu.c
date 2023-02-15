@@ -342,9 +342,9 @@ set_mode:
 		CHK_STACK;
 		GET_OP;
 		if (NEGATIVE(acc))
-			NEGATE(acc);
+			NEGATE(&acc);
 		if (!NEGATIVE(enreg))
-			NEGATE(enreg);
+			NEGATE(&enreg);
 		err = add();
 		if (err)
 			ABORT(err);
@@ -352,7 +352,7 @@ set_mode:
 	case I_RSUB:
 		CHK_STACK;
 		GET_OP;
-		NEGATE(acc);
+		NEGATE(&acc);
 		err = add();
 		if (err)
 			ABORT(err);
@@ -360,7 +360,7 @@ set_mode:
 	case I_SUB:
 		CHK_STACK;
 		GET_OP;
-		NEGATE(enreg);
+		NEGATE(&enreg);
 		err = add();
 		if (err)
 			ABORT(err);
