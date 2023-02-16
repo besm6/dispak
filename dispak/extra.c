@@ -1350,8 +1350,26 @@ e50(void)
 	case 0127:		/* query presence of passwords */
 		acc.r = acc.l = 0;
 		return E_SUCCESS;
-	case 0130:		/* read control words of a zone */
-		return E_SUCCESS;
+        case 0130: {            /* read control words of a zone; imitation */
+            ushort addr = ADDR(((acc.l >> 6) & 037) * 02000);
+                alureg_t t;
+                t.l = t.r = 0;
+                STORE(t, addr + 2);
+                STORE(t, addr + 3);
+                STORE(t, addr + 6);
+                STORE(t, addr + 7);
+                t.l = 01370707;
+#define BCDDISK(d)      (((d)/1000) << 12 | ((d)/100%10) << 8 | \
+			((d)/10%10) << 4  | (d)%10)                
+                t.r = BCDDISK(disks[(acc.r >> 12) &077].diskno) << 12;
+                STORE(t, addr + 1);
+                STORE(t, addr + 5);
+                t.r = 0;
+                t.l = ((acc.r & 07777)+4) << 13;
+                STORE(t, addr);
+                t.l = ((acc.r & 07777)+4) << 13 | (1 << 12);
+                STORE(t, addr+4);
+        }       return E_SUCCESS;
 	case 0131: {		/* attach volume to handle */
 		unsigned        u;
 
