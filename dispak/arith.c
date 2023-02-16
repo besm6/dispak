@@ -250,7 +250,6 @@ qzero:
         acc.mr = quotient & 0xffffff;
 	if ((expdiff > 63) && !dis_exc)
 		return E_OVFL;
-	// printf("%.12e\n", get_real(acc));
 	return E_SUCCESS;
 }
 
@@ -347,16 +346,40 @@ qzero:
 #endif
 }
 
+inline void mult64to128(uint64_t u, uint64_t v, uint64_t* h, uint64_t* l)
+{
+    uint64_t u1 = (u & 0xffffffff);
+    uint64_t v1 = (v & 0xffffffff);
+    uint64_t t = (u1 * v1);
+    uint64_t w3 = (t & 0xffffffff);
+    uint64_t k = (t >> 32);
+    uint64_t w1;
+    
+    u >>= 32;
+    t = (u * v1) + k;
+    k = (t & 0xffffffff);
+    w1 = (t >> 32);
+    
+    v >>= 32;
+    t = (u1 * v) + k;
+    k = (t >> 32);
+    
+    *h = (u * v) + w1 + k;
+    *l = (t << 32) + w3;
+}
+
 int
 mul()
 {
 	uchar           neg = 0;
 	alureg_t        a, b;
         uint64_t        aval, bval;
+#if HAVE_INT128        
 	typedef unsigned __int128   uint128_t;
         uint128_t       prod;
-
-
+#else
+        uint64_t        prodhi, prodlo;
+#endif        
 	a = acc;
 	b = enreg;
 
@@ -382,6 +405,8 @@ mul()
         aval = aval << 24 | a.mr;
         bval = b.ml;
         bval = bval << 24 | b.mr;
+
+#if HAVE_INT128
         prod = (uint128_t) aval * bval;
         
         if (neg) {
@@ -395,7 +420,20 @@ mul()
         acc.mr = prod & 0xFFFFFF;
         prod >>= 24;
         acc.ml = prod & 0x3FFFF;
-
+#else
+        mult64to128(aval, bval, &prodhi, &prodlo);
+        if (neg) {
+            prodlo = -prodlo;
+            prodhi = ~prodhi + !prodlo;
+        }
+        accex.mr = prodlo & 0xFFFFFF;
+        prodlo >>= 24;
+        accex.ml = prodlo & 0xFFFF;
+        prodlo >>= 16;
+        acc.mr = prodlo & 0xFFFFFF;
+        acc.ml = prodhi & 0x3FFFF;
+        
+#endif
 	rnd_rq = !!(accex.ml | accex.mr);
 
 	return E_SUCCESS;
