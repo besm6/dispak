@@ -254,33 +254,29 @@ qzero:
 	return E_SUCCESS;
 }
 
+#define DENORM(val, shift) ((((val) >> (shift)) & 3) == 0 || (((val) >> (shift)) & 3) == 3)
 int
 elfun(int fun)
 {
 #ifdef DIV_NATIVE
-	int             neg = 0, o;
-	unsigned long   i, c;
+	int             o;
+	unsigned long   c;
 	math_t          arg;
 
 	accex.o = accex.ml = accex.mr = 0;
 	UNPCK(acc);
-	if (NEGATIVE(acc)) {
-		NEGATE(&acc);
-		neg = 1;
-	}
 	if ((acc.ml == 0) && (acc.mr == 0)) {
 qzero:
 		acc = zeroword;
 	} else
-	if ((acc.ml & 0x8000) == 0) {   /* normalize */
-		while (acc.ml == 0) {
+          if (DENORM(acc.ml, 15)) {   /* normalize */
+		while (acc.ml == 0 || acc.ml == 0x1FFFF) {
 			if ((acc.o -= 16) & 0x80)
 				goto qzero;
 			acc.ml = acc.mr >> 8;
 			acc.mr = (acc.mr & 0xff) << 16;
 		}
-		for (i = 0x8000, c = 0; (i & acc.ml) == 0; ++c)
-			i >>= 1;
+		for (c = 1; DENORM(acc.ml, 15-c); ++c);
 		if ((acc.o -= c) & 0x80)
 			goto qzero;
 		acc.ml = ((acc.ml << c) | (acc.mr >> (24 - c))) & 0xffff;
@@ -288,12 +284,6 @@ qzero:
 	}
 
 	arg.d = get_real(acc);
-
-	if (neg) {
-		arg.d = -arg.d;
-		neg = 0;
-	}
-
 	switch (fun) {
 	case EF_SQRT:
 		arg.d = sqrt(arg.d);
@@ -335,11 +325,9 @@ qzero:
 		return E_INT;
 	}
 
-	if ((neg = arg.d < 0.0))
-		arg.d *= -1.0;
-
-	o = arg.u.left32 >> 20;
-	o = o - 1022 + 64;
+        arg.d = frexp(arg.d, &o);
+        if (arg.d == -0.5) { arg.d *= 2; --o; }
+        o += 64;
 	if (o < 0) {
 		// biased exponent is negative,
 		// flush to zero
@@ -347,11 +335,8 @@ qzero:
 		return E_SUCCESS;
 	}
 	acc.o = o & 0x7f;
-	acc.ml = ((arg.u.left32 & 0xfffff) | 0x100000) >> 5;
-	acc.mr = ((arg.u.left32 & 0x1f) << 19) |
-			(arg.u.right32 >> 13);
-	if (neg)
-		NEGATE(&acc);
+	acc.ml = (uint64_t) (arg.d * 0x10000000000LL) >> 24;
+	acc.mr = (uint64_t) (arg.d * 0x10000000000LL) & 0xFFFFFF;
 	if ((o > 0x7f) && !dis_exc)
 		return E_EXP;	// the only one that can overflow
 	PACK(acc)
