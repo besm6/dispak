@@ -13,32 +13,12 @@
 #include <math.h>
 #include "defs.h"
 
-/*
- * 64-bit floating-point value in format of standard IEEE 754.
- */
-typedef union {
-	double d;
-	struct {
-#ifndef WORDS_BIGENDIAN
-		unsigned right32, left32;
-#else
-		unsigned left32, right32;
-#endif
-	} u;
-} math_t;
-
 double
 get_real (alureg_t word)
 {
-	math_t exponent;
-	int64_t mantissa;
-
-	mantissa = ((int64_t) word.l << 24 | word.r) << (64 - 48 + 7);
-
-	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
-	exponent.u.right32 = 0;
-
-	return mantissa * exponent.d;
+	int exponent = (word.l >> 17) - 64;
+	int64_t mantissa = ((int64_t) word.l << 24 | word.r) << (64 - 48 + 7);
+        return ldexp(mantissa, exponent - 63);
 }
 
 #define ABS(x) ((x) < 0 ? -x : x)
@@ -209,6 +189,7 @@ nrdiv (int64_t nn, int64_t dd, int * expdiff)
 	while (q > 1) {
 		if (nn == 0)
 			break;
+
 		if (ABS(nn) < (1LL << 39)) {
 			nn *= 2;	/* magic shortcut */
 		} else if ((nn > 0) ^ (dd > 0)) {
@@ -253,89 +234,75 @@ qzero:
 	return E_SUCCESS;
 }
 
-#define DENORM(val, shift) ((((val) >> (shift)) & 3) == 0 || (((val) >> (shift)) & 3) == 3)
 int
 elfun(int fun)
 {
 #ifdef DIV_NATIVE
 	int             o;
-	unsigned long   c;
-	math_t          arg;
+	double          arg;
 
 	accex.o = accex.ml = accex.mr = 0;
 	UNPCK(acc);
-	if ((acc.ml == 0) && (acc.mr == 0)) {
-qzero:
-		acc = zeroword;
-	} else
-          if (DENORM(acc.ml, 15)) {   /* normalize */
-		while (acc.ml == 0 || acc.ml == 0x1FFFF) {
-			if ((acc.o -= 16) & 0x80)
-				goto qzero;
-			acc.ml = acc.mr >> 8;
-			acc.mr = (acc.mr & 0xff) << 16;
-		}
-		for (c = 1; DENORM(acc.ml, 15-c); ++c);
-		if ((acc.o -= c) & 0x80)
-			goto qzero;
-		acc.ml = ((acc.ml << c) | (acc.mr >> (24 - c))) & 0xffff;
-		acc.mr = (acc.mr << c) & 0xffffff;
-	}
-
-	arg.d = get_real(acc);
+        arg = get_real(acc);
+        if ((arg < 0x1p-65 && arg >= -0x1p-65)) {
+            // If the operand was out of range for normalized numbers,
+            // flush to zero.
+            arg = 0;
+        }
 	switch (fun) {
 	case EF_SQRT:
-		arg.d = sqrt(arg.d);
-		if (isnan(arg.d)) {
+		arg = sqrt(arg);
+		if (isnan(arg)) {
 			return E_SQRT;
 		}
 		break;
 	case EF_SIN:
-		arg.d = sin(arg.d);
+		arg = sin(arg);
 		break;
 	case EF_COS:
-		arg.d = cos(arg.d);
+		arg = cos(arg);
 		break;
 	case EF_ARCTG:
-		arg.d = atan(arg.d);
+		arg = atan(arg);
 		break;
 	case EF_ARCSIN:
-		arg.d = asin(arg.d);
-		if (isnan(arg.d)) {
+		arg = asin(arg);
+		if (isnan(arg)) {
 			return E_ASIN;
 		}
 		break;
 	case EF_ALOG:
-		arg.d = log(arg.d);
-		if (isnan(arg.d)) {
+		arg = log(arg);
+		if (isnan(arg)) {
 			return E_ALOG;
 		}
 		break;
 	case EF_EXP:
-		arg.d = exp(arg.d);
-		if (isinf(arg.d)) {
+		arg = exp(arg);
+		if (isinf(arg)) {
 			return E_EXP;
 		}
 		break;
 	case EF_ENTIER:
-		arg.d = floor(arg.d);
+		arg = floor(arg);
 		break;
 	default:
 		return E_INT;
 	}
 
-        arg.d = frexp(arg.d, &o);
-        if (arg.d == -0.5) { arg.d *= 2; --o; }
+        arg = frexp(arg, &o);
+        if (arg == -0.5) { arg = -1.0; --o; }
         o += 64;
-	if (o < 0) {
+	if (arg == 0 || o < 0) {
 		// biased exponent is negative,
 		// flush to zero
 		acc = zeroword;
 		return E_SUCCESS;
 	}
+        
 	acc.o = o & 0x7f;
-	acc.ml = (uint64_t) (arg.d * 0x10000000000LL) >> 24;
-	acc.mr = (uint64_t) (arg.d * 0x10000000000LL) & 0xFFFFFF;
+	acc.ml = (uint64_t) (arg * 0x10000000000LL) >> 24;
+	acc.mr = (uint64_t) (arg * 0x10000000000LL) & 0xFFFFFF;
 	if ((o > 0x7f) && !dis_exc)
 		return E_EXP;	// the only one that can overflow
 	PACK(acc)
@@ -400,7 +367,6 @@ mul()
 		NEGATE(&b);
 	}
 	acc.o = a.o + b.o - 64;
-
         aval = a.ml;
         aval = aval << 24 | a.mr;
         bval = b.ml;
@@ -408,9 +374,8 @@ mul()
 
 #if HAVE_INT128
         prod = (uint128_t) aval * bval;
-        
         if (neg) {
-          prod = -prod;
+            prod = -prod;
         }
 
         accex.mr = prod & 0xFFFFFF;
@@ -651,14 +616,6 @@ double
 fetch_real (int addr)
 {
 	alureg_t word;
-	math_t exponent;
-	int64_t mantissa;
-
 	LOAD(word, addr);
-	mantissa = ((int64_t) word.l << 24 | word.r) << (64 - 48 + 7);
-
-	exponent.u.left32 = ((word.l >> 17) - 64 + 1023 - 64 + 1) << 20;
-	exponent.u.right32 = 0;
-
-	return mantissa * exponent.d;
+        return get_real(word);
 }
