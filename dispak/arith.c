@@ -237,9 +237,11 @@ qzero:
 int
 elfun(int fun)
 {
-#ifdef DIV_NATIVE
 	int             o;
 	double          arg;
+
+	if (enative)
+		return E_UNIMP;
 
 	accex.o = accex.ml = accex.mr = 0;
 	UNPCK(acc);
@@ -307,10 +309,6 @@ elfun(int fun)
 		return E_EXP;	// the only one that can overflow
 	PACK(acc)
 	return E_SUCCESS;
-
-#else
-	return E_UNIMP;
-#endif
 }
 
 inline void mult64to128(uint64_t u, uint64_t v, uint64_t* h, uint64_t* l)
