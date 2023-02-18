@@ -1,0 +1,17 @@
+{
+    "editor.insertSpaces": true,
+    "editor.rulers": [100],
+    "editor.tabSize": 4,
+    "editor.wordWrapColumn": 100,
+
+    "files.exclude": {
+        "**/.DS_Store": true,
+        "**/.git": true
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+
+    "cmake.configureOnOpen": true,
+    "cmake.generator": "Unix Makefiles",
+    "cmake.skipConfigureIfCachePresent": true,
+}
