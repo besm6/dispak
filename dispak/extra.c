@@ -1440,6 +1440,31 @@ e50(void)
 				*dp++ = *sp ? utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
+        case 01211: 	/* plotter output (64 words starting from the address on acc) */
+	       if (reg[3] == 071717) {
+		static FILE * plot = NULL;
+		int i;
+		ptr txt;
+ 	        txt.p_w = ADDR(acc.r);
+	        txt.p_b = 0;
+		if (plot == NULL) {
+			plot = fopen("plot.dat", "w");
+			if (!plot) {
+				perror("Cannot open plot.dat\n");
+				exit(1);
+			}
+		}
+		for (i = 0; i < 64; ++i) {
+			unsigned long long v = getword(&txt);
+			int j;
+			for (j = 7; j >= 0; --j) {
+				int val = (v >> (j*6)) & 077;
+				fprintf(plot, "%02o ", val);
+			}
+			fputc('\n', plot);
+		}
+		fflush(plot);
+	} return E_SUCCESS;
 	case 01212:	/* discard print stream */
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
