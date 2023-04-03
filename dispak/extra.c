@@ -676,27 +676,42 @@ again:
 		need_newline = 1;
 		switch (format) {
 		case 0:	/* text in GOST encoding */
+		case 8:
 			if (trace_e64)
 				print_text_debug (addr0, addr1, 0, offset);
 			addr0 = print_gost(addr0, addr1, line, offset,
 				&need_newline);
 			break;
 		case 1:	/* CPU instruction */
+		case 5:
+		case 9:
+		case 13:
 			addr0 = print_command(addr0, addr1, line, offset,
 				width, repeat);
 			break;
 		case 2: /* octal number */
+		case 10:
 			addr0 = print_octal(addr0, addr1, line, offset,
 				digits, width, repeat);
 			break;
 		case 3: /* real number */
+		case 11:
 			addr0 = print_real(addr0, addr1, line, offset,
 				digits, width, repeat);
 			break;
 		case 4:	/* text in ITM encoding */
+		case 12:
 			if (trace_e64)
 				print_text_debug (addr0, addr1, 1, offset);
 			addr0 = print_itm(addr0, addr1, line, offset);
+			break;
+		case 6: /* hex number */
+		case 7:
+		case 14:
+		case 15:
+			//TODO
+			//addr0 = print_hex(addr0, addr1, line, offset,
+			//	digits, width, repeat);
 			break;
 		}
 		if (final & 8) {
@@ -1269,11 +1284,11 @@ e50(void)
 	case 074:	/* OS Dubna specific */
 		/* Looks like setting up an address to jump on error. */
 		return E_SUCCESS;
-	
+
 	case 076:	/* OS Dubna specific */
 		/* Term OUTPUT */
 		return e50_76();
-	
+
 	case 0100:	/* get account id */
 		acc = user;
 		return E_SUCCESS;
@@ -1623,12 +1638,13 @@ ddio(void)
 	uir = uicore[addr][1];
 	cwadj(&uil);
 	cwadj(&uir);
-	addr = (uil.i_addr & 03700) << 4;
-	u = uir.i_opcode & 077;
+	addr = (uil.i_addr & 03700) << 4;   // адрес листа
+	u = uir.i_opcode & 077;             // номер диска
 	if ((u < 030) || (u >= 070))
-		zone = uir.i_addr & 037;
+		zone = uir.i_addr & 037;    // тракт барабана
 	else
-		zone = uir.i_addr & 07777;
+		zone = uir.i_addr & 07777;  // зона диска
+
 	if (uil.i_opcode & 4) {         /* физобмен */
 		zone += (u - (phdrum & 077)) * 040;
 		u = phdrum >> 8;
@@ -1642,10 +1658,10 @@ ddio(void)
 	    }
 	}
 
-	if (uil.i_reg & 8) {
-       /* согласно ВЗУ и ХЛАМу, 36-й разряд означает, что номер "зоны"
-        * есть не номер тракта, а номер сектора (обмен по КУС).
-        */
+	if (uil.i_reg & 8) {                // секторный обмен
+               /* согласно ВЗУ и ХЛАМу, 36-й разряд означает, что номер "зоны"
+                * есть не номер тракта, а номер сектора (обмен по КУС).
+                */
                if (uil.i_addr & 04000) {
                  zone = uir.i_addr & 0177;
                  sector = zone & 3;
@@ -1670,9 +1686,8 @@ ddio(void)
 			r = disk_writei(disks[u].diskh,
 				(zone + disks[u].offset) & 0xfff,
                                         (char *)buf, cvbuf, NULL, DISK_MODE_QUIET);
-
 		}
-	} else if (uil.i_opcode & 010) {
+	} else if (uil.i_opcode & 010) {    // чтение целой зоны
 		char cwords[48];
 		int iomode = DISK_MODE_QUIET;
 		if (uil.i_addr & 04000 && disks[u].diskno >= 2048) {
@@ -1690,7 +1705,7 @@ ddio(void)
 			/* what should happen to the zone data? */
 			memcpy((char*)(core + addr), cwords, 48);
 		}
-	} else {
+	} else {                            // запись целой зоны
             r = disk_writei(disks[u].diskh,
                             (zone + disks[u].offset) & 0xfff,
                             (char *)(core + addr), (char *)convol + addr, NULL, DISK_MODE_QUIET);
