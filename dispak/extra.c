@@ -272,7 +272,7 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 				putchar('\n');
 				pos = 0;
 			} else
-				while (c-- & 017) {
+				while (pos < 128 && c-- & 017) {
 					if (line[pos] == GOST_SPACE)
 						line[pos] = lastc;
 					++pos;
