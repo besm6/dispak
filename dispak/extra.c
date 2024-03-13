@@ -152,7 +152,7 @@ done:			printf ("\n");
 				break;
 			default:
 				/* No space left on line. */
-				if (! addr1 && pos == 128)
+				if (! addr1)
 					goto done;
 				++pos;
 				if (pos == 128) {
@@ -188,8 +188,6 @@ done:			printf ("\n");
 				break;
 			default:
 				/* No space left on line. */
-				if (pos == 128)
-					goto done;
 				++pos;
 				if (pos == 128) {
 					/* No space left on line. */
