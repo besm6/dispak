@@ -1591,6 +1591,13 @@ e63(void)
 		acc.r = (uint) (TIMEDIFF(start_time, ct) - excuse) * 50;
 		return E_SUCCESS;
 	default:
+                {
+                        if (acc.l == (GOST_K << 16 | GOST_EL << 8 | GOST_YU) &&
+                            acc.r == (GOST_CHE << 16 | GOST_A << 8 | GOST_P)) {
+                                reg[016] = 0;
+                                return E_SUCCESS;
+                        }
+                }
 		if (reg[016] > 7)
 			return physaddr();
 		else
