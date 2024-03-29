@@ -263,18 +263,16 @@ print_gost(ushort addr0, ushort addr1, uchar *line, int pos, int *need_newline)
 		case 0174:
 		case 0265: /* repeat last symbol */
 			c = getbyte(&bp);
-			if (c == 040) {
-				/* fill line by last symbol (?) */
-				memset (line, lastc, 128);
-				lflush(line);
-				putchar('\n');
-				pos = 0;
-			} else
-				while (pos < 128 && c-- & 017) {
-					if (line[pos] == GOST_SPACE)
-						line[pos] = lastc;
-					++pos;
-				}
+                        while (c-- > 0) {
+                                if (pos == 128) {
+                                        lflush(line);
+                                        putchar('\n');
+                                        pos = 0;
+                                }
+				if (line[pos] == GOST_SPACE)
+					line[pos] = lastc;
+				++pos;
+                        }
 			break;
 		case GOST_SPACE2: /* blank */
 		case 0242: /* used as space by forex */
