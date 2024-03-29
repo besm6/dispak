@@ -50,3 +50,4 @@ add_test(NAME whatis-2248 COMMAND Python3::Interpreter ../run-test.py WORKING_DI
 add_test(NAME whatis-4001 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/whatis-4001)
 add_test(NAME whatis-4002 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/whatis-4002)
 add_test(NAME whetstone COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/whetstone)
+add_test(NAME e64-repeat-symbol COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/e64-repeat-symbol)
