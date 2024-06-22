@@ -622,7 +622,7 @@ mtj:
 			switch (reg[016]) {
 			/* undocumented trick (ВРЕМЕННО ФИРСОВ) */
 			case 0: spec = 1; break;
-			case 1: spec = 0; break;
+			case 1: spec = pspspec; break;
 			}
 			break;
 		default:
