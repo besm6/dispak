@@ -44,7 +44,6 @@ do
             "2113") filename="svs2113.bin" ;;
             "2248") filename="alt2048.bin" ;;
             "4001") filename="tape1.bin" ;;
-            "4002") filename="tape23.bin" ;;
             "2063") filename="krab2063.bin" ;;
             "2086") filename="krab2086.bin" ;;
             *)

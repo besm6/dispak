@@ -46,7 +46,7 @@ ibr:
 	}
 
 	user = psp.user;
-	spec_saved = psp.spec;
+	spec_saved = pspspec = psp.spec;
 	spec = 1;
 	acc = user;
 	reg[1] = 0141;

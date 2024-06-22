@@ -18,6 +18,8 @@
  * Options:
  *	-x, --native
  *		use native extracode E64
+ *	-e, --elfun
+ *		use native extracodes for elem. functions 
  *	-b, --break
  *		break on first cmd
  *	-v, --visual
@@ -122,6 +124,7 @@ static struct option longopts[] = {
 	{ "output-enable",	0,	0,	'p'		},
 	{ "output-disable",	0,	0,	'q'		},
 	{ "native",		0,	0,	'x'		},
+	{ "elfun",		0,	0,	'e'		},
 	{ "output",		1,	0,	'o'		},
 	{ "output-raw",		1,	0,	OPT_OUTPUT_RAW },
 	{ "decode-output",	0,	0,	OPT_DECODE_OUTPUT },
@@ -150,6 +153,7 @@ usage ()
 	fprintf (stderr, _("  %s [options] --decode-output <raw-file>\n"), PACKAGE_NAME);
 	fprintf (stderr, _("Options:\n"));
 	fprintf (stderr, _("  -x, --native           use native extracode E64\n"));
+	fprintf (stderr, _("  -e, --elfun            use native elementary functions\n"));
 	fprintf (stderr, _("  -b, --break            break on first cmd\n"));
 	fprintf (stderr, _("  -v, --visual           visual mode for debugger\n"));
 	fprintf (stderr, _("  -t, --trace            trace all extracodes\n"));

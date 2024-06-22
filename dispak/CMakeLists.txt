@@ -9,9 +9,9 @@ set(ARCHIVE "http://www.besm6.org/download/disks")
 set(DISKDIR ${CMAKE_INSTALL_PREFIX}/share/besm6)
 
 #
-# List of disks to downloads.
+# List of disks to download.
 #
-set(DISKS 2048 2053 2148 2153 2113 2248 4001 4002 2063 2086 2099)
+set(DISKS 2048 2053 2148 2153 2113 2248 4001 2063 2086 2099)
 
 #
 # Create config.h.

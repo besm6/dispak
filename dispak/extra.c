@@ -1350,6 +1350,26 @@ e50(void)
 	case 0127:		/* query presence of passwords */
 		acc.r = acc.l = 0;
 		return E_SUCCESS;
+        case 0130: {            /* read control words of a zone; imitation */
+            ushort addr = ADDR(((acc.l >> 6) & 037) * 02000);
+                alureg_t t;
+                t.l = t.r = 0;
+                STORE(t, addr + 2);
+                STORE(t, addr + 3);
+                STORE(t, addr + 6);
+                STORE(t, addr + 7);
+                t.l = 01370707;
+#define BCDDISK(d)      (((d)/1000) << 12 | ((d)/100%10) << 8 | \
+			((d)/10%10) << 4  | (d)%10)                
+                t.r = BCDDISK(disks[(acc.r >> 12) &077].diskno) << 12;
+                STORE(t, addr + 1);
+                STORE(t, addr + 5);
+                t.r = 0;
+                t.l = ((acc.r & 07777)+4) << 13;
+                STORE(t, addr);
+                t.l = ((acc.r & 07777)+4) << 13 | (1 << 12);
+                STORE(t, addr+4);
+        }       return E_SUCCESS;
 	case 0131: {		/* attach volume to handle */
 		unsigned        u;
 
@@ -1420,6 +1440,31 @@ e50(void)
 				*dp++ = *sp ? utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
+        case 01211: 	/* plotter output (64 words starting from the address on acc) */
+	       if (reg[3] == 071717) {
+		static FILE * plot = NULL;
+		int i;
+		ptr txt;
+ 	        txt.p_w = ADDR(acc.r);
+	        txt.p_b = 0;
+		if (plot == NULL) {
+			plot = fopen("plot.dat", "w");
+			if (!plot) {
+				perror("Cannot open plot.dat\n");
+				exit(1);
+			}
+		}
+		for (i = 0; i < 64; ++i) {
+			unsigned long long v = getword(&txt);
+			int j;
+			for (j = 7; j >= 0; --j) {
+				int val = (v >> (j*6)) & 077;
+				fprintf(plot, "%02o ", val);
+			}
+			fputc('\n', plot);
+		}
+		fflush(plot);
+	} return E_SUCCESS;
 	case 01212:	/* discard print stream */
 		return E_SUCCESS;
 	case 07700:	/* set alarm */
@@ -1546,6 +1591,13 @@ e63(void)
 		acc.r = (uint) (TIMEDIFF(start_time, ct) - excuse) * 50;
 		return E_SUCCESS;
 	default:
+                {
+                        if (acc.l == (GOST_K << 16 | GOST_EL << 8 | GOST_YU) &&
+                            acc.r == (GOST_CHE << 16 | GOST_A << 8 | GOST_P)) {
+                                reg[016] = 0;
+                                return E_SUCCESS;
+                        }
+                }
 		if (reg[016] > 7)
 			return physaddr();
 		else
@@ -1984,11 +2036,12 @@ term(void)
 		return E_SUCCESS;
 	}
 	LOAD(r, addr);
-	if ((r.l == 0xffffff) && (r.r == 0xffffff)) {
+	if ((r.l == 0xffffff) && (r.r == 0xffffff) ||
+	    (r.l == 0x040000) && (r.r == 0xffffff)) {	/* for POPLAN */
 		if (notty)
 			acc.r = acc.l = 0;
 		else {
-			acc.l = 0x004000;
+			acc.l = 0x004000;		/* terminal 12(8) */
 			acc.r = 0;
 		}
 		return E_SUCCESS;

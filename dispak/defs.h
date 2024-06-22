@@ -300,20 +300,7 @@ if ((addr) & 077777) { \
 /*	(R).r = (R).mr; */ \
 }
 
-#define NEGATE(R) { \
-	if (NEGATIVE(R)) \
-		(R).ml |= 0x20000; \
-	(R).mr = (~(R).mr & 0xffffff) + 1; \
-	(R).ml = (~(R).ml + ((R).mr >> 24)) & 0x3ffff; \
-	(R).mr &= 0xffffff; \
-	if ((((R).ml >> 1) ^ (R).ml) & 0x10000) { \
-		(R).mr = (((R).mr >> 1) | ((R).ml << 23)) & 0xffffff; \
-		(R).ml >>= 1; \
-		++(R).o; \
-	} \
-	if (NEGATIVE(R)) \
-		(R).ml |= 0x20000; \
-}
+void NEGATE(alureg_t *pR);
 
 #define EF_SQRT         0
 #define EF_SIN          1
@@ -345,6 +332,7 @@ EXTERN int              visual;         /* print registers before entering co */
 EXTERN int              breakflg;       /* break on next command */
 EXTERN int              notty;
 EXTERN int		spec, spec_saved; /* store insns store executable words */
+EXTERN int		pspspec;        /* "special" mode requested in the passport */
 EXTERN int		no_insn_check;	/* ignore number mode except addr 0 */
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
@@ -367,6 +355,7 @@ EXTERN uchar            pout_enable;	/* e64 printing allowed */
 EXTERN uchar            pout_disable;	/* e64 printing suppressed */
 EXTERN char		*pout_file;	/* e64 output file name */
 EXTERN uchar            xnative;        /* native xcodes */
+EXTERN uchar            enative;        /* native elem. funcs */
 EXTERN uchar		bootstrap;	/* run without disk 2099 */
 EXTERN ushort           lasterr;
 EXTERN ushort           intercept;
@@ -445,6 +434,7 @@ int term (void);
 int resources (void);
 int eexit (void);
 double fetch_real (int);
+double get_real (alureg_t word);
 
 /* debug.y */
 void help (void);
