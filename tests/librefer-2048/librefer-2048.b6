@@ -2,6 +2,7 @@
 лен 40(2048)^
 eeв1а3
 *name librefer 2048
+*super
 *perso: 401350
 *call librefer:TAPE=400030
 *call librefer:TAPE=400120

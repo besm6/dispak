@@ -81,7 +81,7 @@
    they can distinguish the relative order of options and other arguments.  */
 
 #if ! HAVE_GETOPT_LONG
-#include "getopt.h"
+#include "mygetopt.h"
 
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,

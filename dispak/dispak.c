@@ -19,7 +19,7 @@
  *	-x, --native
  *		use native extracode E64
  *	-e, --elfun
- *		use native extracodes for elem. functions 
+ *		use native extracodes for elem. functions
  *	-b, --break
  *		break on first cmd
  *	-v, --visual
@@ -63,7 +63,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <getopt.h>
+#ifdef HAVE_GETOPT_LONG
+#   include <getopt.h>
+#else
+#   include "mygetopt.h"
+#endif
 #include "defs.h"
 #include "optab.h"
 #include "disk.h"

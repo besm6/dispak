@@ -23,19 +23,19 @@ get_real (alureg_t word)
 
 #define ABS(x) ((x) < 0 ? -x : x)
 #define BESM_TO_INT64(from,to) {\
-	to = from.mr | (int64_t)from.ml << 24;\
-        if (from.ml & 0x10000) to |= -1ll << 40;\
+	to = from.mr | (uint64_t)from.ml << 24;\
+        if (from.ml & 0x10000) to |= -1ull << 40;\
 }
 
-void NEGATE(alureg_t* pR) { 
+void NEGATE(alureg_t* pR) {
     alureg_t R = *pR;
-          
-    int was_neg = NEGATIVE(R); 
-    if (was_neg) 
-        (R).ml |= 0x20000; 
-    (R).mr = (~(R).mr & 0xffffff) + 1; 
-    (R).ml = (~(R).ml + ((R).mr >> 24)) & 0x3ffff; 
-    (R).mr &= 0xffffff; 
+
+    int was_neg = NEGATIVE(R);
+    if (was_neg)
+        (R).ml |= 0x20000;
+    (R).mr = (~(R).mr & 0xffffff) + 1;
+    (R).ml = (~(R).ml + ((R).mr >> 24)) & 0x3ffff;
+    (R).mr &= 0xffffff;
     if (!was_neg && NEGATIVE(R))
         (R).ml |= 0x20000;
     *pR = R;
@@ -301,7 +301,7 @@ elfun(int fun)
 		acc = zeroword;
 		return E_SUCCESS;
 	}
-        
+
 	acc.o = o & 0x7f;
 	acc.ml = (uint64_t) (arg * 0x10000000000LL) >> 24;
 	acc.mr = (uint64_t) (arg * 0x10000000000LL) & 0xFFFFFF;
@@ -319,16 +319,16 @@ inline void mult64to128(uint64_t u, uint64_t v, uint64_t* h, uint64_t* l)
     uint64_t w3 = (t & 0xffffffff);
     uint64_t k = (t >> 32);
     uint64_t w1;
-    
+
     u >>= 32;
     t = (u * v1) + k;
     k = (t & 0xffffffff);
     w1 = (t >> 32);
-    
+
     v >>= 32;
     t = (u1 * v) + k;
     k = (t >> 32);
-    
+
     *h = (u * v) + w1 + k;
     *l = (t << 32) + w3;
 }
@@ -339,12 +339,12 @@ mul()
 	uchar           neg = 0;
 	alureg_t        a, b;
         uint64_t        aval, bval;
-#if HAVE_INT128        
+#if HAVE_INT128
 	typedef unsigned __int128   uint128_t;
         uint128_t       prod;
 #else
         uint64_t        prodhi, prodlo;
-#endif        
+#endif
 	a = acc;
 	b = enreg;
 
@@ -395,7 +395,7 @@ mul()
         prodlo >>= 16;
         acc.mr = prodlo & 0xFFFFFF;
         acc.ml = prodhi & 0x3FFFF;
-        
+
 #endif
 	rnd_rq = !!(accex.ml | accex.mr);
 

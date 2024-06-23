@@ -1360,7 +1360,7 @@ e50(void)
                 STORE(t, addr + 7);
                 t.l = 01370707;
 #define BCDDISK(d)      (((d)/1000) << 12 | ((d)/100%10) << 8 | \
-			((d)/10%10) << 4  | (d)%10)                
+			((d)/10%10) << 4  | (d)%10)
                 t.r = BCDDISK(disks[(acc.r >> 12) &077].diskno) << 12;
                 STORE(t, addr + 1);
                 STORE(t, addr + 5);
@@ -1445,7 +1445,7 @@ e50(void)
 		static FILE * plot = NULL;
 		int i;
 		ptr txt;
- 	        txt.p_w = ADDR(acc.r);
+	        txt.p_w = ADDR(acc.r);
 	        txt.p_b = 0;
 		if (plot == NULL) {
 			plot = fopen("plot.dat", "w");
@@ -2036,8 +2036,8 @@ term(void)
 		return E_SUCCESS;
 	}
 	LOAD(r, addr);
-	if ((r.l == 0xffffff) && (r.r == 0xffffff) ||
-	    (r.l == 0x040000) && (r.r == 0xffffff)) {	/* for POPLAN */
+	if ((r.l == 0xffffff && r.r == 0xffffff) ||
+	    (r.l == 0x040000 && r.r == 0xffffff)) {	/* for POPLAN */
 		if (notty)
 			acc.r = acc.l = 0;
 		else {

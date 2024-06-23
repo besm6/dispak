@@ -27,8 +27,7 @@ long aumodes[] = {
 extern ulong icnt;
 
 void
-unpack(pc)
-	unsigned pc;
+unpack(unsigned pc)
 {
 	word_t         *wp = &core[pc];
 	uinstr_t       *ip = uicore[pc];
@@ -43,8 +42,7 @@ unpack(pc)
 }
 
 int
-_abort(err)
-        int     err;
+_abort(int err)
 {
 	lasterr = err;
 	if (ninter) {
@@ -637,7 +635,7 @@ errchk:
 				supmode = 0100000;
 				sup_mmap = 0100000;
 				reg[PSREG] = 02007;
- 				/* words formed by the kernel in user memory can be instructions */
+				/* words formed by the kernel in user memory can be instructions */
 				spec = 1;
 				JMP(XCODE_ENTRYPT);
 			} else if (err) {

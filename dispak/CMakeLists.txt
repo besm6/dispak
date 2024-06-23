@@ -31,6 +31,9 @@ include_directories(
 #
 include(CheckIncludeFile)
 check_include_file("string.h" HAVE_STRING_H)
+include(CheckSymbolExists)
+
+check_symbol_exists(getopt_long "getopt.h" HAVE_GETOPT_LONG)
 
 #
 # Need Bison parser.
@@ -58,7 +61,9 @@ add_executable(dispak
 )
 target_link_libraries(dispak PUBLIC m)
 target_compile_options(dispak PRIVATE
-    -Wall -g -O3 -ffast-math -fomit-frame-pointer -DHAVE_STRING_H=${HAVE_STRING_H}
+    -Wall -g -O3 -Werror -ffast-math -fomit-frame-pointer
+    -DHAVE_STRING_H=${HAVE_STRING_H}
+    -DHAVE_GETOPT_LONG=${HAVE_GETOPT_LONG}
 )
 install(TARGETS dispak DESTINATION bin)
 

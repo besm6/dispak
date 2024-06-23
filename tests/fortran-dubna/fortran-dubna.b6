@@ -5,6 +5,7 @@ eeв1а3
 *call yesmemory
 *no list
 *full list
+*super
 *system
 c---- Целые числа от 2 до 100: решето Эратосфена
       program main

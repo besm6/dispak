@@ -24,7 +24,7 @@
 #define PROMPT "- "
 
 static alureg_t wd;
-static void pfloat();
+static void pfloat(unsigned long, unsigned long);
 static void prcmd(int);
 static void prword(int);
 
@@ -348,8 +348,7 @@ yylex ()
 }
 
 void
-yyerror  (s)
-char *s;
+yyerror (char *s)
 {
 	 puts(s);
 }
