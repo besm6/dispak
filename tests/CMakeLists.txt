@@ -37,6 +37,7 @@ add_test(NAME serp-list-2113 COMMAND Python3::Interpreter ../run-test.py WORKING
 add_test(NAME serp-ogl-2113 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-ogl-2113)
 add_test(NAME serp-users-2053 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-users-2053)
 add_test(NAME serp-users-2153 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-users-2153)
+add_test(NAME sp4 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/sp4)
 add_test(NAME stat COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/stat)
 add_test(NAME whatis-4001 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/whatis-4001)
 add_test(NAME whetstone COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/whetstone)
