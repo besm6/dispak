@@ -61,9 +61,9 @@ _abort(int err)
 }
 
 #define CHK_STACK       \
-	if (!addr && (ui.i_reg == STACKREG))    \
+	if (!addr && (ui.i_reg == STACKREG)) {   \
 		reg[STACKREG] = ADDR(reg[STACKREG] - 1);        \
-	else
+	}
 #define GET_OP  {\
 		LOAD(enreg, XADDR(addr + reg[ui.i_reg]));\
 		if (op.o_flags & F_AR) {\

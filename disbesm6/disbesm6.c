@@ -888,14 +888,14 @@ void make_syms(uint32 addr, uint32 limit)
         if (mflags[addr] & W_STARTBB) {
             sym = findsym(addr);
             if (sym->n_value != addr) {
-                char buf[8];
+                char buf[16];
                 sprintf(buf, "A%05o", addr);
                 addsym(buf, W_CODE, addr);
             }
         } else if (mflags[addr] & W_DATA) {
             sym = findsym(addr);
             if (sym->n_value != addr) {
-                char buf[8];
+                char buf[16];
                 sprintf(buf, "D%05o", addr);
                 addsym(buf, W_DATA, addr);
             }

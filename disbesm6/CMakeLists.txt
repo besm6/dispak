@@ -12,5 +12,5 @@ add_executable(disbesm6
     disbesm6.c
     ../dispak/encoding.c
 )
-target_compile_options(disbesm6 PRIVATE -Wall -g -O2)
+target_compile_options(disbesm6 PRIVATE -Wall -g -O2 -Werror)
 install(TARGETS disbesm6 DESTINATION bin)

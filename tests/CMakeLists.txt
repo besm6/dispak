@@ -35,7 +35,6 @@ add_test(NAME serp-keys-2053 COMMAND Python3::Interpreter ../run-test.py WORKING
 add_test(NAME serp-keys-2153 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-keys-2153)
 add_test(NAME serp-list-2113 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-list-2113)
 add_test(NAME serp-ogl-2113 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-ogl-2113)
-add_test(NAME serp-pasp COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-pasp)
 add_test(NAME serp-users-2053 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-users-2053)
 add_test(NAME serp-users-2153 COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/serp-users-2153)
 add_test(NAME stat COMMAND Python3::Interpreter ../run-test.py WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/stat)

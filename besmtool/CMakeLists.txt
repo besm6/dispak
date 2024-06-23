@@ -19,5 +19,5 @@ add_executable(besmtool
     ../dispak/disk.c
     ../dispak/encoding.c
 )
-target_compile_options(besmtool PRIVATE -Wall -g -O2)
+target_compile_options(besmtool PRIVATE -Wall -g -O2 -Werror)
 install(TARGETS besmtool DESTINATION bin)

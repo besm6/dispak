@@ -267,7 +267,7 @@ if ((addr) & 077777) { \
 } else if (1) { \
 	(reg).l = 0; \
 	(reg).r = 0; \
-} else
+}
 
 #define STORE(reg,addr) \
 	if (addr) { \
