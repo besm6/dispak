@@ -1,0 +1,54 @@
+шифр 419900зс5^
+еев1а3
+*name gost-10859
+*assembler
+*bemsh
+inp$$$
+main start 1
+ vtm '30000'(13)
+ *66 is
+ kk 0,'10'(8)
+ *66 is        comment out this line
+ kk 0,'10'(8)  and this one to make the test pass
+printo extrd printo
+ vtm res(14)
+ its 14
+ vtm res+len-1(14)
+ its 14
+ vtm N(14)
+ its 14
+ vtm M(14)
+ its 14
+ vjm printo(13)
+ *74
+N dc b'30'
+M dc b'2'
+is atx start
+ atx fin-1
+ atx
+ atx res
+ dc b'-1'
+rep equ 2
+start nop
+ dc (rep)b'7'
+ dc (rep)b'1'
+ dc (rep)b'5'
+ dc (rep)b'12'
+ dc (rep)b'6'
+ dc (rep)b'10'
+ dc (rep)b'3'
+ dc (rep)b'4'
+ dc (rep)b'2'
+ dc (rep)b'11'
+fin nop
+len equ fin-start
+res dc (len)b'0' 
+ fin
+eoi$$$
+trn$$$
+end$$$
+*main main
+*execute
+*end file
+``````
+еконец
