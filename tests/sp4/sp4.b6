@@ -1,0 +1,27 @@
+шифр 419900зс5^
+еев1а3
+*name gost-10859
+*assembler
+*no list
+*no load list
+ program: ,name,
+ 13,vtm,4096
+ ,*66,adr
+ , ,4b
+ ,*74,
+ a1:,xta,a
+ ,a/x,b
+ ,a*x,c
+ ,arx,=1
+ adr:, ,a1
+ , ,a1+2
+ , ,
+ , ,1000b
+ a:,real,5.0
+ b:,real,6.0
+ c:,real,-7.0
+  ,end ,
+*execute
+*end file
+``````
+еконец
