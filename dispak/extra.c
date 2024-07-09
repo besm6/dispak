@@ -27,6 +27,25 @@
 #define IS_CHAR(c)	((c >= 0101 && c <= 0132) || \
 			 (c >= 0140 && c <= 0136))
 
+#define INTERCEPT_E64 002
+#define INTERCEPT_E70 004
+#define INTERCEPT_E71 010
+#define INTERCEPT_E74 020
+
+static int
+intercept_ex(int mask) {
+    alureg_t t;
+    t.l = t.r = 0;
+    STORE(acc, intercept_addr-1);
+    t.r = reg[TRAPRETREG];
+    STORE(t, intercept_addr-2);
+    t.r = reg[016] | mask << 15;
+    STORE(t, intercept_addr-3);
+    intercept_mask &= ~mask;
+    JMP(intercept_addr);
+    return E_SUCCESS;
+}
+
 static void     exform(void);
 
 static inline uchar
@@ -632,6 +651,9 @@ print(void)
 	int		format, offset, digits, final, width, repeat;
 	int		need_newline;
 
+	if (intercept_mask & INTERCEPT_E64) {
+	    return intercept_ex(INTERCEPT_E64);
+	}
 	if (! pout_enable)
 		return E_SUCCESS;
 	if (xnative)
@@ -1299,6 +1321,10 @@ e50(void)
 		intercept = ADDR(acc.r);
 		ninter = 1;
 		return E_SUCCESS;
+	case 0104:
+	case 0106:
+	case 0107:	/*  get user name from user ID */
+	    return E_UNIMP;
 	case 0105:	/* get volume number by handle */
 		acc.l = 0;
 		{
@@ -1497,6 +1523,9 @@ e50(void)
 int
 eexit(void)
 {
+    if (intercept_mask & INTERCEPT_E74) {
+	return intercept_ex(INTERCEPT_E74);
+    }
 	if (exitaddr) {
 		JMP(exitaddr);
 		return E_SUCCESS;
@@ -1679,7 +1708,9 @@ ddio(void)
 	int             r;
 	static uchar	buf[6144];
         static char	cvbuf[1024];
-
+	if (intercept_mask & INTERCEPT_E70) {
+	    return intercept_ex(INTERCEPT_E70);
+	}
 	LOAD(acc, addr);
 	unpack(addr);
 	uil = uicore[addr][0];
@@ -1834,6 +1865,9 @@ ttout(uchar flags, ushort a1, ushort a2)
 			/* zero-width space */
 			usleep (100000);
 			break;
+                case 0143:
+                        /* ignored */
+                        break;
 		case 0146:
 		case 0170:
 			/* non-destructive backspace */
@@ -2027,6 +2061,9 @@ term(void)
 	uinstr_t        uil, uir;
 	int             err;
 
+	if(intercept_mask & INTERCEPT_E71) {
+	    return intercept_ex(INTERCEPT_E71);
+	}
 	reg[016] = 0;   /* Function key code    */
 	if (addr == 0) {
 		if (notty)
@@ -2159,12 +2196,19 @@ resources(void)
 	uchar           arg[8];
 	int             i;
 
-	if ((acc.l == 022642531) && (acc.r == 021233462)) {     /* KEYE72 */
-		exitaddr = addr;
-		return E_SUCCESS;
-	}
-
 	LOAD(r, addr);
+	if ((acc.l == 022642531) && (acc.r == 021233462)) {     /* KEYE72 */
+	    if ((r.l >> 18) != 07) {
+		// The word @EA does not have the proper key,
+		// use EA as the address of the intercept routine.
+		exitaddr = addr;
+	    } else {
+		// The word @EA has the key, use the mask and the address as indicated.
+		intercept_mask = r.r & 03777;
+		intercept_addr = r.l & 077777;
+	    }
+	    return E_SUCCESS;
+	}
 	for (i = 0; i < 4; ++i) {
 		arg[i] = (r.l >> ((3 - i) * 6)) & 077;
 		arg[i + 4] = (r.r >> ((3 - i) * 6)) & 077;
