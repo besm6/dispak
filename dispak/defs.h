@@ -360,7 +360,7 @@ EXTERN uchar		bootstrap;	/* run without disk 2099 */
 EXTERN ushort           lasterr;
 EXTERN ushort           intercept;
 EXTERN ushort           ninter;
-EXTERN ushort           exitaddr;
+EXTERN ushort           exitaddr, intercept_addr, intercept_mask;
 EXTERN alureg_t         user;           /* job id               */
 EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
