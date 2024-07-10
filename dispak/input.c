@@ -77,8 +77,8 @@ ibr:
 		disk_close(disks[u].diskh);
 		disks[u].diskh = 0;
 	}
-	if ((phdrum = psp.phys))
-		phdrum |= psp.vol[0].u << 8;
+	if ((phdrum = psp.phys)) /* drum LUN */
+		phys_dd.diskno = psp.vol[0].u; /* LUN */
 
 	while (ftell(ibuf) < psp.arr_end) {
 		struct ibword   ibw;

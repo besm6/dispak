@@ -365,6 +365,7 @@ EXTERN alureg_t         user;           /* job id               */
 EXTERN struct timeval   start_time, stop_time;
 EXTERN double           excuse;
 EXTERN ushort           phdrum;
+EXTERN ddisk_t          phys_dd;
 EXTERN uint             jhbuf[JHBSZ];
 EXTERN int              jhbi;
 EXTERN uint             ecode_intr;
