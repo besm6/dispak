@@ -1343,7 +1343,7 @@ e50(void)
 		 * in chunks of 040 blocks for disks
 		 */
 		disks[unit].offset =
-			(disks[unit].diskno < 2048 ? acc.r : acc.r << 5) & 07777;
+			(getenv("BESM6_SMALL_DISKS") || disks[unit].diskno < 2048 ? acc.r : acc.r << 5) & 07777;
 		return E_SUCCESS;
 	}
 	case 0113: {	/* get current offset */
@@ -1466,6 +1466,13 @@ e50(void)
 				*dp++ = *sp ? utf8_to_gost(&sp) : GOST_SPACE;
 		}
 		return E_SUCCESS;
+        case 01206: {
+                void * h = disk_open(NDISK(acc.r), DISK_READ_ONLY);
+		if (h) {
+			acc.r = 1;
+			disk_close(h);
+		} else acc.r = 0;
+        }        return E_SUCCESS;
         case 01211: 	/* plotter output (64 words starting from the address on acc) */
 	       if (reg[3] == 071717) {
 		static FILE * plot = NULL;
@@ -1724,15 +1731,22 @@ ddio(void)
 	else
 		zone = uir.i_addr & 07777;  // зона диска
 
+	ddisk_t * dd = disks + u;
 	if (uil.i_opcode & 4) {         /* физобмен */
-		zone += (u - (phdrum & 077)) * 040;
-		u = phdrum >> 8;
+		zone += (u - phdrum) * 040;
+		if (phys_dd.diskh) {
+		    // The disk LUN associated with the phys. drum has been relinquished.
+                        fprintf(stderr, "Using old PHYS\n");
+		    dd = &phys_dd;
+		} else {
+		    dd = disks + phys_dd.diskno; /* diskno is LUN here */
+		}
 	}
-	if (!disks[u].diskh) {
-	    if (!disks[u].diskno) {
+	if (!dd->diskh) {
+	    if (!dd->diskno) {
 		return E_CWERR;
 	    } else {
-		if (!(disks[u].diskh = disk_open(disks[u].diskno, disks[u].mode)))
+		if (!(dd->diskh = disk_open(dd->diskno, dd->mode)))
 			return E_INT;
 	    }
 	}
@@ -1748,8 +1762,8 @@ ddio(void)
                } else {
                  sector = (uir.i_addr >> 6) & 3;
                }
-		r = disk_readi(disks[u].diskh,
-			(zone + disks[u].offset) & 0xfff,
+		r = disk_readi(dd->diskh,
+			(zone + dd->offset) & 0xfff,
                                (char *)buf, cvbuf, NULL, DISK_MODE_QUIET);
 		if (!(uil.i_opcode & 010)) {
 			memcpy(
@@ -1762,36 +1776,36 @@ ddio(void)
                                convol + addr + (uil.i_addr & 3) * 256,
                                256
                                );
-			r = disk_writei(disks[u].diskh,
-				(zone + disks[u].offset) & 0xfff,
+			r = disk_writei(dd->diskh,
+				(zone + dd->offset) & 0xfff,
                                         (char *)buf, cvbuf, NULL, DISK_MODE_QUIET);
 		}
 	} else if (uil.i_opcode & 010) {    // чтение целой зоны
 		char cwords[48];
 		int iomode = DISK_MODE_QUIET;
-		if (uil.i_addr & 04000 && disks[u].diskno >= 2048) {
+		if (uil.i_addr & 04000 && dd->diskno >= 2048) {
 			/* листовой обмен с диском по КУС - физический номер зоны */
 			iomode = DISK_MODE_PHYS;
 		}
-		r = disk_readi(disks[u].diskh,
-			(zone + disks[u].offset) & 0xfff,
+		r = disk_readi(dd->diskh,
+			(zone + dd->offset) & 0xfff,
                                (char *)(core + addr), (char *)convol + addr, cwords, iomode);
-		if (uil.i_opcode & 1 && disks[u].diskno < 2048) {
+		if (uil.i_opcode & 1 && dd->diskno < 2048) {
 			/* check words requested for tape */
 			put_check_words(u, zone, addr, 0 != (uir.i_opcode & 0200));
-		} else if (uil.i_addr & 04000 && disks[u].diskno >= 2048) {
+		} else if (uil.i_addr & 04000 && dd->diskno >= 2048) {
 			/* copy disk check words to requested page */
 			/* what should happen to the zone data? */
 			memcpy((char*)(core + addr), cwords, 48);
 		}
 	} else {                            // запись целой зоны
-            r = disk_writei(disks[u].diskh,
-                            (zone + disks[u].offset) & 0xfff,
+            r = disk_writei(dd->diskh,
+                            (zone + dd->offset) & 0xfff,
                             (char *)(core + addr), (char *)convol + addr, NULL, DISK_MODE_QUIET);
         }
-	if (disks[u].diskno) {
-		disk_close(disks[u].diskh);
-		disks[u].diskh = 0;
+	if (dd->diskno) {
+		disk_close(dd->diskh);
+		dd->diskh = 0;
 	}
 	if (r != DISK_IO_OK)
 		return E_DISKERR;
@@ -2216,16 +2230,23 @@ resources(void)
 	switch (arg[0]) {
 	case 020:				/* close tape/disk */
 		for (i = 1; i < 7; ++i) {
-			if (arg[i] == 077)
-				break;
-			if (!disks[arg[i]].diskno)
-				continue;
-			if (disks[arg[i]].diskh)
-				disk_close(disks[arg[i]].diskh);
-			disks[arg[i]].diskh = 0;
-			if (arg[i] != (phdrum >> 8)) {
-				disks[arg[i]].diskno = 0;
-			}
+		    int u = arg[i];
+		    if (u == 077)
+			break;
+		    if (!disks[u].diskno)
+			continue;
+		    if (disks[u].diskh)
+			disk_close(disks[u].diskh);
+
+		    if (u == phys_dd.diskno) {
+			phys_dd = disks[u]; /* Using the current disk offset */
+			phys_dd.diskh = disk_open(phys_dd.diskno, phys_dd.mode);
+			// Handle this descriptor as a "drum".
+			phys_dd.diskno = 0;
+		    }
+
+		    disks[u].diskno = 0;
+		    disks[u].diskh = 0;
 		}
 		return E_SUCCESS;
 	case 047:				/* free drums/tracks */
