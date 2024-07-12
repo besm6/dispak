@@ -121,12 +121,22 @@ disk_open(u_int diskno, u_int mode)
 	if (diskno) {
 		disk_find_path (fname, diskno);
 		if (access(fname, R_OK) < 0) {
-			fprintf(stderr, "disk_open: no %d image found\n", diskno);
-			return 0;
+			if (mode == DISK_CREATE) {
+				// Create new disk.
+				int fd = creat(fname, 0644);
+				if (fd < 0) {
+                                    fprintf(stderr, "disk_open: cannot create %s\n", fname);
+                                    return 0;
+                                }
+				close(fd);
+                        } else {
+				fprintf(stderr, "disk_open: no %d image found\n", diskno);
+				return 0;
+                        }
 		}
 		if (access(fname, W_OK) < 0) {
 			newmode = DISK_RW_NO_WAY;
-			if ((mode & DISK_READ_TOTAL) == DISK_READ_WRITE) {
+			if (mode >= DISK_READ_WRITE) {
 				fprintf(stderr, "disk_open: %d is write-protected\n", diskno);
 				return 0;
 			}
@@ -183,6 +193,9 @@ disk_open(u_int diskno, u_int mode)
              d->d_str = Physical;
 	}
 
+	if (mode == DISK_CREATE) {
+		mode = DISK_READ_WRITE;
+        }
 	d->d_mode = newmode | mode;
 
         if (d->d_str == Physical)

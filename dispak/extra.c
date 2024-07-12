@@ -25,7 +25,7 @@
 
 #define IS_DIGIT(c)	(c >= '0' && c <= '9')
 #define IS_CHAR(c)	((c >= 0101 && c <= 0132) || \
-			 (c >= 0140 && c <= 0136))
+			 (c >= 0140 && c <= 0176))
 
 #define INTERCEPT_E64 002
 #define INTERCEPT_E70 004

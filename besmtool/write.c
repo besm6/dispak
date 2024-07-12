@@ -215,13 +215,41 @@ void
 disk_to_disk (unsigned to_diskno, unsigned to_start, unsigned length,
 	unsigned from_diskno, unsigned from_start)
 {
-	int limit;
+	void *src_disk, *dest_disk;
+	char buf [ZBYTES];
+	char cvbuf[1024];
+	char check[48];
+	int limit = length ? (from_start + length) : MAXZ;
 
-	limit = length ? (to_start + length) : MAXZ;
 	printf ("Writing %d zones (%d kbytes) from disk %d/%04o to disk %d/%04o\n",
-		(limit - to_start), (limit - to_start) * 6,
+		(limit - from_start), (limit - from_start) * 6,
 		from_diskno, from_start, to_diskno, to_start);
-	printf ("*** Not implemented yet. Sorry.\n");
+
+	src_disk = disk_open (from_diskno, DISK_READ_ONLY);
+	if (! src_disk) {
+		fprintf (stderr, "Cannot open disk %d\n", from_diskno);
+		return;
+	}
+	dest_disk = disk_open (to_diskno, DISK_CREATE);
+	if (! dest_disk) {
+		fprintf (stderr, "Cannot open disk %d\n", to_diskno);
+		return;
+	}
+
+	for (unsigned src_znum=from_start; src_znum<limit; ++src_znum) {
+		int status = disk_readi (src_disk, src_znum, buf, cvbuf, check, DISK_MODE_LOUD);
+		if (status != DISK_IO_OK) {
+			fprintf (stderr, "Read from %d/%04o failed\n", from_diskno, src_znum);
+			break;
+		}
+		unsigned dest_znum = src_znum - from_start + to_start;
+		if (disk_writei (dest_disk, dest_znum, buf, cvbuf, check, DISK_MODE_QUIET) != DISK_IO_OK) {
+			fprintf (stderr, "Write to %d/%04o failed\n", to_diskno, dest_znum);
+			break;
+		}
+	}
+	disk_close (src_disk);
+	disk_close (dest_disk);
 }
 
 void
