@@ -1349,7 +1349,7 @@ e50(void)
 	case 0113: {	/* get current offset */
 		uint unit = (acc.r >> 12) & 077;
 		acc.l = disks[unit].offset;
-		if (disks[unit].diskno >= 2048)
+		if (disks[unit].diskno >= 2048 && !getenv("BESM6_SMALL_DISKS"))
 			acc.l >>= 5;
 		acc.r = 0;
 		return E_SUCCESS;
@@ -1715,6 +1715,7 @@ ddio(void)
 	int             r;
 	static uchar	buf[6144];
         static char	cvbuf[1024];
+        ushort          mask = getenv("BESM6_SMALL_DISKS") ? 01777 : 07777;
 	if (intercept_mask & INTERCEPT_E70) {
 	    return intercept_ex(INTERCEPT_E70);
 	}
@@ -1736,7 +1737,6 @@ ddio(void)
 		zone += (u - phdrum) * 040;
 		if (phys_dd.diskh) {
 		    // The disk LUN associated with the phys. drum has been relinquished.
-                        fprintf(stderr, "Using old PHYS\n");
 		    dd = &phys_dd;
 		} else {
 		    dd = disks + phys_dd.diskno; /* diskno is LUN here */
@@ -1788,7 +1788,7 @@ ddio(void)
 			iomode = DISK_MODE_PHYS;
 		}
 		r = disk_readi(dd->diskh,
-			(zone + dd->offset) & 0xfff,
+			(zone + dd->offset) & mask,
                                (char *)(core + addr), (char *)convol + addr, cwords, iomode);
 		if (uil.i_opcode & 1 && dd->diskno < 2048) {
 			/* check words requested for tape */
@@ -1800,7 +1800,7 @@ ddio(void)
 		}
 	} else {                            // запись целой зоны
             r = disk_writei(dd->diskh,
-                            (zone + dd->offset) & 0xfff,
+                            (zone + dd->offset) & mask,
                             (char *)(core + addr), (char *)convol + addr, NULL, DISK_MODE_QUIET);
         }
 	if (dd->diskno) {
