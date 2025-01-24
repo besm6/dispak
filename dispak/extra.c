@@ -1580,6 +1580,11 @@ e62(void)
 		e = ddio();
 		STORE(r, 1);
 		return e;
+	case 0131:	/* system volume information */
+		acc.l = 2;
+		acc.r = (5<<8)+3;
+		accex = acc;
+		return E_SUCCESS;
 	default:	/* set volume offset or close volume */
 		u = reg[016] >> 9;
 		if ((u >= 030) && (u < 070)) {
@@ -1595,6 +1600,36 @@ e62(void)
 		}
 		return E_UNIMP;
 	}
+}
+
+int
+arfa(void)
+{
+    int addr = reg[016];
+    alureg_t arg;
+    LOAD(arg, addr);
+    reg[016] = 0;
+    switch (arg.l >> 18) {
+    case 016:                   /* admin password confirmation */
+        break;
+    case 065: {                 /* reading main archive volume */
+        void * h;
+        int page, zone, r;
+        h = disk_open(2248, DISK_READ_ONLY);
+        if (!h) {
+            fprintf(stderr, "No archive volume 2248\n");
+            return E_UNIMP;
+        }
+        page = (arg.l >> 6) & 037;
+        zone = arg.r & 07777;
+        r = disk_readi(h, zone, (char *)(core + page*02000), (char *)convol + (page*02000), NULL, DISK_MODE_QUIET);
+        disk_close(h);
+        return r == DISK_IO_OK ? E_SUCCESS : E_DISKERR;
+    } break;
+    default:
+        return E_UNIMP;
+    }
+    return E_SUCCESS;
 }
 
 int
@@ -1630,8 +1665,7 @@ e63(void)
                 {
                         if (acc.l == (GOST_K << 16 | GOST_EL << 8 | GOST_YU) &&
                             acc.r == (GOST_CHE << 16 | GOST_A << 8 | GOST_P)) {
-                                reg[016] = 0;
-                                return E_SUCCESS;
+                                return arfa();
                         }
                 }
 		if (reg[016] > 7)
