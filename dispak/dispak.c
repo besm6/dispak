@@ -229,7 +229,7 @@ main(int argc, char **argv)
 	(void)textdomain (PACKAGE_NAME);
 
 	for (;;) {
-		i = getopt_long (argc, argv, "hVlbvtspqxo:c:", longopts, 0);
+		i = getopt_long (argc, argv, "hVlbvtspqxeo:c:", longopts, 0);
 		if (i < 0)
 			break;
 		switch (i) {
@@ -265,6 +265,9 @@ main(int argc, char **argv)
 			break;
 		case 'x':		/* native xcodes */
 			xnative = 1;
+			break;
+		case 'e':		/* native elfun */
+			enative = 1;
 			break;
 		case 'o':
 			pout_file = optarg;
