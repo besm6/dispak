@@ -110,6 +110,8 @@ enum {
 	OPT_PATH,
 	OPT_INPUT_ENCODING,
 	OPT_NO_INSN_CHECK,
+	OPT_725,
+	OPT_COVERAGE,
 	OPT_DRUM_DUMP,
 };
 
@@ -139,6 +141,8 @@ static struct option longopts[] = {
 	{ "path",		1,	0,	OPT_PATH	},
 	{ "input-encoding",	1,	0,	OPT_INPUT_ENCODING },
 	{ "no-insn-check",	0,	0,	OPT_NO_INSN_CHECK },
+	{ "725",		0,	0,	OPT_725         },
+	{ "coverage",		0,	0,	OPT_COVERAGE    },
 	{ "drum-dump",		1,	0,	OPT_DRUM_DUMP   },
 	{ 0,			0,	0,	0		},
 };
@@ -176,6 +180,8 @@ usage ()
 	fprintf (stderr, _("  --input-encoding=code  set encoding for input files: utf8 koi8 cp1251 cp866\n"));
 	fprintf (stderr, _("  --bootstrap            used to generate contents of the system disk\n"));
 	fprintf (stderr, _("  --no-insn-check        all words but at addr 0 are treated as insns\n"));
+	fprintf (stderr, _("  --725                  emulate 7.25 MB disk geometry\n"));
+	fprintf (stderr, _("  --coverage             print PC coverage map at exit\n"));
 	fprintf (stderr, _("  --drum-dump=file       output drum 27 to file\n"));
 
 	exit (1);
@@ -305,6 +311,12 @@ main(int argc, char **argv)
 			break;
 		case OPT_NO_INSN_CHECK:
 			no_insn_check = 1;
+			break;
+		case OPT_725:
+			disk_emulate_725 = 1;
+			break;
+		case OPT_COVERAGE:
+			covflg = 1;
 			break;
 		case OPT_DRUM_DUMP:
 			drum_dump_filename = optarg;

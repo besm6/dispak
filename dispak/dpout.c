@@ -74,7 +74,7 @@ dump(FILE *fout, unsigned sz)
 		case 0175:
 		case 0:
 			if (trace_e64)
-				putchar('\n');
+				printf("=\n");
 			return;
 		}
 		if (*cp & 0200) {
@@ -92,12 +92,12 @@ dump(FILE *fout, unsigned sz)
 		}
 		if (maxp >= 0) {
 			if (trace_e64)
-				putchar('\n');
+				printf("/\n");
 			gost_write(line, maxp + 1, fout);
 			rstline();
 		}
 		if (*cp == 0176)
-			utf8_puts("\f", fout);
+			utf8_puts("\f\r", fout);
 		else
 			for (rc = *cp - 0141; rc; --rc)
 				putc('\n', fout);

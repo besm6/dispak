@@ -90,6 +90,8 @@ ibr:
 			iaddr = ibw.w.w_b[4] << 8 | ibw.w.w_b[5];
 			break;
 		case W_DATA:
+			convol[iaddr] |= CV_NUMBER;
+			/* fall through */
 		case W_CODE:
 			core[iaddr++] = ibw.w;
 			break;

@@ -58,7 +58,7 @@ optab_t optab[] = {
 	{"mtj", 0,      I_MTJ,  F_REG, },                       /* 044 */
 	{"m+j", 0,      I_MPJ,  F_REG, },                       /* 045 */
 	{"x46", priv,   0,      F_PRIV, },                      /* 046 */
-	{"x47", priv,   0,      F_PRIV, },                      /* 047 */
+	{"*47", 0,      I_TRAP, F_TRAP, },                      /* 047 */
 	{"*50", 0,      I_TRAP, F_TRAP, },                      /* 050 */
 	{"*51", 0,      I_TRAP, F_TRAP, },                      /* 051 */
 	{"*52", 0,      I_TRAP, F_TRAP, },                      /* 052 */

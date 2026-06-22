@@ -334,6 +334,8 @@ EXTERN int              notty;
 EXTERN int		spec, spec_saved; /* store insns store executable words */
 EXTERN int		pspspec;        /* "special" mode requested in the passport */
 EXTERN int		no_insn_check;	/* ignore number mode except addr 0 */
+EXTERN int		disk_emulate_725; /* 7.25 MB disk geometry (see --725) */
+EXTERN int		covflg;		/* PC coverage map enabled */
 EXTERN int              stepflg;        /* "step" command flag */
 EXTERN int              cmdflg;         /* command  loop  flag */
 EXTERN int		quitflg;	/* "quit" command flag */
