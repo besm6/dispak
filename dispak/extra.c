@@ -23,6 +23,8 @@
 #include "gost10859.h"
 #include "encoding.h"
 
+#define SMALL_DISKS()	(getenv("BESM6_SMALL_DISKS") || disk_emulate_725)
+
 #define IS_DIGIT(c)	(c >= '0' && c <= '9')
 #define IS_CHAR(c)	((c >= 0101 && c <= 0132) || \
 			 (c >= 0140 && c <= 0176))
@@ -1343,13 +1345,13 @@ e50(void)
 		 * in chunks of 040 blocks for disks
 		 */
 		disks[unit].offset =
-			(getenv("BESM6_SMALL_DISKS") || disks[unit].diskno < 2048 ? acc.r : acc.r << 5) & 07777;
+			(SMALL_DISKS() || disks[unit].diskno < 2048 ? acc.r : acc.r << 5) & 07777;
 		return E_SUCCESS;
 	}
 	case 0113: {	/* get current offset */
 		uint unit = (acc.r >> 12) & 077;
 		acc.l = disks[unit].offset;
-		if (disks[unit].diskno >= 2048 && !getenv("BESM6_SMALL_DISKS"))
+		if (disks[unit].diskno >= 2048 && !SMALL_DISKS())
 			acc.l >>= 5;
 		acc.r = 0;
 		return E_SUCCESS;
@@ -1426,16 +1428,19 @@ e50(void)
 		return E_SUCCESS;
 	case 0137:	/* undocumented */
 		return E_SUCCESS;
+	case 0151:	/* input queue position per CPU channel */
+		if (acc.l != 0 || acc.r != 0)
+			return E_UNIMP;
+		acc.r = 0123;	/* arbitrary */
+		return E_SUCCESS;
 	case 0156: { /* get volume type */
 		int i = disks[(acc.r >> 12) & 077].diskno;
 		acc.l = 0;
 		if (i == 0)
 			acc.r = 077777;
 		else if (i >= 2048)
-			/* pretend that the disks are 29.5 Mb */
-			acc.r = 1;
+			acc.r = disk_emulate_725 ? 0 : 1;
 		else
-			/* BESM-6 tape */
 			acc.r = 040;
 		return E_SUCCESS;
 	}
@@ -1446,6 +1451,8 @@ e50(void)
 		accex.r = GOST_REVERSE_E << 16 | GOST_B << 8 | GOST_M;
 		reg[016] = 0x222;
 		reg[015] = 2053;
+		return E_SUCCESS;
+	case 0166:	/* declare self an archive task */
 		return E_SUCCESS;
 	case 0177:      /* resource request     */
 		acc.l = acc.r = 0;
@@ -1473,6 +1480,8 @@ e50(void)
 			disk_close(h);
 		} else acc.r = 0;
         }        return E_SUCCESS;
+	case 01207:
+		return E_SUCCESS;
         case 01211: 	/* plotter output (64 words starting from the address on acc) */
 	       if (reg[3] == 071717) {
 		static FILE * plot = NULL;
@@ -1561,6 +1570,11 @@ e62(void)
 	case 0055:	/* get error catcher address */
 		acc.l = 0;
 		acc.r = 040000000;
+		return E_SUCCESS;
+	case 0057:	/* acquire a terminal by number */
+		fprintf(stderr, "Acquiring terminal %08o %08o\n", acc.l, acc.r);
+		acc.l = 0;
+		acc.r = 077777;
 		return E_SUCCESS;
 	case 0076:	/* drop incognito */
 		return E_SUCCESS;
@@ -2216,7 +2230,12 @@ physaddr(void)
 	case 0476:
 		acc.l = 0; acc.r = 077740000; /* МОНИТ */
 		break;
+	case 0603:
+	case 0604:
+		acc.l = 077777777; acc.r = 077777777; /* НОММБ, НОММБ1 */
+		break;
 	case 0500: /* для МС ДУБНА */
+	case 0765:
 	case 01026:
 		acc.l = acc.r = 0;
 		break;

@@ -13,6 +13,7 @@
  */
 #include <stdio.h>
 #define EXTERN                          /* to allocate common data      */
+#include <string.h>
 #include "defs.h"
 #include "optab.h"
 #include "encoding.h"
@@ -103,6 +104,8 @@ rdtsc(void)
 	return 0ull;
 #endif
 }
+
+int covmap[32768];
 
 ulong   run() {
 	optab_t        op;
@@ -205,6 +208,12 @@ dbg:
 		addr = ADDR(ui.i_addr + reg[MODREG]);
 	} else
 		addr = ui.i_addr;
+
+	if (covflg) {
+		if (abpc == 01000 && abright == 0)
+			memset(covmap, 0, sizeof(covmap));
+		covmap[abpc] |= 1 << abright;
+	}
 
 	if (trace >= 2) {
 		char str [40] = "";
@@ -532,6 +541,8 @@ mtj:
 			fflush(stderr);
 		}
 		switch (ui.i_opcode) {
+		case 047:
+			break;
 		case 050:
 			err = e50();
 			goto errchk;
@@ -622,6 +633,9 @@ mtj:
 			case 0: spec = 1; break;
 			case 1: spec = pspspec; break;
 			}
+			break;
+		case 077:
+			trace = reg[016];
 			break;
 		default:
 			err = E_UNIMP;
@@ -865,6 +879,16 @@ done:
 ENDFOREVER
 	if (pout_enable && xnative)
 		pout_decode(pout_file);
+	if (covflg) {
+		for (i = 01000; i < 32768; ++i) {
+			if (covmap[i])
+				printf("%05o: %c%c\n", i,
+				    covmap[i] & 1 ? 'L' : ' ',
+				    covmap[i] & 2 ? 'R' : ' ');
+			else
+				printf("%05o: --\n", i);
+		}
+	}
 	pc = abpc;
 	right = abright;
 	pcm_dbg = pcm;
