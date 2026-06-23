@@ -99,6 +99,8 @@ def compare_output(output_name, expected_name):
 # A symbol # in pattern matches any symbol in the line.
 #
 def match_line(line, pattern):
+    if len(line) != len(pattern):
+        return False
     for c, p in zip(line, pattern):
         #print("---", c, p)
         if p != '#' and c != p:
@@ -106,32 +108,55 @@ def match_line(line, pattern):
     return True
 
 #--------------------------------------------------------------
-# Compare the output with expected contents.
+# Filter out diff hunks whose differences are covered by wildcards.
+#
+# A unified hunk is a '@@' header followed by the expected ('-') lines
+# and then the actual ('+') lines. difflib coalesces adjacent changed
+# lines, so a hunk may hold several '-'/'+' pairs. A hunk is dropped
+# only when it has the same number of expected and actual lines and
+# every pair matches under wildcard rules; otherwise it is kept so the
+# genuine difference is reported.
 #
 def process_wildcards(diff):
     # Convert the iterator into list.
     lines = list(diff)
 
     # Remove header.
-    if len(lines) < 2 or \
-       lines[0] != "--- \n" or \
-       lines[1] != "+++ \n":
-        return lines
-    lines = lines[2:]
+    if len(lines) >= 2 and \
+       lines[0].startswith("--- ") and \
+       lines[1].startswith("+++ "):
+        lines = lines[2:]
 
-    # Process groups of three lines and match wildcards.
-    while len(lines) >= 3:
-        if lines[0][0] == '@' and \
-           lines[1][0] == '-' and \
-           lines[2][0] == '+' and \
-           match_line(lines[2][1:], lines[1][1:]):
-            # Match: remove these three lines.
-            lines = lines[3:]
-        else:
-            # No match, return the rest.
-            return lines
+    result = []
+    i = 0
+    while i < len(lines):
+        if not lines[i].startswith('@'):
+            # Not a hunk header; keep it as-is.
+            result.append(lines[i])
+            i += 1
+            continue
 
-    return lines
+        # Collect the hunk: header, then expected ('-') and actual ('+') lines.
+        j = i + 1
+        expected = []
+        while j < len(lines) and lines[j].startswith('-'):
+            expected.append(lines[j])
+            j += 1
+        actual = []
+        while j < len(lines) and lines[j].startswith('+'):
+            actual.append(lines[j])
+            j += 1
+
+        matched = len(expected) > 0 and len(expected) == len(actual) and \
+            all(match_line(a[1:], e[1:]) for e, a in zip(expected, actual))
+
+        if not matched:
+            # Keep the whole hunk so the difference gets reported.
+            result.extend(lines[i:j])
+
+        i = j
+
+    return result
 
 #--------------------------------------------------------------
 #

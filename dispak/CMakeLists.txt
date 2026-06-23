@@ -61,10 +61,20 @@ add_executable(dispak
 )
 target_link_libraries(dispak PUBLIC m)
 target_compile_options(dispak PRIVATE
-    -Wall -g -O3 -Werror -ffast-math -fomit-frame-pointer
+    -Wall -g
     -DHAVE_STRING_H=${HAVE_STRING_H}
     -DHAVE_GETOPT_LONG=${HAVE_GETOPT_LONG}
 )
+#
+# Optimize aggressively for normal builds, but make a -DCMAKE_BUILD_TYPE=Debug
+# build actually debuggable: no optimization, keep the frame pointer and do not
+# turn warnings into errors.
+#
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(dispak PRIVATE -O0 -fno-omit-frame-pointer)
+else()
+    target_compile_options(dispak PRIVATE -O3 -Werror -ffast-math -fomit-frame-pointer)
+endif()
 install(TARGETS dispak DESTINATION bin)
 
 #
