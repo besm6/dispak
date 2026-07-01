@@ -605,6 +605,8 @@ mtj:
 			goto errchk;
 		case 071:
 			err = term();
+			if (err == E_TERM)
+				STOP;
 			goto errchk;
 		case 072:
 			err = resources();

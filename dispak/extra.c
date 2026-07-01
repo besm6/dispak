@@ -1992,8 +1992,12 @@ ttin(uchar flags, ushort a1, ushort a2)
 	else
 		fputs("-\r", stdout);
 	fflush(stdout);
-	if (! fgets((char*) buf, sizeof(buf), stdin))
-		buf[0] = '\n';
+	if (! fgets((char*) buf, sizeof(buf), stdin)) {
+		if (feof(stdin))
+			return E_TERM;
+		perror("stdin");
+		return E_INT;
+	}
 	dp = core[a1].w_b;
 	sp = buf;
 	while (dp - core[a1].w_b < (a2 - a1 + 1) * 6) {
